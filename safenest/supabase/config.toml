@@ -1,0 +1,23 @@
+# Working directory in the Supabase GitHub integration: safenest
+project_id = "safenest"
+
+[auth]
+enabled = true
+site_url = "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site"
+additional_redirect_urls = [
+  "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html",
+  "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html?mode=recovery",
+  "https://mysafenestbd.com/account.html",
+  "https://mysafenestbd.com/account.html?mode=recovery"
+]
+enable_signup = true
+minimum_password_length = 10
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
+
+# Production Auth settings are not deployed by the GitHub integration by
+# default. Configure these exact settings in the hosted project dashboard.
+# Configure your own SMTP provider in the dashboard before public signups.

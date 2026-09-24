@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://kflenmeizngmafwnwhgv.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="theme-color" content="#fff6fa">
+  <meta name="robots" content="noindex">
+  <title>SafeNest — Your account</title>
+  <link rel="stylesheet" href="account.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/">SafeNest<span class="brand-dot" aria-hidden="true">●</span></a>
+    <nav aria-label="Language">
+      <button type="button" data-language="en" aria-pressed="true">English + বাংলা</button>
+      <button type="button" data-language="bn" aria-pressed="false" lang="bn">বাংলা</button>
+    </nav>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow" data-en="YOUR OWN QUIET CORNER" data-bn="আপনার নিজের শান্ত জায়গা">YOUR OWN QUIET CORNER</p>
+      <h1 data-en="Make room for a fresh start." data-bn="নতুন শুরুর জন্য একটু জায়গা করুন।">Make room for a fresh start.</h1>
+      <p class="bubble" data-en="A safer digital space, one step at a time." data-bn="ধাপে ধাপে আরও নিরাপদ ডিজিটাল জীবন।">A safer digital space, one step at a time.</p>
+      <p class="note" data-en="Your account saves your name and language preference. Device protection will be available through the SafeNest app when it is ready." data-bn="আপনার অ্যাকাউন্টে নাম ও ভাষার পছন্দ সংরক্ষিত থাকবে। SafeNest অ্যাপ প্রস্তুত হলে সেটির মাধ্যমে ডিভাইসের সুরক্ষা পাওয়া যাবে।">Your account saves your name and language preference. Device protection will be available through the SafeNest app when it is ready.</p>
+    </section>
+    <section class="card" aria-label="SafeNest account">
+      <p id="status" role="status" aria-live="polite" data-en="Loading your account…" data-bn="আপনার অ্যাকাউন্ট লোড হচ্ছে…">Loading your account…</p>
+      <div id="guest" hidden>
+        <div class="tabs" aria-label="Account options">
+          <button type="button" data-mode="login" aria-pressed="true" data-en="Log in" data-bn="লগইন">Log in</button>
+          <button type="button" data-mode="signup" aria-pressed="false" data-en="Create account" data-bn="অ্যাকাউন্ট খুলুন">Create account</button>
+        </div>
+        <form id="login-form">
+          <label><span data-en="Email" data-bn="ইমেইল">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label><span data-en="Password" data-bn="পাসওয়ার্ড">Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="primary" type="submit" data-en="Log in" data-bn="লগইন">Log in</button>
+          <button class="text-button" type="button" data-mode="reset" data-en="Forgot your password?" data-bn="পাসওয়ার্ড ভুলে গেছেন?">Forgot your password?</button>
+        </form>
+        <form id="signup-form" hidden>
+          <label><span data-en="Email" data-bn="ইমেইল">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label><span data-en="Password · at least 10 characters" data-bn="পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">Password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
+          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10"></label>
+          <p class="note" data-en="We will email you a confirmation link. Creating an account does not activate device protection." data-bn="আমরা ইমেইলে একটি নিশ্চিতকরণ লিংক পাঠাব। অ্যাকাউন্ট খুললেই ডিভাইসে সুরক্ষা চালু হবে না।">We will email you a confirmation link. Creating an account does not activate device protection.</p>
+          <button class="primary" type="submit" data-en="Create account" data-bn="অ্যাকাউন্ট খুলুন">Create account</button>
+        </form>
+        <form id="reset-form" hidden>
+          <h2 data-en="Let’s get you back in." data-bn="আবার অ্যাকাউন্টে ফিরুন।">Let’s get you back in.</h2>
+          <label><span data-en="Email" data-bn="ইমেইল">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <button class="primary" type="submit" data-en="Send reset link" data-bn="রিসেট লিংক পাঠান">Send reset link</button>
+          <button class="text-button" type="button" data-mode="login" data-en="Back to login" data-bn="লগইনে ফিরে যান">Back to login</button>
+        </form>
+      </div>
+      <div id="account" hidden>
+        <h2 data-en="A little space of your own." data-bn="আপনার নিজের একটি জায়গা।">A little space of your own.</h2>
+        <p id="user-email" class="email"></p>
+        <form id="profile-form">
+          <label><span data-en="Display name · optional" data-bn="নাম · ঐচ্ছিক">Display name · optional</span><input name="display_name" autocomplete="nickname" maxlength="80"></label>
+          <label><span data-en="Preferred language" data-bn="পছন্দের ভাষা">Preferred language</span><select name="language"><option value="en">English + বাংলা</option><option value="bn">বাংলা</option></select></label>
+          <button class="primary" type="submit" data-en="Save profile" data-bn="প্রোফাইল সংরক্ষণ করুন">Save profile</button>
+        </form>
+        <button class="text-button" type="button" id="logout" data-en="Log out on this device" data-bn="এই ডিভাইসে লগআউট করুন">Log out on this device</button>
+      </div>
+      <div id="recovery" hidden>
+        <form id="recovery-form">
+          <h2 data-en="Choose a new password." data-bn="নতুন পাসওয়ার্ড দিন।">Choose a new password.</h2>
+          <label><span data-en="New password · at least 10 characters" data-bn="নতুন পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">New password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
+          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10"></label>
+          <button class="primary" type="submit" data-en="Save new password" data-bn="নতুন পাসওয়ার্ড সংরক্ষণ করুন">Save new password</button>
+        </form>
+        <button class="text-button" type="button" id="cancel-recovery" data-en="Cancel and log out" data-bn="বাতিল করে লগআউট করুন">Cancel and log out</button>
+      </div>
+      <noscript><p>Enable JavaScript to use your account. / অ্যাকাউন্ট ব্যবহার করতে JavaScript চালু করুন।</p></noscript>
+    </section>
+  </main>
+  <footer><p data-en="Account privacy: Supabase processes your email, password and session. Your profile stores your optional name and language. This page stores a login session on this device and does not collect browsing history." data-bn="অ্যাকাউন্টের গোপনীয়তা: Supabase আপনার ইমেইল, পাসওয়ার্ড ও সেশন পরিচালনা করে। প্রোফাইলে ঐচ্ছিক নাম ও ভাষা থাকে। এই পেজ ডিভাইসে লগইন সেশন সংরক্ষণ করে; ব্রাউজিং ইতিহাস সংগ্রহ করে না।">Account privacy: Supabase processes your email, password and session. Your profile stores your optional name and language. This page stores a login session on this device and does not collect browsing history.</p></footer>
+  <script type="module" src="account.js"></script>
+</body>
+</html>
