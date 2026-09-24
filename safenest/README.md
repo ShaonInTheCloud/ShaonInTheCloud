@@ -2,7 +2,10 @@
 
 Prepared for Supabase project `kflenmeizngmafwnwhgv`. The private profiles
 migration is now applied in the hosted database (version `20260924212500`).
-The account page still needs the Supabase Auth settings and website deployment.
+The account page is published as an unlinked pilot at
+`https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html`.
+Supabase Auth redirects and custom SMTP still need configuration before
+inviting the public to register.
 The GitHub repository currently also holds the owner's profile README, so all
 SafeNest files live under `safenest/`.
 
@@ -70,12 +73,12 @@ The result is `dist/account.html`, `dist/account.js`, and `dist/account.css`.
 Without a key, the page clearly says account setup is in progress and all
 account forms remain hidden. A secret/service-role key is rejected by the build.
 
-To integrate with the existing Sites website, copy these three files into that
-site's `dist/`, merge the account headers from `dist/_headers` into its host
-configuration, and add an Account link. Update the landing page's statements
-about account availability and privacy at the same time. Keep its existing
-homepage, visuals and other files. Publish through the existing Sites project.
-GitHub commits do not automatically publish that website.
+Site version 5 now contains the compiled account page at `/account.html` and
+the host headers it needs. The homepage does not link to this pilot yet because
+confirmation/reset emails are restricted until Supabase custom SMTP and
+redirects are configured. After enabling public signups, add an Account link
+and update the homepage privacy/account-availability copy in the existing
+Sites project. GitHub commits do not automatically publish that website.
 
 The account HTML's Content Security Policy allows only this Supabase project.
 If changing project, update that policy as well. Keep third-party scripts off
