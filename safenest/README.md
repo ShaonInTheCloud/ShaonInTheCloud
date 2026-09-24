@@ -1,7 +1,8 @@
 # SafeNest account integration
 
-Prepared for Supabase project `kflenmeizngmafwnwhgv`. This is a draft integration;
-it has not been applied to the hosted database or published on the website.
+Prepared for Supabase project `kflenmeizngmafwnwhgv`. The private profiles
+migration is now applied in the hosted database (version `20260924212500`).
+The account page still needs the Supabase Auth settings and website deployment.
 The GitHub repository currently also holds the owner's profile README, so all
 SafeNest files live under `safenest/`.
 
@@ -39,35 +40,16 @@ Do not use wildcard production redirect URLs. Supabase has a default password
 recovery email template; retain its confirmation URL unless deliberately
 implementing a different email verification flow.
 
-## 2. Apply the private profile migration
+## 2. Private profile migration
 
-Use either the CLI migration workflow or the one-time SQL Editor workflow, not
-both for the same migration.
+The hosted database already contains the migration at
+`supabase/migrations/20260924212500_private_profiles.sql` (version `20260924212500`).
+Do **not** run the SQL or `supabase db push` a second time on this project.
+Check that Supabase's migration list shows this version before turning on
+GitHub production deployment. The migration enables RLS and grants each
+signed-in user only the permissions needed for their own profile.
 
-**CLI workflow** (from this `safenest` directory, with the official Supabase CLI):
-
-```sh
-supabase login
-supabase link --project-ref kflenmeizngmafwnwhgv
-supabase db push --dry-run
-supabase db push
-```
-
-The CLI may securely prompt for a database password. Do not paste it in chat or
-commit it. Inspect the dry run before applying. This draft assumes `profiles`
-does not already exist; inspect any existing table before applying.
-
-**SQL Editor workflow:** open
-`supabase/migrations/20260924000100_private_profiles.sql`, paste its contents into
-your project's SQL Editor, and run it once. If you later switch to CLI/GitHub
-migrations, mark this exact migration as already applied after checking the
-table and policies:
-
-```sh
-supabase migration repair 20260924000100 --status applied
-```
-
-The `auth.users` table already belongs to Supabase. New accounts appear in
+The `auth.users` table belongs to Supabase. New accounts appear in
 **Authentication → Users**. A row in `public.profiles` appears when a logged-in
 user first saves their name/language. There is no signup trigger to fail and
 block new accounts. User IDs and creation timestamps cannot be changed by users.
@@ -148,12 +130,11 @@ cross-user access denial, owner-only writes, immutable ownership/timestamps,
 field validation and deletion cascade. Unit tests also check account/recovery
 state and rejection of stale profile responses after an account switch.
 
-These tests do not verify the hosted project configuration, email delivery,
+These tests do not verify the hosted Auth configuration, email delivery,
 browser rendering, deployed callback URLs or an actual device. Before enabling
 accounts for visitors, test with two owner-controlled email addresses: confirm
 signup, log in, save profile, reset a password, log out, and verify that account A
-cannot fetch account B's row through the API. No real signup emails or account
-changes were made while preparing this draft.
+cannot fetch account B's row through the API. No real signup emails were sent while preparing this integration.
 
 On 24 September 2026: all 7 local tests passed, including the embedded
 PostgreSQL isolation test; the account bundle built successfully with the
@@ -165,3 +146,8 @@ Official references:
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://supabase.com/docs/guides/deployment/branching/github-integration
 - https://supabase.com/docs/guides/getting-started/api-keys
+
+Hosted verification on 24 September 2026: `public.profiles` exists with RLS
+and three owner-scoped policies; anonymous SELECT and authenticated owner-ID
+UPDATE grants are absent; Supabase Security Advisor reports no lints. No
+real-user authentication test has been completed yet.

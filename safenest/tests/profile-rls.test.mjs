@@ -23,7 +23,7 @@ test('database enforces private profiles and immutable ownership', async () => {
       grant execute on function auth.uid() to anon, authenticated;
       insert into auth.users values ('${userA}'), ('${userB}');
     `);
-    await db.exec(await readFile(new URL('../supabase/migrations/20260924000100_private_profiles.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20260924212500_private_profiles.sql', import.meta.url), 'utf8'));
 
     await db.exec('set role anon');
     await assert.rejects(db.query('select * from public.profiles'), { code: '42501' });
