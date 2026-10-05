@@ -7,19 +7,19 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src https://kflenmeizngmafwnwhgv.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="theme-color" content="#fff6fa">
   <meta name="robots" content="noindex">
-  <title>SafeNest — Your account</title>
+  <title>SafeNest — Your personal portal</title>
   <link rel="stylesheet" href="account.css">
 </head>
 <body>
   <header>
-    <a class="brand" href="https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/">SafeNest<span class="brand-dot" aria-hidden="true">●</span></a>
+    <a class="brand" href="./">SafeNest<span class="brand-dot" aria-hidden="true">●</span></a>
     <nav aria-label="Language">
       <button type="button" data-language="en" aria-pressed="true">English + বাংলা</button>
       <button type="button" data-language="bn" aria-pressed="false" lang="bn">বাংলা</button>
     </nav>
   </header>
   <main>
-    <section class="intro">
+    <section class="intro" id="intro">
       <p class="eyebrow" data-en="YOUR OWN QUIET CORNER" data-bn="আপনার নিজের শান্ত জায়গা">YOUR OWN QUIET CORNER</p>
       <h1 data-en="Make room for a fresh start." data-bn="নতুন শুরুর জন্য একটু জায়গা করুন।">Make room for a fresh start.</h1>
       <p class="bubble" data-en="A safer digital space, one step at a time." data-bn="ধাপে ধাপে আরও নিরাপদ ডিজিটাল জীবন।">A safer digital space, one step at a time.</p>
@@ -53,13 +53,50 @@
         </form>
       </div>
       <div id="account" hidden>
-        <h2 data-en="A little space of your own." data-bn="আপনার নিজের একটি জায়গা।">A little space of your own.</h2>
+        <div class="portal-heading">
+          <div><p class="eyebrow" data-en="YOUR PERSONAL PORTAL" data-bn="আপনার ব্যক্তিগত পোর্টাল">YOUR PERSONAL PORTAL</p>
+          <h1 data-en="My SafeNest" data-bn="আমার SafeNest">My SafeNest</h1>
+          <p id="portal-name" hidden></p></div>
+          <a class="portal-link" href="./" data-en="Visit website" data-bn="ওয়েবসাইট দেখুন">Visit website</a>
+        </div>
         <p id="user-email" class="email"></p>
+        <nav class="portal-nav" aria-label="Your portal">
+          <a href="#profile" data-en="My profile" data-bn="আমার প্রোফাইল">My profile</a>
+          <a href="#app-download" data-en="Android app" data-bn="Android অ্যাপ">Android app</a>
+          <a href="#installation" data-en="Installation guide" data-bn="ইনস্টল করার নির্দেশিকা">Installation guide</a>
+        </nav>
+        <div class="portal-grid">
+        <section class="portal-panel" id="profile" aria-labelledby="profile-title">
+        <h2 id="profile-title" data-en="My profile" data-bn="আমার প্রোফাইল">My profile</h2>
         <form id="profile-form">
           <label><span data-en="Display name · optional" data-bn="নাম · ঐচ্ছিক">Display name · optional</span><input name="display_name" autocomplete="nickname" maxlength="80"></label>
           <label><span data-en="Preferred language" data-bn="পছন্দের ভাষা">Preferred language</span><select name="language"><option value="en">English + বাংলা</option><option value="bn">বাংলা</option></select></label>
           <button class="primary" type="submit" data-en="Save profile" data-bn="প্রোফাইল সংরক্ষণ করুন">Save profile</button>
         </form>
+        <a class="portal-link next-step" href="#app-download" data-en="Next: get the Android app" data-bn="পরবর্তী ধাপ: Android অ্যাপ নিন">Next: get the Android app</a>
+        </section>
+        <section class="portal-panel app-panel" id="app-download" aria-labelledby="app-title">
+          <p class="badge" data-en="DEVELOPMENT BUILD" data-bn="পরীক্ষামূলক সংস্করণ">DEVELOPMENT BUILD</p>
+          <h2 id="app-title" data-en="SafeNest for Android" data-bn="Android-এর জন্য SafeNest">SafeNest for Android</h2>
+          <p class="app-meta" data-en="Version 0.4.0 · Android 8.0 or later · 18.7 MB" data-bn="সংস্করণ ০.৪.০ · Android ৮.০ বা পরবর্তী সংস্করণ · ১৮.৭ MB">Version 0.4.0 · Android 8.0 or later · 18.7 MB</p>
+          <p data-en="Download this test version on your Android phone. It is not a finished customer release." data-bn="আপনার Android ফোনে এই পরীক্ষামূলক সংস্করণ ডাউনলোড করুন। এটি গ্রাহকদের জন্য চূড়ান্ত সংস্করণ নয়।">Download this test version on your Android phone. It is not a finished customer release.</p>
+          <a class="primary download-button" href="downloads/SafeNest-0.4.0-debug.apk" download="SafeNest-0.4.0-debug.apk" data-en="Download Android APK" data-bn="Android APK ডাউনলোড করুন">Download Android APK</a>
+          <a class="portal-link" href="#installation" data-en="How to install" data-bn="যেভাবে ইনস্টল করবেন">How to install</a>
+          <p class="note" data-en="Windows and iPhone apps are not available yet. On a Windows PC, open this portal on your Android phone to install the APK." data-bn="Windows ও iPhone-এর অ্যাপ এখনো নেই। Windows কম্পিউটারে থাকলে APK ইনস্টল করতে Android ফোনে এই পোর্টাল খুলুন।">Windows and iPhone apps are not available yet. On a Windows PC, open this portal on your Android phone to install the APK.</p>
+          <details class="download-details"><summary data-en="Verify this download" data-bn="ডাউনলোড যাচাই করুন">Verify this download</summary><p>SHA-256</p><code>09b18a7149c70bbdb707d9328d85f063d197eb916d05c31075b86bba6902d77c</code></details>
+        </section>
+        <section class="portal-panel installation-panel" id="installation" aria-labelledby="installation-title">
+          <h2 id="installation-title" data-en="Install and sign in" data-bn="ইনস্টল করে লগইন করুন">Install and sign in</h2>
+          <ol class="installation-steps">
+            <li><strong data-en="Download on your phone" data-bn="ফোনে ডাউনলোড করুন">Download on your phone</strong><p data-en="Open this portal on an Android phone, then tap Download Android APK." data-bn="Android ফোনে এই পোর্টাল খুলে Android APK ডাউনলোড করুন চাপুন।">Open this portal on an Android phone, then tap Download Android APK.</p></li>
+            <li><strong data-en="Install the APK" data-bn="APK ইনস্টল করুন">Install the APK</strong><p data-en="Open the downloaded file. If Android requests it, allow installation from that browser or file manager, then tap Install. Turn that installation permission off again afterward." data-bn="ডাউনলোড করা ফাইল খুলুন। Android চাইলে ওই ব্রাউজার বা ফাইল ম্যানেজার থেকে ইনস্টল করার অনুমতি দিয়ে Install চাপুন। পরে ওই ইনস্টল করার অনুমতি আবার বন্ধ করুন।">Open the downloaded file. If Android requests it, allow installation from that browser or file manager, then tap Install. Turn that installation permission off again afterward.</p></li>
+            <li><strong data-en="Use your SafeNest account" data-bn="আপনার SafeNest অ্যাকাউন্ট ব্যবহার করুন">Use your SafeNest account</strong><p data-en="Open SafeNest, tap the Account icon, and sign in with the same confirmed email and password you use here." data-bn="SafeNest খুলে Account আইকনে চাপুন। এখানে ব্যবহার করা নিশ্চিত ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।">Open SafeNest, tap the Account icon, and sign in with the same confirmed email and password you use here.</p></li>
+          </ol>
+          <div class="activation-note"><h3 data-en="Protection activation is not available yet" data-bn="সুরক্ষা চালু করার সেবা এখনো প্রস্তুত নয়">Protection activation is not available yet</h3><p data-en="You can install the app and sign in. This build requires a verified paid period to start protection; checkout and payment activation are not connected yet. Saving a profile or logging in does not start blocking." data-bn="অ্যাপ ইনস্টল করে লগইন করতে পারবেন। এই সংস্করণে সুরক্ষা চালু করতে যাচাইকৃত পেইড মেয়াদ প্রয়োজন; পেমেন্ট ও অ্যাক্টিভেশন এখনো যুক্ত হয়নি। প্রোফাইল সংরক্ষণ বা লগইন করলে ব্লকিং চালু হয় না।">You can install the app and sign in. This build requires a verified paid period to start protection; checkout and payment activation are not connected yet. Saving a profile or logging in does not start blocking.</p></div>
+          <p class="note" data-en="After activation becomes available, follow the app's permission and consent screens and test normal browsing before relying on protection. This development build must leave Android's “Block connections without VPN” setting off." data-bn="অ্যাক্টিভেশন প্রস্তুত হলে অ্যাপের অনুমতি ও সম্মতির ধাপ অনুসরণ করুন। সুরক্ষার ওপর নির্ভর করার আগে স্বাভাবিক ব্রাউজিং পরীক্ষা করুন। এই পরীক্ষামূলক সংস্করণে Android-এর “Block connections without VPN” বন্ধ রাখতে হবে।">After activation becomes available, follow the app's permission and consent screens and test normal browsing before relying on protection. This development build must leave Android's “Block connections without VPN” setting off.</p>
+          <details class="download-details"><summary data-en="If Android cannot install the update" data-bn="Android-এ আপডেট ইনস্টল না হলে">If Android cannot install the update</summary><p data-en="An existing SafeNest installation needs an update signed with the same certificate. If Android reports a conflicting package or signature, keep your existing installation and request a matching update." data-bn="আগে ইনস্টল করা SafeNest আপডেট করতে একই সনদে সাইন করা ফাইল প্রয়োজন। Android প্যাকেজ বা সনদের অমিল জানালে আগের অ্যাপ রেখে একই সনদের আপডেট নিন।">An existing SafeNest installation needs an update signed with the same certificate. If Android reports a conflicting package or signature, keep your existing installation and request a matching update.</p></details>
+        </section>
+        </div>
         <button class="text-button" type="button" id="logout" data-en="Log out on this device" data-bn="এই ডিভাইসে লগআউট করুন">Log out on this device</button>
       </div>
       <div id="recovery" hidden>

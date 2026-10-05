@@ -3,14 +3,19 @@
 Prepared for Supabase project `kflenmeizngmafwnwhgv`. The private profiles
 migration is now applied in the hosted database (version `20260924212500`).
 The account page is published as an unlinked pilot at
-`https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html`.
-Supabase Auth redirects and custom SMTP still need configuration before
-inviting the public to register.
+`https://mysafenestbd.com/account`. On 5 October 2026 the Auth Site URL,
+exact redirect allowlist and Resend custom SMTP were configured. Signup,
+confirmation-email delivery, email verification and private profile saving
+were verified with an owner-controlled test account. Password reset and
+email/password login still require an end-to-end test before adding the public
+registration link.
 The GitHub repository currently also holds the owner's profile README, so all
 SafeNest files live under `safenest/`.
 
 Included: email signup and confirmation, login, password reset, logout on the
-current device, and private name/language preferences. The interface uses white
+current device, and private name/language preferences. The signed-in personal
+portal also provides the Android development APK and bilingual installation
+instructions. Saving a profile leaves the portal open with a clear next step. The interface uses white
 and baby pink, English above smaller Bangla, with a full Bangla option.
 
 Supabase Auth manages credentials and users. PostgreSQL row-level security
@@ -24,20 +29,26 @@ Open your [Supabase project](https://supabase.com/dashboard/project/kflenmeizngm
 1. In **Authentication → Sign In / Providers**, enable Email and keep email
    confirmation on. Set minimum password length to 10.
 2. In **Authentication → URL Configuration**, use the currently working site URL:
-   `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site`.
+   `https://mysafenestbd.com`.
 3. Add these exact Redirect URLs:
    - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html`
    - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html?mode=recovery`
    - `https://mysafenestbd.com/account.html`
    - `https://mysafenestbd.com/account.html?mode=recovery`
-4. Under **Authentication → Email / SMTP Settings**, connect an email provider
-   before accepting public signups. Supabase's default sender is only suitable
-   for testing with project-team addresses. Enter its SMTP credentials in the
-   dashboard, not in GitHub. Keep confirmation and recovery links enabled.
+   - `https://mysafenestbd.com/account`
+   - `https://mysafenestbd.com/account?mode=recovery`
+   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account`
+   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account?mode=recovery`
+4. Under **Authentication → Email / SMTP Settings**, custom SMTP is configured:
+   sender `no-reply@auth.mysafenestbd.com`, name `SafeNest`, host
+   `smtp.resend.com`, port `465`, username `resend`, minimum interval 60 seconds.
+   The sending-only key is restricted to the verified `auth.mysafenestbd.com`
+   domain and saved only in Supabase. Keep credentials out of Git. Confirmation
+   delivery to Gmail passed SPF and DKIM; recovery still needs live testing.
 5. In **Connect** or **Settings → API Keys**, copy the **Publishable key**
    beginning `sb_publishable_`. The account page does not need any secret key.
 
-After the custom domain works over HTTPS, change the Site URL to
+The custom domain works over HTTPS and the Site URL is
 `https://mysafenestbd.com`. Keep both origins on the allowlist while both are used.
 Do not use wildcard production redirect URLs. Supabase has a default password
 recovery email template; retain its confirmation URL unless deliberately
@@ -73,12 +84,30 @@ The result is `dist/account.html`, `dist/account.js`, and `dist/account.css`.
 Without a key, the page clearly says account setup is in progress and all
 account forms remain hidden. A secret/service-role key is rejected by the build.
 
-Site version 5 now contains the compiled account page at `/account.html` and
-the host headers it needs. The homepage does not link to this pilot yet because
-confirmation/reset emails are restricted until Supabase custom SMTP and
-redirects are configured. After enabling public signups, add an Account link
-and update the homepage privacy/account-availability copy in the existing
-Sites project. GitHub commits do not automatically publish that website.
+The existing Sites project serves the compiled account portal at `/account`
+(`/account.html` redirects there). Its homepage remains unlinked while the
+password-reset and password-login checks are pending. Add the Account link and
+update public availability copy only after those tests pass. GitHub commits do
+not automatically publish that website.
+
+## Android download and installation
+
+The portal links to `/downloads/SafeNest-0.4.0-debug.apk`. This is the existing
+Library development artifact, not a new release build. Its SHA-256 is
+`09b18a7149c70bbdb707d9328d85f063d197eb916d05c31075b86bba6902d77c`.
+It requires Android 8.0 or newer and is 18,728,260 bytes. APK bytes are distributed
+by the existing Site; no signing keys are stored here.
+
+Open the portal on an Android phone, download and open the APK, complete
+Android's installation prompt, then use the app's Account icon to log in with
+the same confirmed SafeNest credentials. An update must use the same signing
+certificate as the installed app. Windows and iPhone builds are not available.
+
+The 0.4.0 source and verification notes describe a paid-period requirement for
+protection. Checkout and payment-to-entitlement issuance are not connected;
+the live `protection_entitlements` table had no rows on 5 October 2026. The
+portal therefore does not claim that login/profile saving activates protection.
+Device validation remains separate from these web account checks.
 
 The account HTML's Content Security Policy allows only this Supabase project.
 If changing project, update that policy as well. Keep third-party scripts off
@@ -109,8 +138,9 @@ root and setting Working directory to `.`.
 
 ## 5. Connect mysafenestbd.com
 
-The domain is already attached to the existing Sites project, but DNS and SSL
-validation are pending. In the registrar's **DNS Records → Add DNS Record**, add:
+The domain is attached to the existing Sites project and serves HTTPS. The
+previously issued DNS records are recorded below for reference; preserve the
+current working DNS rather than reapplying these as a new migration:
 
 | Type | Name / Host | Value |
 | --- | --- | --- |
@@ -137,7 +167,8 @@ These tests do not verify the hosted Auth configuration, email delivery,
 browser rendering, deployed callback URLs or an actual device. Before enabling
 accounts for visitors, test with two owner-controlled email addresses: confirm
 signup, log in, save profile, reset a password, log out, and verify that account A
-cannot fetch account B's row through the API. No real signup emails were sent while preparing this integration.
+cannot fetch account B's row through the API. The owner-controlled signup/confirmation/profile test succeeded on 5 October
+2026; recovery and password-login tests remain pending.
 
 On 24 September 2026: all 7 local tests passed, including the embedded
 PostgreSQL isolation test; the account bundle built successfully with the
@@ -152,5 +183,5 @@ Official references:
 
 Hosted verification on 24 September 2026: `public.profiles` exists with RLS
 and three owner-scoped policies; anonymous SELECT and authenticated owner-ID
-UPDATE grants are absent; Supabase Security Advisor reports no lints. No
-real-user authentication test has been completed yet.
+UPDATE grants are absent; Supabase Security Advisor reports no lints. The historical check above predates the owner-controlled live test on
+5 October 2026; it does not imply that recovery/password-login are verified.

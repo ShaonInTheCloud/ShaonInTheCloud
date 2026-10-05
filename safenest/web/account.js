@@ -97,6 +97,9 @@ async function start() {
       }
       $('profile-form').elements.display_name.value = data?.display_name || '';
       $('profile-form').elements.language.value = data?.language || language;
+      $('portal-name').textContent = data?.display_name || '';
+      $('portal-name').hidden = !data?.display_name;
+      if (data?.language) setLanguage(data.language);
     } catch {
       if (mayShowProfile(state, userId, requestRevision, revision)) {
         message('Your profile could not load. Please reload to try again.', 'প্রোফাইল লোড হয়নি। আবার লোড করে চেষ্টা করুন।', true);
@@ -114,8 +117,13 @@ async function start() {
     $('guest').hidden = state.view !== 'login';
     $('account').hidden = state.view !== 'account';
     $('recovery').hidden = state.view !== 'recovery';
+    const portalVisible = state.view === 'account';
+    document.body.classList.toggle('portal-open', portalVisible);
+    $('intro').hidden = portalVisible;
     if (!state.user) {
       $('user-email').textContent = '';
+      $('portal-name').textContent = '';
+      $('portal-name').hidden = true;
       $('profile-form').reset();
       if (event === 'SIGNED_OUT') {
         document.querySelectorAll('form').forEach(form => form.reset());
@@ -125,6 +133,8 @@ async function start() {
     } else {
       $('user-email').textContent = state.user.email || '';
       if (identityChanged) {
+        $('portal-name').textContent = '';
+        $('portal-name').hidden = true;
         $('profile-form').reset();
         setBusy($('profile-form'), true);
         const requestRevision = revision;
@@ -216,7 +226,9 @@ async function start() {
     if (error) throw error;
     if (!mayShowProfile(state, userId, requestRevision, revision)) return;
     setLanguage(values.language);
-    message('Your profile is saved.', 'আপনার প্রোফাইল সংরক্ষিত হয়েছে।');
+    $('portal-name').textContent = values.display_name;
+    $('portal-name').hidden = !values.display_name;
+    message('Your profile is saved. Your Android download and installation guide are below.', 'আপনার প্রোফাইল সংরক্ষিত হয়েছে। নিচে Android ডাউনলোড ও ইনস্টল করার নির্দেশিকা আছে।');
   });
 
   async function logout(button) {
