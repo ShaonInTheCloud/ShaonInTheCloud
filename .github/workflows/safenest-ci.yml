@@ -50,7 +50,7 @@ jobs:
       - run: sh run-core-tests.sh
       - run: chmod +x android/gradlew
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
-      - run: ./gradlew :app:testPlayDebugUnitTest :app:testDirectDebugUnitTest :app:lintPlayDebug :app:lintDirectDebug :app:assemblePlayDebug :app:assembleDirectDebug :app:bundlePlayRelease
+      - run: ./gradlew :app:testPlayDebugUnitTest :app:testDirectDebugUnitTest :app:testLabDebugUnitTest :app:lintPlayDebug :app:lintDirectDebug :app:lintLabDebug :app:assemblePlayDebug :app:assembleDirectDebug :app:assembleLabDebug :app:bundlePlayRelease
         working-directory: safenest/android
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -60,4 +60,9 @@ jobs:
             safenest/android/app/build/outputs/bundle/playRelease
             safenest/android/app/build/reports/tests
             safenest/android/app/build/reports/lint-results-*
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: safenest-test-apk
+          path: safenest/android/app/build/outputs/apk/lab/debug/app-lab-debug.apk
           retention-days: 14

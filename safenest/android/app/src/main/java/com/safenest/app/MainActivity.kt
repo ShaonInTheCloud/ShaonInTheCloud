@@ -102,8 +102,8 @@ private fun SafeNestApp() {
     var page by remember { mutableStateOf("home") }
     var language by remember { mutableStateOf(prefs.getString("language", "en") ?: "en") }
     var category by remember { mutableStateOf(RuleCategory.GAMBLING) }
-    var domains by remember { mutableStateOf(RulesStore.get(context, category).sorted()) }
     var protectionOn by remember { mutableStateOf(SafeNestVpnService.isRunning.get() && VpnService.prepare(context) == null) }
+    var testActive by remember { mutableStateOf(LocalTestSession.isActive(context)) }
     var paidAccess by remember { mutableStateOf(ProtectionCommitment.hasVerifiedAccess(context)) }
     var checkins by remember { mutableIntStateOf(prefs.getInt("checkins", 0)) }
     var showAdd by remember { mutableStateOf(false) }
@@ -127,7 +127,6 @@ private fun SafeNestApp() {
         }
     }
     fun refreshRules() {
-        domains = RulesStore.get(context, category).sorted()
         syncManagedBrowser()
     }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -136,6 +135,7 @@ private fun SafeNestApp() {
             if (event == Lifecycle.Event.ON_RESUME) {
                 // Android can replace this app with another VPN from system settings.
                 protectionOn = SafeNestVpnService.isRunning.get() && VpnService.prepare(context) == null
+                testActive = LocalTestSession.isActive(context)
                 paidAccess = ProtectionCommitment.hasVerifiedAccess(context)
                 prefs.edit().putBoolean("protection_on", protectionOn).apply()
                 isOwner = ManagedProtection.isDeviceOwner(context)
@@ -152,6 +152,7 @@ private fun SafeNestApp() {
         while (true) {
             if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 protectionOn = SafeNestVpnService.isRunning.get() && VpnService.prepare(context) == null
+                testActive = LocalTestSession.isActive(context)
                 paidAccess = ProtectionCommitment.hasVerifiedAccess(context)
                 ProtectionCommitment.checkpoint(context)
                 dnsState = SafeNestVpnService.dnsHealth.get()
@@ -226,7 +227,7 @@ private fun SafeNestApp() {
     fun startProtection() {
         if (protectionOn) return
         if (!ProtectionCommitment.hasVerifiedAccess(context)) { page = "account"; return }
-        if (!GuardPreferences.isSelected(context) || !GuardPreferences.isAccessibilityEnabled(context)) {
+        if (!LocalTestSession.enabled && (!GuardPreferences.isSelected(context) || !GuardPreferences.isAccessibilityEnabled(context))) {
             page = "setup"
             toast = s(language, "Complete the app guard consent and Accessibility step first.", "আগে অ্যাপ গার্ডের সম্মতি ও Accessibility ধাপ শেষ করুন।")
             return
@@ -270,7 +271,7 @@ private fun SafeNestApp() {
                 Box(Modifier.size(34.dp).clip(RoundedCornerShape(12.dp,12.dp,12.dp,4.dp)).background(Violet), contentAlignment=Alignment.Center) { Text("s",color=Color.White,fontWeight=FontWeight.ExtraBold,fontSize=22.sp) }
                 Spacer(Modifier.width(9.dp)); Text("safe",fontWeight=FontWeight.ExtraBold,fontSize=18.sp,color=Ink,letterSpacing=(-1).sp); Text("nest",fontWeight=FontWeight.Medium,fontSize=18.sp,color=SoftText,letterSpacing=(-1).sp)
                 Spacer(Modifier.weight(1f)); TextButton(onClick={language=if(language=="en")"bn" else "en";prefs.edit().putString("language",language).apply()}) { Text(if(language=="en")"বাংলা" else "EN", color=Ink,fontSize=11.sp) }
-                IconButton(onClick={page="account"}) { Icon(Icons.Rounded.AccountCircle,t("Account","অ্যাকাউন্ট"),tint=SoftText) }
+                IconButton(onClick={page="account"}) { Icon(if(LocalTestSession.enabled)Icons.Rounded.Science else Icons.Rounded.AccountCircle,if(LocalTestSession.enabled)t("Test tools","পরীক্ষার টুল")else t("Account","অ্যাকাউন্ট"),tint=SoftText) }
                 IconButton(onClick={page="settings"}) { Icon(Icons.Rounded.Settings,null,tint=SoftText) }
             }
         }
@@ -278,6 +279,9 @@ private fun SafeNestApp() {
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding=PaddingValues(start=18.dp,end=18.dp,top=10.dp,bottom=20.dp), verticalArrangement=Arrangement.spacedBy(14.dp)) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                if (LocalTestSession.enabled) TestBuildBanner(language, testActive,
+                    onStart={requestActivation()}, onStop={LocalTestSession.stop(context);testActive=false;protectionOn=false},
+                    onTools={page="account"})
                 if (page == "settings") {
                     OutlinedButton(onClick={metalMotion=!metalMotion;prefs.edit().putBoolean("metal_motion",metalMotion).apply()}, modifier=Modifier.fillMaxWidth()) {
                         Icon(if(metalMotion)Icons.Rounded.PauseCircle else Icons.Rounded.PlayCircle, null)
@@ -287,8 +291,10 @@ private fun SafeNestApp() {
                 }
                 when(page) {
                     "home" -> HomeScreen(language, protectionOn, paidAccess, dnsState, lockdown, checkins, onToggle={if(protectionOn)page="protect" else requestActivation()}, onReset={showReset=true}, onCheckin={showCheckin=true}, onProtect={page="protect"}, onRecover={page="recover"})
-                    "protect" -> ProtectionScreen(language, protectionOn, paidAccess, category, domains, onToggle={if(protectionOn)page="setup" else requestActivation()}, onCategory={category=it;refreshRules()}, onAdd={newDomain="";showAdd=true}, onSetup={page="setup"},onCatalog={page="catalog"},onImport={if(!importing)importRules.launch(arrayOf("application/json","text/json"))})
-                    "account" -> SubscriptionScreen(language, onVerified={paidAccess=true;page="setup"})
+                    "protect" -> ProtectionScreen(language, protectionOn, paidAccess, category, onToggle={if(protectionOn)page="setup" else requestActivation()}, onCategory={category=it;refreshRules()}, onAdd={newDomain="";showAdd=true}, onSetup={page="setup"},onCatalog={page="catalog"},onImport={if(!importing)importRules.launch(arrayOf("application/json","text/json"))})
+                    "account" -> if(LocalTestSession.enabled) TestLabScreen(language,
+                        onStart={requestActivation()}, onSetup={page="setup"}, onRulesChanged={refreshRules()})
+                        else SubscriptionScreen(language, onVerified={paidAccess=true;page="setup"})
                     "catalog" -> CatalogScreen(language,onChanged={refreshRules()},onBack={page="protect";refreshRules()})
                     "recover" -> RecoveryScreen(language, onReset={showReset=true}, onCheckin={showCheckin=true}, checkins=checkins)
                     "insights" -> InsightsScreen(language,checkins)
@@ -304,11 +310,15 @@ private fun SafeNestApp() {
 
     if (showActivationConfirm) AlertDialog(
         onDismissRequest={showActivationConfirm=false},
-        title={Text(t("Commit to your paid protection period?", "পেইড মেয়াদের সুরক্ষায় সম্মত?"))},
+        title={Text(if(LocalTestSession.enabled)t("Start a local test?", "ফোনে পরীক্ষা চালু করবেন?")else t("Commit to your paid protection period?", "পেইড মেয়াদের সুরক্ষায় সম্মত?"))},
         text={Column(Modifier.verticalScroll(rememberScrollState())) {
+            if(LocalTestSession.enabled) {
+                Text(t("No login or payment is needed. This starts a 60-minute local DNS filtering test that you can stop at any time. Android will ask for VPN permission. Normal traffic stays on your network; allowed DNS queries use your resolver or Cloudflare/Google fallback. This is not an encrypted privacy VPN. Keep Block connections without VPN off. App blocking is optional and needs separate Accessibility consent in Setup.", "লগইন বা পেমেন্ট লাগবে না। ফোনে ৬০ মিনিটের DNS পরীক্ষা চলবে; যেকোনো সময় বন্ধ করতে পারবেন। Android VPN অনুমতি চাইবে। সাধারণ ট্রাফিক আপনার নেটওয়ার্কে থাকে; অনুমোদিত DNS অনুরোধ নেটওয়ার্কের resolver বা Cloudflare/Google-এ যায়। এটি এনক্রিপ্টেড VPN নয়। Block connections without VPN বন্ধ রাখুন। অ্যাপ ব্লক ঐচ্ছিক; সেটআপে আলাদা Accessibility সম্মতি লাগবে।"),fontSize=12.sp)
+            } else {
             Text(appGuardDisclosure(language), fontSize=12.sp)
             Spacer(Modifier.height(10.dp))
             Text(t("SafeNest also uses Android VpnService as a local DNS filter. DNS queries are checked locally; allowed queries go to your network resolver, with Cloudflare or Google DNS as fallback. Regular UDP/TCP DNS is not encrypted unless the configured Private DNS transport is used. This is not an encrypted privacy VPN. There is no in-app pause until the verified period expires. Android controls remain available in the Play build. Your period ends at ", "SafeNest স্থানীয় DNS ফিল্টার হিসেবে Android VpnService ব্যবহার করে। DNS অনুরোধ ফোনে পরীক্ষা হয়; অনুমোদিত অনুরোধ নেটওয়ার্কের DNS সেবায় যায়, প্রয়োজনে Cloudflare বা Google DNS ব্যবহৃত হয়। Private DNS ছাড়া সাধারণ UDP/TCP DNS এনক্রিপ্ট করা নয়। এটি গোপনীয়তার এনক্রিপ্টেড VPN নয়। যাচাইকৃত মেয়াদ পর্যন্ত অ্যাপে বিরতি নেই। Play সংস্করণে Android-এর নিয়ন্ত্রণ ব্যবহার করা যায়। মেয়াদ শেষ: ")+java.time.Instant.ofEpochMilli(ProtectionCommitment.endsAt(context)).toString(),fontSize=12.sp)
+            }
         }},
         confirmButton={TextButton(onClick={showActivationConfirm=false;startProtection()}){Text(t("I agree — start protection","সম্মত — সুরক্ষা চালু করুন"))}},
         dismissButton={TextButton(onClick={showActivationConfirm=false}){Text(t("Not now","এখন নয়"))}}
@@ -364,32 +374,17 @@ private fun SafeNestApp() {
     RecoveryDisclaimer(lang)
 }
 
-@Composable private fun ProtectionScreen(lang:String,active:Boolean,paid:Boolean,category:RuleCategory,domains:List<String>,onToggle:()->Unit,onCategory:(RuleCategory)->Unit,onAdd:()->Unit,onSetup:()->Unit,onCatalog:()->Unit,onImport:()->Unit){
+@Composable private fun ProtectionScreen(lang:String,active:Boolean,paid:Boolean,category:RuleCategory,onToggle:()->Unit,onCategory:(RuleCategory)->Unit,onAdd:()->Unit,onSetup:()->Unit,onCatalog:()->Unit,onImport:()->Unit){
     val t={en:String,bn:String->s(lang,en,bn)}
-    val context = LocalContext.current
-    var search by remember(category) { mutableStateOf("") }
-    var listPage by remember(category, search) { mutableIntStateOf(0) }
-    val matching = remember(domains, search) { domains.filter { it.contains(search.trim(), true) } }
-    val lastPage = ((matching.size - 1).coerceAtLeast(0) / 100)
-    val shownPage = listPage.coerceAtMost(lastPage)
-    val pageStart = shownPage * 100
-    val visibleDomains = matching.subList(pageStart, minOf(pageStart + 100, matching.size))
-
     Text(t("YOUR DIGITAL GUARDRAILS","আপনার ডিজিটাল সুরক্ষা"),fontSize=9.sp,letterSpacing=1.sp,color=SoftText,fontWeight=FontWeight.Bold)
     Text(t("Protection, your way.","আপনার মতো করে সুরক্ষা।"),fontSize=24.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.padding(top=4.dp))
-    Text(t("Add and manage domains on this device.","এই ডিভাইসে ডোমেইন যোগ করুন ও পরিচালনা করুন।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp,bottom=6.dp))
+    Text(t("Website rules run quietly in the background.","ওয়েবসাইটের নিয়ম ব্যাকগ্রাউন্ডে কাজ করে।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp,bottom=6.dp))
     Surface(shape=RoundedCornerShape(14.dp),color=Lilac){Row(Modifier.padding(13.dp),verticalAlignment=Alignment.Top){Icon(Icons.Rounded.Info,null,tint=Violet,modifier=Modifier.size(18.dp));Spacer(Modifier.width(9.dp));Text(t("Android allows one active VPN. SafeNest can use Always-on, but this DNS-only prototype should not use Lockdown because it does not carry all internet traffic.","Android-এ একটি VPN সক্রিয় থাকে। SafeNest Always-on ব্যবহার করতে পারে, তবে DNS-only prototype সব internet traffic বহন করে না বলে Lockdown ব্যবহার করবেন না।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp)} }
     Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) { RuleCategory.entries.forEach { item -> FilterChip(selected=category==item,onClick={onCategory(item)},label={Text(when(item){RuleCategory.GAMBLING->t("Gambling","জুয়া");RuleCategory.ADULT->t("Adult","প্রাপ্তবয়স্ক");RuleCategory.PERSONAL->t("My list","আমার তালিকা")},fontSize=9.sp)},shape=RoundedCornerShape(10.dp)) } }
     Surface(shape=RoundedCornerShape(18.dp),color=Color.White,tonalElevation=0.dp,modifier=Modifier.fillMaxWidth()){Column(Modifier.padding(15.dp)){
-        Text(t("Selected domains","নির্বাচিত ডোমেইন"),fontWeight=FontWeight.Bold,fontSize=13.sp)
-        Spacer(Modifier.height(8.dp));if(domains.isEmpty()) Text(t("No domains added yet.","এখনো কোনো ডোমেইন নেই।"),color=SoftText,fontSize=11.sp,modifier=Modifier.padding(vertical=16.dp))
-        OutlinedTextField(search,onValueChange={search=it},modifier=Modifier.fillMaxWidth(),label={Text(t("Search domains","ডোমেইন খুঁজুন"))},singleLine=true)
-        visibleDomains.forEach { domain -> Row(Modifier.fillMaxWidth().padding(vertical=7.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)).background(Lilac),contentAlignment=Alignment.Center){Text(domain.take(1).uppercase(),fontSize=10.sp,color=Violet,fontWeight=FontWeight.Bold)};Spacer(Modifier.width(9.dp));Text(domain,fontSize=11.sp,color=Ink,modifier=Modifier.weight(1f));if(RulesStore.isCatalogRule(context,category,domain)) Text(t("Catalog","ক্যাটালগ"),fontSize=9.sp,color=SoftText) };HorizontalDivider(color=Color(0xFFF1F0F3)) }
-        if(matching.size > 100) Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-            TextButton(onClick={listPage=(shownPage-1).coerceAtLeast(0)},enabled=shownPage>0){Text(t("Previous","আগের"))}
-            Text(t("Browse list", "তালিকা দেখুন"),fontSize=11.sp,color=SoftText)
-            TextButton(onClick={listPage=shownPage+1},enabled=shownPage<lastPage){Text(t("Next","পরের"))}
-        }
+        Text(t("Website filtering", "ওয়েবসাইট ফিল্টার"),fontWeight=FontWeight.Bold,fontSize=13.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(t("The built-in website list is hidden. Filtering stays enabled, and you can add your own websites below.", "অন্তর্ভুক্ত ওয়েবসাইটের তালিকা লুকানো। ফিল্টার কাজ করে; নিচে নিজের ওয়েবসাইট যোগ করতে পারেন।"),color=SoftText,fontSize=11.sp)
         TextButton(onClick=onAdd,modifier=Modifier.fillMaxWidth()){Text(t("＋  Add a website","＋  ওয়েবসাইট যোগ করুন"),fontSize=10.sp)}
     } }
     Button(onClick=onToggle,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp),colors=ButtonDefaults.buttonColors(containerColor=if(active)Ink else Violet)){Text(if(active)t("DNS service on · Check setup","DNS সেবা চালু · সেটআপ দেখুন")else if(paid)t("Start device protection","ডিভাইস সুরক্ষা চালু করুন")else t("Verify paid access","পেইড মেয়াদ যাচাই করুন"),fontSize=11.sp)}

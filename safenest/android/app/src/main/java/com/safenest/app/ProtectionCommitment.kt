@@ -26,6 +26,7 @@ object ProtectionCommitment {
     private fun boot(c: Context) = Settings.Global.getInt(c.contentResolver, Settings.Global.BOOT_COUNT, -1)
 
     @Synchronized fun cacheVerified(c: Context, window: PaidWindow) {
+        check(!LocalTestSession.enabled) { "The test app uses local test sessions, not paid access." }
         require(CommitmentRules.validWindow(window.starts, window.ends, window.serverNow)) { "No active paid period." }
         // An active commitment never changes account or extends itself without fresh consent.
         if (isActive(c)) return
@@ -44,13 +45,15 @@ object ProtectionCommitment {
             p.getLong("server_anchor", 0), p.getLong("elapsed_anchor", 0), p.getLong("high_water", 0),
             sameBoot)
     }
-    fun isActive(c: Context) = CommitmentRules.active(prefs(c).getBoolean("committed", false), endsAt(c), now(c))
-    fun endsAt(c: Context) = prefs(c).getLong("ends", 0)
+    fun isActive(c: Context) = if (LocalTestSession.enabled) LocalTestSession.isActive(c)
+        else CommitmentRules.active(prefs(c).getBoolean("committed", false), endsAt(c), now(c))
+    fun endsAt(c: Context) = if (LocalTestSession.enabled) LocalTestSession.endsAt(c) else prefs(c).getLong("ends", 0)
     fun entitlementId(c: Context) = prefs(c).getString("id", null)
     /** Support can revoke only on the server. A successful recheck must match both account and period.
      * Wrong credentials, another account and network failures never release a commitment.
      */
     @Synchronized fun reconcile(c: Context, result: AccessCheck): Boolean {
+        check(!LocalTestSession.enabled) { "Local test sessions have no server entitlement." }
         val p = prefs(c)
         check(p.getBoolean("committed", false) && result.checkedId == p.getString("id", null) &&
             result.userId == p.getString("user", null)) { "Sign in with the account used to start this protection period." }
@@ -63,12 +66,14 @@ object ProtectionCommitment {
         return true
     }
     fun hasVerifiedAccess(c: Context): Boolean {
+        if (LocalTestSession.enabled) return true // Local QA access only; no server entitlement is issued.
         if (isActive(c)) return true
         val p = prefs(c)
         return p.getString("id", null) != null && p.getInt("boot", -2) == boot(c) &&
             SystemClock.elapsedRealtime() - p.getLong("elapsed_anchor", -1) in 0..300_000L && now(c) < endsAt(c)
     }
     @Synchronized fun begin(c: Context): Boolean {
+        if (LocalTestSession.enabled) return LocalTestSession.begin(c)
         if (isActive(c)) return true
         if (!hasVerifiedAccess(c) || !GuardPreferences.isAccessibilityEnabled(c) || !GuardPreferences.isSelected(c)) return false
         check(prefs(c).edit().putBoolean("committed", true).commit())
@@ -78,6 +83,10 @@ object ProtectionCommitment {
     }
     /** Re-anchor periodically; clock rollback cannot extend a commitment within this boot. */
     @Synchronized fun checkpoint(c: Context) {
+        if (LocalTestSession.enabled) {
+            if (LocalTestSession.hasSession(c) && !LocalTestSession.isActive(c)) expireAsync(c)
+            return
+        }
         val p = prefs(c)
         if (!p.getBoolean("committed", false)) return
         val current = now(c)
@@ -98,6 +107,7 @@ object ProtectionCommitment {
     }
     @Synchronized internal fun releaseExpired(c: Context) {
         if (isActive(c)) return
+        if (LocalTestSession.enabled) { LocalTestSession.stop(c); return }
         // Also removes old, unbilled prototype policies during upgrade to paid mode.
         GuardPreferences.clearForExpiry(c)
         val remaining = if (ManagedProtection.isConfigured(c)) ManagedProtection.release(c).managed else false
@@ -110,6 +120,7 @@ object ProtectionCommitment {
         else schedule(c, 60_000)
     }
     fun schedule(c: Context, retry: Long? = null) {
+        if (LocalTestSession.enabled) return
         val delay = retry ?: (endsAt(c) - now(c)).coerceAtLeast(1000)
         val scheduler = c.getSystemService(JobScheduler::class.java) ?: return
         scheduler.schedule(JobInfo.Builder(JOB_ID, ComponentName(c, CommitmentExpiryJob::class.java))

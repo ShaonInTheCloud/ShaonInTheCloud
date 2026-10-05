@@ -12,8 +12,9 @@ android {
         applicationId = "com.safenest.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 19
-        versionName = "0.4.2"
+        versionCode = 20
+        versionName = "0.4.3"
+        buildConfigField("boolean", "LOCAL_TEST_BUILD", "false")
         buildConfigField("String", "SUPABASE_URL", "\"https://kflenmeizngmafwnwhgv.supabase.co\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl\"")
     }
@@ -28,6 +29,14 @@ android {
             dimension = "distribution"
             buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "true")
             buildConfigField("boolean", "MANAGED_CONTROLS", "true")
+        }
+        create("lab") {
+            dimension = "distribution"
+            applicationIdSuffix = ".lab"
+            versionNameSuffix = "-test"
+            buildConfigField("boolean", "LOCAL_TEST_BUILD", "true")
+            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "false")
+            buildConfigField("boolean", "MANAGED_CONTROLS", "false")
         }
     }
     val uploadKey = System.getenv("SAFENEST_UPLOAD_KEYSTORE")
@@ -48,6 +57,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+}
+
+androidComponents {
+    beforeVariants(selector().withFlavor("distribution" to "lab").withBuildType("release")) {
+        it.enable = false
+    }
 }
 
 dependencies {

@@ -142,7 +142,7 @@ fun ProtectionSetupScreen(
                 !guardEnabled -> t("Off", "বন্ধ")
                 !accessEnabled -> t("Accessibility permission missing", "Accessibility অনুমতি প্রয়োজন")
                 !guardConnected -> t("Waiting for Android to connect", "Android সংযোগের অপেক্ষায়")
-                !ProtectionCommitment.isActive(context) -> t("Prepared; activate paid protection", "প্রস্তুত; পেইড সুরক্ষা চালু করুন")
+                !ProtectionCommitment.isActive(context) -> if(LocalTestSession.enabled)t("Prepared; start a local test", "প্রস্তুত; ফোনে পরীক্ষা চালু করুন")else t("Prepared; activate paid protection", "প্রস্তুত; পেইড সুরক্ষা চালু করুন")
                 else -> t("Enabled and connected", "চালু ও সংযুক্ত")
             })
             StatusLine(t("VPN app blocking", "VPN অ্যাপ ব্লক"), when {
@@ -157,7 +157,7 @@ fun ProtectionSetupScreen(
 
         SetupCard(t("1. Website filtering", "১. ওয়েবসাইট ফিল্টার")) {
             Text(t("Your domain lists include gambling, adult content and custom sites. Subdomains are included. Test normal browsing before enabling Always-on.", "জুয়া, প্রাপ্তবয়স্ক ও নিজের তালিকার ডোমেইন এবং সাবডোমেইন ব্লক হবে। Always-on চালুর আগে সাধারণ ব্রাউজিং পরীক্ষা করুন।"), fontSize = 12.sp)
-            if (!running) Button(onClick = onStart) { Text(if (ProtectionCommitment.hasVerifiedAccess(context)) t("Start paid protection", "পেইড সুরক্ষা চালু করুন") else t("Verify paid access first", "আগে পেইড মেয়াদ যাচাই করুন")) }
+            if (!running) Button(onClick = onStart) { Text(if(LocalTestSession.enabled)t("Start local test", "ফোনে পরীক্ষা চালু করুন")else if (ProtectionCommitment.hasVerifiedAccess(context)) t("Start paid protection", "পেইড সুরক্ষা চালু করুন") else t("Verify paid access first", "আগে পেইড মেয়াদ যাচাই করুন")) }
             OutlinedButton(onClick = onTestInternet) { Text(t("Open example.com to test", "example.com খুলে পরীক্ষা করুন")) }
             Text(t("Add example.org to My list, then open it and check Last filtered DNS request above. A saved rule without a recorded request means the browser may be using cache or bypassing this DNS filter. Existing connections can keep working; close the tab or browser and retry. Confirm example.com still loads.", "আমার তালিকায় example.org যোগ করে খুলুন এবং উপরের সর্বশেষ ব্লক করা DNS অনুরোধ দেখুন। অনুরোধ না এলে ব্রাউজারের ক্যাশ বা ভিন্ন DNS পথ ব্যবহৃত হতে পারে। পুরনো সংযোগ চলতে পারে; ট্যাব বা ব্রাউজার বন্ধ করে আবার চেষ্টা করুন। example.com চালু থাকে কি না দেখুন।"), fontSize = 11.sp, color = SetupMuted)
         }
@@ -262,7 +262,8 @@ fun ProtectionSetupScreen(
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appGuardDisclosure(language))
             Text(t("These observations stay on your phone, are not recorded as history and are not sent to a server. SafeNest does not inspect page bodies, messages or passwords. Calls and unrelated settings remain usable.", "পর্যবেক্ষণ ফোনেই থাকে; ইতিহাস হিসেবে সংরক্ষণ বা সার্ভারে পাঠানো হয় না। পৃষ্ঠার বিষয়বস্তু, বার্তা বা পাসওয়ার্ড পরীক্ষা করা হয় না। কল ও অন্য সেটিংস ব্যবহার করা যায়।"))
-            Text(t("This step prepares the permission only. Protection starts after paid verification and activation, has no in-app pause, and ends automatically at expiry. Detection depends on Android and the phone's interface. It is not root access or a promise of impossible removal.", "এই ধাপ শুধু অনুমতি প্রস্তুত করে। পেইড যাচাই ও চালুর পরে সুরক্ষা কাজ করে; অ্যাপে বিরতি নেই এবং মেয়াদ শেষে শেষ হয়। শনাক্তকরণ ফোন ও Android-এর ওপর নির্ভর করে। এটি root access নয় এবং সরানো অসম্ভবের প্রতিশ্রুতি নয়।"))
+            if(LocalTestSession.enabled) Text(t("App blocking is optional in this test build. It runs only during a local test session, and Stop test turns it off. Website DNS filtering can be tested without Accessibility.", "এই পরীক্ষায় অ্যাপ ব্লক ঐচ্ছিক। ফোনের পরীক্ষার মেয়াদে কাজ করে; Stop test চাপলে বন্ধ হয়। Accessibility ছাড়াই DNS পরীক্ষা করতে পারেন।"))
+            else Text(t("This step prepares the permission only. Protection starts after paid verification and activation, has no in-app pause, and ends automatically at expiry. Detection depends on Android and the phone's interface. It is not root access or a promise of impossible removal.", "এই ধাপ শুধু অনুমতি প্রস্তুত করে। পেইড যাচাই ও চালুর পরে সুরক্ষা কাজ করে; অ্যাপে বিরতি নেই এবং মেয়াদ শেষে শেষ হয়। শনাক্তকরণ ফোন ও Android-এর ওপর নির্ভর করে। এটি root access নয় এবং সরানো অসম্ভবের প্রতিশ্রুতি নয়।"))
         } },
         confirmButton = { TextButton(onClick = {
             GuardPreferences.setEnabled(context, true)

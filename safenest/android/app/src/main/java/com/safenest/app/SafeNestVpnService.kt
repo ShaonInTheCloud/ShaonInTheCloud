@@ -121,7 +121,8 @@ class SafeNestVpnService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!ProtectionCommitment.isActive(this)) {
             ProtectionCommitment.expireAsync(this)
-            stopProtection("Protection requires an activated, verified paid subscription.")
+            stopProtection(if (LocalTestSession.enabled) "Start a new local test session in SafeNest Test."
+                else "Protection requires an activated, verified paid subscription.")
             return START_NOT_STICKY
         }
         if (intent?.action == ACTION_STOP) {

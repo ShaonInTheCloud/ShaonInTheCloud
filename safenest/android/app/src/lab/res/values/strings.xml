@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SafeNest Test</string>
+    <string name="accessibility_service_summary">Optional app blocking during a local test. Stop test is always available.</string>
+    <string name="accessibility_service_description">After your separate consent, SafeNest Test checks foreground app package IDs and returns Home from selected blocked apps and detected VPN apps during a local test session. Observations stay on this phone and are not recorded or uploaded. It does not inspect browser pages, messages, passwords, Settings controls or installer labels. Website filtering uses the separate local DNS service. You can stop the test at any time. Android permission controls and uninstall remain available.</string>
+</resources>
