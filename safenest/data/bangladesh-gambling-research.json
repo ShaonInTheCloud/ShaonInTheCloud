@@ -1,0 +1,84 @@
+{
+  "schema": "safenest-bangladesh-research/1",
+  "reviewed_at": "2026-10-03",
+  "active_domain_evidence": [
+    {
+      "domain": "krikya.pro",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed redirect to Krikia betting destination in Bangladesh-targeted Facebook campaign"
+    },
+    {
+      "domain": "jeetbuzz88.net",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed Jit-baaj betting destination"
+    },
+    {
+      "domain": "babu88d.com",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed Babu88 destination"
+    },
+    {
+      "domain": "bajibdt.online",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed Baji destination"
+    },
+    {
+      "domain": "six6-bd.com",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed Six6BD destination"
+    },
+    {
+      "domain": "six6sbdt.online",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "basis": "Dismislab observed Six6SBDT Online destination"
+    },
+    {
+      "domain": "linebet1.com",
+      "source": "https://www.wipo.int/amc/en/domains/decisions/pdf/2025/d2025-1338.pdf",
+      "basis": "WIPO panel found Bangladesh-targeted gambling landing page and geolocation-dependent redirects; site may change after transfer"
+    },
+    {
+      "domain": "krikya11.live",
+      "source": "https://krikya.io",
+      "basis": "Observed redirect on 2026-10-03 to www.krikya11.live; title advertises Bangladesh casino"
+    },
+    {
+      "domain": "app.krikya.tech",
+      "source": "https://www.krikya11.live/js/app~13afa0e0.2d2fc65b.js",
+      "basis": "Public app download action links to this host; fetched APK manifest package com.krikya.krikya"
+    },
+    {
+      "domain": "baji.com",
+      "source": "https://intercom.help/bajilive/en/articles/16499713-baji-app-download-installation-update-login-complete-guide",
+      "basis": "Baji help centre links official app download page on baji.com"
+    }
+  ],
+  "active_android_package_evidence": [
+    {
+      "package_name": "com.luckygoal.neonpulse",
+      "source": "https://apkpure.net/jaya9/com.luckygoal.neonpulse",
+      "basis": "Listing for Jaya9 describes sports betting and casino; third-party listing, no APK independently inspected"
+    },
+    {
+      "package_name": "com.playcubely.fall",
+      "source": "https://apkpure.net/jeetbuzz/com.playcubely.fall",
+      "basis": "Listing for Jeetbuzz describes live sports betting; third-party listing, no APK independently inspected"
+    }
+  ],
+  "review_only": [
+    {
+      "name": "CID list of 116",
+      "source": "https://www.tbsnews.net/bangladesh/crime/cid-busts-gambling-syndicate-identifies-116-websites-ban-1441786",
+      "reason": "The names of all 116 were not published in the accessible report; do not fabricate them."
+    },
+    {
+      "name": "Facebook redirect and shortened links",
+      "source": "https://en.dismislab.com/how-fake-groom-wanted-posts-drive-facebook-users-to-gambling-sites/",
+      "reason": "Shared redirector domains also send people to nongambling sites, so blocking their root domains could affect unrelated traffic."
+    },
+    {
+      "name": "Babu88/Jaya9/Baji Live namesake APKs",
+      "reason": "Several third-party listings use the same name for puzzle, countdown or virtual-coin apps. Exact package and app purpose need separate evidence."
+    }
+  ]
+}

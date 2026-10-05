@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { nextAccountState, mayShowProfile } from './account-state.js';
+import { entitlementState } from './entitlement-state.js';
 
 const $ = (id) => document.getElementById(id);
 let language = 'en';
@@ -73,6 +74,7 @@ async function start() {
   };
   let revision = 0;
   let observedAuthEvent = false;
+  let entitlementRequest = 0;
   const linkHasError = new URLSearchParams(location.hash.slice(1)).has('error');
 
   function chooseMode(mode) {
@@ -105,9 +107,53 @@ async function start() {
         message('Your profile could not load. Please reload to try again.', 'প্রোফাইল লোড হয়নি। আবার লোড করে চেষ্টা করুন।', true);
       }
       return;
+    } finally {
+      if (mayShowProfile(state, userId, requestRevision, revision)) setBusy($('profile-form'), false);
     }
-    if (mayShowProfile(state, userId, requestRevision, revision)) setBusy($('profile-form'), false);
   }
+
+  function accessMessage(en, bn) {
+    const node = $('access-status');
+    node.dataset.en = en; node.dataset.bn = bn;
+    translate(node);
+  }
+  async function loadAccess(userId, requestRevision) {
+    const requestNumber = ++entitlementRequest;
+    const button = $('refresh-access');
+    button.disabled = true;
+    accessMessage('Checking your subscription…', 'আপনার সাবস্ক্রিপশন যাচাই হচ্ছে…');
+    $('access-period').hidden = true;
+    try {
+      const { data, error } = await client.functions.invoke('protection-access', {
+        body: {}, signal: AbortSignal.timeout(12000)
+      });
+      if (!mayShowProfile(state, userId, requestRevision, revision) || requestNumber !== entitlementRequest) return;
+      const result = error ? { kind: 'unavailable' } : entitlementState(data, userId);
+      if (result.kind === 'active') {
+        accessMessage('Your subscription period is verified.', 'আপনার সাবস্ক্রিপশনের মেয়াদ যাচাই হয়েছে।');
+        const plans = { weekly: ['Weekly', 'সাপ্তাহিক'], monthly: ['Monthly', 'মাসিক'], annual: ['Annual', 'বার্ষিক'] };
+        const end = new Date(result.endsAt);
+        const format = locale => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(end);
+        const node = $('access-period');
+        node.dataset.en = `${plans[result.plan][0]} · Ends ${format('en-GB')} (your local time)`;
+        node.dataset.bn = `${plans[result.plan][1]} · শেষ ${format('bn-BD')} (আপনার স্থানীয় সময়)`;
+        translate(node); node.hidden = false;
+      } else if (result.kind === 'inactive') {
+        accessMessage('No active subscription. Checkout is not open yet.', 'সক্রিয় সাবস্ক্রিপশন নেই। চেকআউট এখনো চালু হয়নি।');
+      } else {
+        accessMessage('Subscription status is unavailable. Please try again.', 'সাবস্ক্রিপশনের অবস্থা জানা যাচ্ছে না। আবার চেষ্টা করুন।');
+      }
+    } catch {
+      if (mayShowProfile(state, userId, requestRevision, revision) && requestNumber === entitlementRequest) {
+        accessMessage('Subscription status is unavailable. Please try again.', 'সাবস্ক্রিপশনের অবস্থা জানা যাচ্ছে না। আবার চেষ্টা করুন।');
+      }
+    } finally {
+      if (mayShowProfile(state, userId, requestRevision, revision) && requestNumber === entitlementRequest) button.disabled = false;
+    }
+  }
+  $('refresh-access').addEventListener('click', () => {
+    if (state.user && state.view === 'account') void loadAccess(state.user.id, revision);
+  });
 
   function showSession(event, session) {
     const previousId = state.user?.id;
@@ -125,6 +171,10 @@ async function start() {
       $('portal-name').textContent = '';
       $('portal-name').hidden = true;
       $('profile-form').reset();
+      entitlementRequest++;
+      $('access-period').hidden = true;
+      $('access-period').textContent = '';
+      accessMessage('', '');
       if (event === 'SIGNED_OUT') {
         document.querySelectorAll('form').forEach(form => form.reset());
         history.replaceState(null, '', accountUrl.pathname);
@@ -140,7 +190,10 @@ async function start() {
         const requestRevision = revision;
         const requestedUserId = state.user.id;
         // Keep Supabase calls outside the auth listener's synchronous lock.
-        setTimeout(() => { void loadProfile(requestedUserId, requestRevision); }, 0);
+        setTimeout(() => {
+          void loadProfile(requestedUserId, requestRevision);
+          void loadAccess(requestedUserId, requestRevision);
+        }, 0);
       }
     }
   }
@@ -240,6 +293,27 @@ async function start() {
     } catch (error) { errorMessage(error); }
     finally { button.disabled = false; }
   }
+  bindForm('delete-form', async ({ password, consent }) => {
+    const currentId = state.user?.id;
+    if (!currentId || consent !== 'on') throw new Error('Confirmation required');
+    const { data: sessionData, error: sessionError } = await client.auth.getSession();
+    if (sessionError || sessionData.session?.user?.id !== currentId) throw new Error('No session');
+    const response = await fetch(new URL('/functions/v1/delete-account', __SUPABASE_URL__), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: __SUPABASE_KEY__, Authorization: `Bearer ${sessionData.session.access_token}` },
+      body: JSON.stringify({ password, confirm: true })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      if (result.code === 'reauthentication_failed') {
+        message('Confirm your current password to delete your account.', 'অ্যাকাউন্ট মুছতে বর্তমান পাসওয়ার্ড নিশ্চিত করুন।', true);
+        return;
+      }
+      throw new Error('Deletion unavailable');
+    }
+    await client.auth.signOut({ scope: 'local' });
+    message('Your account and associated server data have been deleted.', 'আপনার অ্যাকাউন্ট ও সংশ্লিষ্ট সার্ভারের তথ্য মুছে গেছে।');
+  });
   for (const id of ['logout', 'cancel-recovery']) $(id).addEventListener('click', () => { void logout($(id)); });
 
   const { data, error } = await client.auth.getSession();

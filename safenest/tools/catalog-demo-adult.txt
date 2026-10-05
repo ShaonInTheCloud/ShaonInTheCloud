@@ -1,0 +1,2 @@
+# Reserved example domains for publisher testing; not a real adult-content catalog.
+adult.example

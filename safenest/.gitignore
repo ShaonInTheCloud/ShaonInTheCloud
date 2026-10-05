@@ -5,3 +5,11 @@ dist/
 !.env.example
 supabase/.temp/
 supabase/.branches/
+android/.gradle/
+android/.kotlin/
+android/**/build/
+android/local.properties
+*.jks
+*.keystore
+*.apk
+*.aab

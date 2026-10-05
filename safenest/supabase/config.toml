@@ -3,12 +3,16 @@ project_id = "safenest"
 
 [auth]
 enabled = true
-site_url = "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site"
+site_url = "https://mysafenestbd.com"
 additional_redirect_urls = [
   "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html",
   "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html?mode=recovery",
   "https://mysafenestbd.com/account.html",
-  "https://mysafenestbd.com/account.html?mode=recovery"
+  "https://mysafenestbd.com/account.html?mode=recovery",
+  "https://mysafenestbd.com/account",
+  "https://mysafenestbd.com/account?mode=recovery",
+  "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account",
+  "https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account?mode=recovery"
 ]
 enable_signup = true
 minimum_password_length = 10
@@ -21,3 +25,12 @@ double_confirm_changes = true
 # Production Auth settings are not deployed by the GitHub integration by
 # default. Configure these exact settings in the hosted project dashboard.
 # Configure your own SMTP provider in the dashboard before public signups.
+[functions.delete-account]
+verify_jwt = true
+
+[functions.protection-access]
+verify_jwt = true
+
+# Preserve the live function's own authorization model.
+[functions.intelligence]
+verify_jwt = false

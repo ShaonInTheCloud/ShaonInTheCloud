@@ -1,0 +1,952 @@
+You are working on my existing project called SafeNest.
+
+SafeNest is a Bangladesh-focused digital protection platform designed to help users voluntarily protect themselves from online gambling. I want you to implement a production-quality gambling-domain intelligence and blocking system into the EXISTING SafeNest codebase.
+
+IMPORTANT:
+- Inspect the existing project before changing anything.
+- Preserve the current SafeNest UI, branding, authentication, navigation, database structure, and working functionality unless a modification is required.
+- Do not rebuild the project from scratch.
+- Do not create fake/demo functionality where real functionality can be implemented.
+- Test everything you change.
+- Keep a clear record of files, database migrations, APIs, and configuration that you modify.
+
+==================================================
+1. PRIMARY GOAL
+==================================================
+
+Build a continuously maintainable gambling blocklist system focused primarily on gambling services accessible to or targeting users in Bangladesh.
+
+Do NOT depend on one static list of domains.
+
+Gambling operators frequently:
+- change domains
+- create mirror domains
+- create Bangladesh-specific domains
+- change TLDs
+- create mobile subdomains
+- distribute APKs
+- use URL redirects
+- create look-alike domains
+- move infrastructure
+- change IP addresses
+
+Therefore SafeNest must maintain intelligence about gambling BRANDS and DOMAIN FAMILIES rather than only individual URLs.
+
+The system should support:
+
+Layer 1 — Confirmed gambling domains
+Layer 2 — Known mirror/clone domains
+Layer 3 — Gambling brand/alias detection
+Layer 4 — Look-alike/new-domain detection
+Layer 5 — DNS/domain intelligence
+Layer 6 — Page/content classification
+Layer 7 — Android APK/package intelligence where technically available
+Layer 8 — Continuous blocklist updates
+
+==================================================
+2. INITIAL BRAND SEED LIST
+==================================================
+
+Research, verify, normalize and expand gambling services including, but NOT limited to:
+
+1xbet
+1win
+22bet
+4rabet
+888starz
+babu88
+baji
+baji365
+baji777
+baji888
+baji999
+bajilive
+bc.game
+bdbet88
+bet365
+betfair
+betfred
+betjili
+betongame
+betvisa
+betvictor
+betway
+betwinner
+ck444
+crickex
+dafabet
+f999
+jaya9
+jeetbuzz
+jeetwin
+krikya
+linebet
+marvelbet
+mcw
+megapari
+melbet
+mostbet
+mostplay
+nagad88
+netbet
+okbajee
+paddypower
+parimatch
+paripesa
+paripulse
+pin-up
+rajabaji
+six6s
+sportsbet.io
+stake
+takabet
+titanbet
+unibet
+winer
+winwin
+
+IMPORTANT:
+This is only a seed list.
+
+Do extensive defensive research to identify additional gambling/betting/casino domains and mirrors relevant to Bangladesh.
+
+Do not assume a domain is gambling merely because its name resembles one.
+
+Every discovered entry needs provenance and a confidence classification.
+
+==================================================
+3. INITIAL DOMAIN SEEDS
+==================================================
+
+Research and independently verify these initial candidates before production use:
+
+1xbet.com
+1xbetbd.com
+1win.in
+22bet.com
+4rabet.com
+888starz.bet
+babu88.com
+bajilive.net
+bdbet88.com
+bet365.com
+betfair.com
+betfred.com
+betjili.com
+betongame.com
+betvictor.com
+betway.com
+bv88visa.com
+ck444.pro
+dafabet.com
+f999.com
+jaya9.best
+jeetbuzz.com
+krikya.io
+linebet.com
+marvelbet.com
+megapari.com
+melbetbd.net
+mostplaylive.com
+nagad88.com
+netbet.com
+paddypower.com
+paripesa.africa
+paripulse1.com
+pin-up.world
+sportsbet.io
+stake.com
+titanbet.com
+unibet.com
+winwin.bet
+
+Do NOT blindly insert questionable entries into the confirmed production blocklist.
+
+Research each one.
+
+==================================================
+4. CONFIDENCE SYSTEM
+==================================================
+
+Every domain must have one of these states:
+
+CONFIRMED
+HIGH
+SUSPECTED
+MIRROR
+DEAD
+FALSE_POSITIVE
+REVIEW_REQUIRED
+
+CONFIRMED:
+Strong evidence that the domain operates gambling/betting/casino services.
+
+HIGH:
+Multiple reliable indicators strongly suggest gambling.
+
+SUSPECTED:
+Some indicators exist but evidence is insufficient.
+
+MIRROR:
+Known or strongly verified mirror/alternate domain belonging to an identified gambling service.
+
+DEAD:
+Previously relevant gambling domain that no longer resolves/operates.
+
+FALSE_POSITIVE:
+Investigated and determined not to be gambling.
+
+REVIEW_REQUIRED:
+Automated detection found it but human verification is needed.
+
+Only sufficiently high-confidence records should enter the active blocking list automatically.
+
+==================================================
+5. DATABASE
+==================================================
+
+Use the project's existing database. If SafeNest currently uses Supabase/PostgreSQL, integrate this into Supabase instead of introducing another database.
+
+Create appropriate normalized tables such as:
+
+gambling_brands
+----------------
+id
+name
+slug
+category
+country_focus
+risk_level
+active
+created_at
+updated_at
+
+gambling_domains
+----------------
+id
+brand_id
+domain
+registrable_domain
+domain_type
+confidence
+active
+first_seen
+last_seen
+last_verified
+source_count
+notes
+created_at
+updated_at
+
+domain_sources
+----------------
+id
+domain_id
+source_name
+source_url
+source_type
+discovered_at
+last_checked
+evidence_summary
+
+brand_aliases
+----------------
+id
+brand_id
+alias
+normalized_alias
+
+domain_observations
+----------------
+id
+domain_id
+dns_status
+resolved_ips
+redirect_target
+http_status
+classification
+observed_at
+
+blocklist_versions
+----------------
+id
+version
+generated_at
+domain_count
+checksum
+
+Add indexes and unique constraints where appropriate.
+
+Domains must be normalized before storage.
+
+==================================================
+6. DOMAIN NORMALIZATION
+==================================================
+
+Normalize input such as:
+
+HTTPS://WWW.EXAMPLE.COM/path?a=1
+
+into:
+
+example.com
+
+Handle:
+
+http://
+https://
+www.
+uppercase
+paths
+query parameters
+fragments
+trailing dots
+Unicode/IDN domains
+punycode
+subdomains
+
+However, DO NOT discard subdomain information permanently.
+
+Store both:
+
+hostname
+registrable_domain
+
+Example:
+
+casino.example.com
+
+hostname:
+casino.example.com
+
+registrable_domain:
+example.com
+
+Use the Public Suffix List or another reliable equivalent for registrable-domain calculation.
+
+==================================================
+7. BRAND INTELLIGENCE
+==================================================
+
+Do not detect only exact domains.
+
+Maintain brand fingerprints.
+
+Example concept:
+
+brand:
+JEETBUZZ
+
+aliases:
+jeetbuzz
+jeet-buzz
+jeet_buzz
+jeet buzz
+
+If a new suspicious domain appears such as a modified brand domain, the system should be able to flag it for investigation.
+
+Do NOT automatically block arbitrary fuzzy matches because that could block innocent websites.
+
+Use fuzzy detection to create:
+
+REVIEW_REQUIRED
+
+records.
+
+==================================================
+8. LOOK-ALIKE DETECTION
+==================================================
+
+Create defensive detection for domains resembling confirmed gambling brands.
+
+Consider:
+
+Levenshtein distance
+Damerau-Levenshtein distance
+character substitution
+added numbers
+removed characters
+hyphens
+prefixes
+suffixes
+TLD changes
+"bd" additions
+"bangla" additions
+"live"
+"vip"
+"official"
+"app"
+"play"
+"bet"
+"casino"
+
+Example:
+
+confirmed brand:
+examplebet
+
+new domain:
+examplebetbd.tld
+
+This should trigger investigation.
+
+It must NOT automatically be considered confirmed solely from string similarity.
+
+==================================================
+9. REDIRECT INTELLIGENCE
+==================================================
+
+Where legally and technically appropriate, inspect redirects defensively.
+
+Example:
+
+unknown-domain.tld
+→ redirect
+→ known-gambling-domain.tld
+
+Store the relationship.
+
+Do not execute downloads, gambling transactions, authentication, deposits or interactions with gambling services.
+
+This system is for classification/blocking only.
+
+==================================================
+10. CONTENT CLASSIFICATION
+==================================================
+
+Where technically appropriate, analyze publicly accessible page metadata/content for indicators such as:
+
+sports betting
+casino
+slots
+live casino
+jackpot
+odds
+betting
+deposit
+withdraw
+bonus
+sportsbook
+roulette
+blackjack
+baccarat
+
+Also consider Bangla gambling terminology.
+
+Do NOT classify a website solely because one keyword occurs.
+
+Combine multiple signals.
+
+Possible signals:
+
+known brand
+domain similarity
+page title
+metadata
+structured data
+redirect destination
+DNS relationship
+multiple reliable external sources
+gambling-specific terminology
+
+Generate a confidence score internally.
+
+==================================================
+11. BANGLADESH-SPECIFIC INTELLIGENCE
+==================================================
+
+Prioritize sources relevant to Bangladesh.
+
+Research public information from reliable sources including, where available:
+
+BTRC
+Bangladesh government publications
+Bangladesh Police
+CID
+Cyber Crime Investigation Division
+court/government documents
+reputable Bangladeshi newspapers
+reputable international security/blocklist sources
+
+Record source URLs and dates.
+
+Do not treat random SEO gambling affiliate websites as authoritative evidence.
+
+Affiliate websites can be used as discovery signals, but require independent verification.
+
+==================================================
+12. BLOCKLIST GENERATION
+==================================================
+
+Generate optimized blocklists from the database.
+
+Create outputs suitable for:
+
+SafeNest internal filtering
+DNS filtering
+hostname matching
+server/API consumption
+
+For example:
+
+/api/blocklist
+
+Return something similar to:
+
+{
+  "version": "2026.x.x",
+  "generated_at": "...",
+  "domains": [...]
+}
+
+Also support incremental updates:
+
+/api/blocklist/delta?since=<version>
+
+so clients don't need to download the complete database every time.
+
+==================================================
+13. CLIENT LOOKUP API
+==================================================
+
+Create an efficient endpoint/function such as:
+
+checkDomain(domain)
+
+Expected result:
+
+{
+  "blocked": true,
+  "domain": "example.com",
+  "brand": "ExampleBet",
+  "confidence": "CONFIRMED",
+  "category": "gambling",
+  "reason": "Known gambling domain",
+  "blocklist_version": "..."
+}
+
+Make this extremely fast.
+
+Do not expose unnecessary internal intelligence or administrative information to ordinary clients.
+
+==================================================
+14. LOCAL BLOCKING PERFORMANCE
+==================================================
+
+SafeNest should NOT make a remote database request for every network connection.
+
+Maintain a signed/versioned local blocklist on the client.
+
+Use an efficient lookup structure such as:
+
+hash set
+
+or another suitable structure.
+
+Target near-O(1) known-domain lookup.
+
+Flow:
+
+network request
+↓
+normalize hostname
+↓
+local blocklist lookup
+↓
+BLOCK if confirmed
+↓
+ALLOW if not listed
+↓
+optional asynchronous intelligence processing
+
+Do not introduce noticeable browsing latency.
+
+==================================================
+15. SUBDOMAIN BLOCKING
+==================================================
+
+If:
+
+examplebet.com
+
+is confirmed gambling, SafeNest should normally block:
+
+www.examplebet.com
+m.examplebet.com
+casino.examplebet.com
+sports.examplebet.com
+
+without needing four separate records.
+
+But be careful with hosting platforms/shared domains where blocking the parent would affect unrelated services.
+
+==================================================
+16. FALSE-POSITIVE PROTECTION
+==================================================
+
+False positives are extremely important.
+
+Never automatically block a domain merely because it contains words such as:
+
+bet
+casino
+stake
+game
+play
+win
+
+These can appear in legitimate domains.
+
+Use evidence-based classification.
+
+Provide an administrative review mechanism.
+
+==================================================
+17. ADMIN DASHBOARD
+==================================================
+
+Add a SafeNest admin section for gambling intelligence.
+
+Show:
+
+Total active blocked domains
+Confirmed domains
+Mirrors
+Suspected domains
+Review required
+Dead domains
+New domains discovered
+Last blocklist update
+
+Provide search/filtering by:
+
+domain
+brand
+confidence
+status
+date
+source
+
+Allow authorized admins to:
+
+confirm
+reject
+disable
+mark false positive
+mark dead
+assign brand
+add evidence
+add domain
+add alias
+
+Protect this with proper authorization/RLS.
+
+Normal users must NEVER receive administrative privileges.
+
+==================================================
+18. SUPABASE SECURITY
+==================================================
+
+If Supabase is being used:
+
+Create proper migrations.
+
+Enable Row Level Security.
+
+Public/client users should only be able to retrieve the minimum information necessary for blocking.
+
+Administrative modification must require authorized roles.
+
+Never expose:
+
+service_role key
+database credentials
+private API keys
+
+inside frontend JavaScript or mobile applications.
+
+Use server-side/Edge Functions for privileged operations.
+
+==================================================
+19. AUTOMATED UPDATE PIPELINE
+==================================================
+
+Implement an update pipeline.
+
+Conceptually:
+
+Trusted feeds
+       ↓
+Bangladesh sources
+       ↓
+Domain discovery
+       ↓
+Normalization
+       ↓
+Deduplication
+       ↓
+Brand matching
+       ↓
+Confidence analysis
+       ↓
+False-positive checks
+       ↓
+Database
+       ↓
+Blocklist generator
+       ↓
+Signed/versioned blocklist
+       ↓
+SafeNest clients
+
+Run updates periodically rather than requiring application releases.
+
+==================================================
+20. DEDUPLICATION
+==================================================
+
+These must not become separate duplicates:
+
+https://example.com
+http://example.com/
+www.example.com
+EXAMPLE.COM
+example.com/?ref=123
+
+Canonicalize appropriately.
+
+Keep relevant hostname/subdomain observations separately when needed.
+
+==================================================
+21. BLOCKING REASON
+==================================================
+
+When SafeNest blocks something, present a simple user-facing message.
+
+Example:
+
+SafeNest blocked this gambling website.
+
+You enabled gambling protection to help maintain your commitment.
+
+Do not show gambling advertisements, promotional copy, odds, bonuses or affiliate material on the block screen.
+
+==================================================
+22. PRIVACY
+==================================================
+
+Design SafeNest with privacy in mind.
+
+Avoid storing complete browsing histories.
+
+Prefer local domain matching.
+
+Do not upload every website a user visits.
+
+If telemetry is required, minimize and anonymize it appropriately and make its purpose clear.
+
+Do not store URL paths/query parameters unless strictly necessary for security functionality.
+
+==================================================
+23. BLOCKLIST INTEGRITY
+==================================================
+
+The client must be able to verify that downloaded blocklists genuinely came from SafeNest.
+
+Implement signed blocklist releases or another appropriate cryptographic integrity mechanism.
+
+Reject corrupted or invalid updates.
+
+Support rollback to the last known-good blocklist if an update fails.
+
+==================================================
+24. OFFLINE PROTECTION
+==================================================
+
+Protection should continue working when the SafeNest API/database is temporarily unavailable.
+
+Store the latest valid blocklist locally.
+
+Network outage must not automatically disable gambling protection.
+
+==================================================
+25. FAIL-SAFE BEHAVIOR
+==================================================
+
+If a new blocklist download fails:
+
+KEEP the previous valid blocklist.
+
+Do NOT replace it with an empty list.
+
+Do NOT silently disable protection.
+
+==================================================
+26. TESTING
+==================================================
+
+Create automated tests for:
+
+domain normalization
+subdomain handling
+IDN/punycode handling
+brand aliases
+duplicate detection
+known-domain lookup
+false positives
+blocklist generation
+blocklist versioning
+signature verification
+database permissions
+API authorization
+offline fallback
+failed-update fallback
+
+Test representative confirmed gambling domains only in a defensive/non-transactional manner.
+
+==================================================
+27. PERFORMANCE
+==================================================
+
+The gambling-domain database may eventually contain hundreds of thousands or millions of observations.
+
+Design the architecture accordingly.
+
+Do not repeatedly perform expensive fuzzy matching during ordinary browsing.
+
+Known-domain blocking should use the optimized local blocklist.
+
+Expensive classification belongs in the intelligence/update pipeline.
+
+==================================================
+28. IMPORTANT ARCHITECTURAL DISTINCTION
+==================================================
+
+Separate:
+
+BLOCKING ENGINE
+
+from:
+
+THREAT/GAMBLING INTELLIGENCE ENGINE.
+
+The blocking engine needs to be:
+
+fast
+small
+deterministic
+offline-capable
+
+The intelligence system can perform:
+
+research
+classification
+domain discovery
+similarity analysis
+DNS analysis
+source verification
+
+and periodically publish a clean blocklist to clients.
+
+==================================================
+29. DO NOT CLAIM PERFECT BLOCKING
+==================================================
+
+Do not claim SafeNest can block 100% of gambling websites.
+
+Operators can introduce previously unseen infrastructure.
+
+Instead design SafeNest so new domains can be discovered and distributed rapidly.
+
+==================================================
+30. IMPLEMENTATION ORDER
+==================================================
+
+Work in this order:
+
+PHASE 1
+Inspect the existing SafeNest architecture.
+
+PHASE 2
+Document how its current protection/networking system works.
+
+PHASE 3
+Design database schema and migrations.
+
+PHASE 4
+Create gambling brand/domain intelligence database.
+
+PHASE 5
+Research and verify the initial Bangladesh-focused dataset.
+
+PHASE 6
+Implement normalization and deduplication.
+
+PHASE 7
+Implement blocklist generation.
+
+PHASE 8
+Implement local high-performance lookup.
+
+PHASE 9
+Integrate it into SafeNest's existing protection engine.
+
+PHASE 10
+Implement update/versioning/signature system.
+
+PHASE 11
+Create admin intelligence dashboard.
+
+PHASE 12
+Add automated discovery/review pipeline.
+
+PHASE 13
+Write tests.
+
+PHASE 14
+Run the project and test the complete flow.
+
+==================================================
+31. BEFORE MODIFYING CODE
+==================================================
+
+First inspect:
+
+project structure
+package.json / dependencies
+frontend framework
+backend framework
+Supabase configuration
+database migrations
+authentication
+existing SafeNest protection logic
+existing VPN/DNS/network code
+deployment configuration
+
+Then give me a concise implementation plan.
+
+After that, implement it rather than stopping at recommendations.
+
+==================================================
+32. FINAL DELIVERABLE
+==================================================
+
+When implementation is complete, report:
+
+1. Architecture implemented
+2. Files changed
+3. Database tables/migrations created
+4. Number of brands researched
+5. Number of confirmed domains
+6. Number of mirrors
+7. Number requiring review
+8. Sources used
+9. API endpoints/functions created
+10. Blocking algorithm
+11. Blocklist update mechanism
+12. Security/RLS implemented
+13. Tests performed
+14. Remaining limitations
+15. Recommended next engineering step
+
+The end result should turn SafeNest's gambling protection from a small static blacklist into a maintainable Bangladesh-focused gambling-domain intelligence and blocking platform.

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safenest.example/schemas/rule-list-v1.json",
+  "title": "SafeNest local domain rules",
+  "type": "object",
+  "required": ["version", "domains"],
+  "properties": {
+    "version": { "const": 1 },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["domain", "category"],
+        "properties": {
+          "domain": { "type": "string", "minLength": 3, "maxLength": 253 },
+          "category": { "enum": ["gambling", "adult", "custom"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

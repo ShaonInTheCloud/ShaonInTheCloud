@@ -187,3 +187,12 @@ Hosted verification on 24 September 2026: `public.profiles` exists with RLS
 and three owner-scoped policies; anonymous SELECT and authenticated owner-ID
 UPDATE grants are absent; Supabase Security Advisor reports no lints. The historical check above predates the owner-controlled live test on
 5 October 2026; it does not imply that recovery/password-login are verified.
+# SafeNest release workspace
+
+The canonical launch tracker is [docs/market-launch-checklist.md](docs/market-launch-checklist.md). This repository now contains the website source, Android app, catalogues, applied database migrations and backend functions.
+
+`npm ci`, `npm test`, `npm run build` validate and build the website/account pages. `sh run-core-tests.sh` exercises the independent network/rule/signature checks. Android Gradle builds live in `android/`; use the `play` or `direct` flavor explicitly. New source is 0.4.2/code 19; an unsigned AAB or CI debug APK is not a market-ready release.
+
+The Play flavor leaves uninstall/permission controls available, keeps browsers open and serves existing accounts without an in-app checkout. The direct development flavor retains separate system-screen/managed-device experiments. Final payment setup, signing, physical-device QA and Play Console submission remain required.
+
+The notes below describe the earlier account-only repository and are retained for setup history.

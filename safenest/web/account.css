@@ -68,3 +68,7 @@ footer { max-width:900px; margin:auto; padding:24px 32px 40px; color:var(--muted
 .download-details p { color:var(--muted); }
 summary:focus-visible { outline:3px solid var(--rose); outline-offset:4px; }
 @media (max-width:760px) { .portal-open main{padding:0 16px}.portal-open .card{padding:20px}.portal-grid{grid-template-columns:1fr}.portal-panel{padding:22px}.installation-steps{grid-template-columns:1fr;gap:20px}.portal-nav a{flex:1;min-width:120px}.portal-heading{align-items:start} }
+/* Account deletion uses a separate, explicit confirmation. */
+.deletion-consent { display: flex; align-items: flex-start; gap: .75rem; }
+.deletion-consent input { width: auto; margin-top: .25rem; }
+.legal-links { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; }

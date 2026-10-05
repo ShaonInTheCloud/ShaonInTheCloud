@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-28T00:00:00Z",
+  "domains": [
+    { "domain": "bet365.com", "category": "gambling" },
+    { "domain": "stake.com", "category": "gambling" },
+    { "domain": "pornhub.com", "category": "adult" },
+    { "domain": "xvideos.com", "category": "adult" },
+    { "domain": "adult-demo.example", "category": "adult" },
+    { "domain": "my-trigger-site.com", "category": "custom" }
+  ]
+}

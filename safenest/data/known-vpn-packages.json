@@ -1,0 +1,81 @@
+{
+  "verified_at": "2026-10-03",
+  "scope": "Representative VPN apps usable globally; Bangladesh popularity was not measured. Exact Android package IDs, not hostnames.",
+  "apps": [
+    {
+      "name": "NordVPN",
+      "package_name": "com.nordvpn.android",
+      "source_url": "https://play.google.com/store/apps/details?id=com.nordvpn.android"
+    },
+    {
+      "name": "Surfshark",
+      "package_name": "com.surfshark.vpnclient.android",
+      "source_url": "https://play.google.com/store/apps/details?id=com.surfshark.vpnclient.android"
+    },
+    {
+      "name": "ExpressVPN",
+      "package_name": "com.expressvpn.vpn",
+      "source_url": "https://play.google.com/store/apps/details?id=com.expressvpn.vpn"
+    },
+    {
+      "name": "Proton VPN",
+      "package_name": "ch.protonvpn.android",
+      "source_url": "https://play.google.com/store/apps/details?id=ch.protonvpn.android"
+    },
+    {
+      "name": "Psiphon",
+      "package_name": "com.psiphon3",
+      "source_url": "https://play.google.com/store/apps/details?id=com.psiphon3"
+    },
+    {
+      "name": "Psiphon Pro",
+      "package_name": "com.psiphon3.subscription",
+      "source_url": "https://play.google.com/store/apps/details?id=com.psiphon3.subscription"
+    },
+    {
+      "name": "Turbo VPN",
+      "package_name": "free.vpn.unblock.proxy.turbovpn",
+      "source_url": "https://play.google.com/store/apps/details?id=free.vpn.unblock.proxy.turbovpn"
+    },
+    {
+      "name": "Thunder VPN",
+      "package_name": "com.fast.free.unblock.thunder.vpn",
+      "source_url": "https://play.google.com/store/apps/details?id=com.fast.free.unblock.thunder.vpn"
+    },
+    {
+      "name": "SuperVPN",
+      "package_name": "com.jrzheng.supervpnfree",
+      "source_url": "https://play.google.com/store/apps/details?id=com.jrzheng.supervpnfree"
+    },
+    {
+      "name": "Windscribe",
+      "package_name": "com.windscribe.vpn",
+      "source_url": "https://play.google.com/store/apps/details?id=com.windscribe.vpn"
+    },
+    {
+      "name": "TunnelBear",
+      "package_name": "com.tunnelbear.android",
+      "source_url": "https://play.google.com/store/apps/details?id=com.tunnelbear.android"
+    },
+    {
+      "name": "Cloudflare WARP",
+      "package_name": "com.cloudflare.onedotonedotonedotone",
+      "source_url": "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
+    },
+    {
+      "name": "Hotspot Shield",
+      "package_name": "hotspotshield.android.vpn",
+      "source_url": "https://play.google.com/store/apps/details?id=hotspotshield.android.vpn"
+    },
+    {
+      "name": "Private Internet Access",
+      "package_name": "com.privateinternetaccess.android",
+      "source_url": "https://play.google.com/store/apps/details?id=com.privateinternetaccess.android"
+    },
+    {
+      "name": "CyberGhost",
+      "package_name": "de.mobileconcepts.cyberghost",
+      "source_url": "https://play.google.com/store/apps/details?id=de.mobileconcepts.cyberghost"
+    }
+  ]
+}

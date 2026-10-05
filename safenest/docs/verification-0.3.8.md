@@ -1,0 +1,7 @@
+# SafeNest 0.3.8 verification and limits
+
+The packaged Android source includes 3,983 hostsVN entries and 2,690 Sinfonietta entries, 6,673 distinct hostnames in total. The import test validates count, uniqueness and hostname syntax. Country domains are separate entries: `1xbet.fi` is explicitly included; `1xbet.*` is not a rule. User-added rules take priority in the finite managed Chrome policy budget.
+
+Run `npm test` inside `intelligence/` and `./gradlew testDebugUnitTest assembleDebug` inside `android/` after installing the Android SDK. Install the resulting APK on a test phone and test ordinary browsing, a listed domain, a newly added personal domain, subdomains and an unrelated lookalike. Check `chrome://policy` when managed Chrome is in use. A Gradle build and physical-device network test have not run in this workspace because Android SDK and cached Gradle plugins are unavailable.
+
+These feeds are snapshots, not exhaustive or individually verified classifications. The DNS matcher sees queries that travel through SafeNest's VPN service. Another VPN can replace it on a personal device, and browser Secure DNS, proxies, existing connections and direct IP traffic may bypass DNS filtering. Android Device Owner enrollment is a separate managed-device process; paying for a subscription cannot grant it. Do not advertise universal VPN-resistant blocking or impossible removal based on this list update.

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" role="img" aria-labelledby="t d">
+  <title id="t">upay | উপায়</title><desc id="d">upay mobile financial service mark</desc>
+  <path d="M50 10v34a25 25 0 0 0 50 0V10" fill="none" stroke="#f8c32c" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M86 10v34a25 25 0 0 0 50 0V10" fill="none" stroke="#2b7ac1" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="120" y="89" text-anchor="middle" fill="#202020" font-family="Arial,sans-serif" font-size="27" font-weight="700">upay</text>
+  <text x="120" y="111" text-anchor="middle" fill="#202020" font-family="Noto Sans Bengali,sans-serif" font-size="16" font-weight="600">উপায়</text>
+</svg>

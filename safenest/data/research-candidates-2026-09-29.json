@@ -1,0 +1,557 @@
+{
+  "schema": "safenest-research-candidates/1",
+  "created_at": "2026-09-29",
+  "purpose": "Review queue, deliberately not an importable active blocklist. Verify before production publication.",
+  "candidates": [
+    {
+      "hostname": "bet365.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "stake.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "1xbet.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betway.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "parimatch.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "dafabet.com",
+      "claimed_category": "gambling",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "1xbetbd.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "1win.in",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "22bet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "4rabet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "888starz.bet",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "babu88.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "bajilive.net",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "bc.game",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "bdbet88.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betfair.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betfred.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betjili.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betongame.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "betvictor.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "bv88visa.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "ck444.pro",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "f999.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "facai777.net",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "jaya9.best",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "jeetbuzz.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "jwbangla88.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "krikya.io",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "linebet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "marvelbet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "megapari.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "melbetbd.net",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "mostplaylive.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "nagad88.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "netbet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "paddypower.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "paripesa.africa",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "paripulse1.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "pin-up.world",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "pbc888.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "sportsbet.io",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "titanbet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "unibet.com",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "winwin.bet",
+      "claimed_category": "gambling",
+      "provided_source": "research-seed",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "pornhub.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "xvideos.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "xnxx.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "xhamster.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "redtube.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "youporn.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "spankbang.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "chaturbate.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "livejasmin.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    },
+    {
+      "hostname": "onlyfans.com",
+      "claimed_category": "adult",
+      "provided_source": "curated",
+      "confidence": "REVIEW_REQUIRED",
+      "active": false,
+      "source_name": "User-supplied candidate list, 2026-09-29",
+      "source_url": null,
+      "notes": "Not independently verified in this update. The provided source label is not verification evidence."
+    }
+  ],
+  "excluded_placeholders": [
+    {
+      "hostname": "adult-demo.example",
+      "reason": "Reserved demonstration domain."
+    },
+    {
+      "hostname": "my-trigger-site.com",
+      "reason": "Example custom entry; requires an actual user-selected hostname."
+    }
+  ]
+}

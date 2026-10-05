@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 120" role="img" aria-labelledby="t d">
+  <title id="t">Dutch-Bangla Bank DBBL Wallet</title><desc id="d">Dutch-Bangla Bank mark and DBBL Wallet wordmark</desc>
+  <path d="M14 14h34c-6 12-6 25 0 37H14c-8-12-8-25 0-37Z" fill="#2364a2"/>
+  <path d="M26 40h46c-7 13-7 25 0 38H26c-8-12-8-25 0-38Z" fill="#d33b47"/>
+  <path d="M14 67h34c-6 12-6 25 0 37H14c-8-12-8-25 0-37Z" fill="#319766"/>
+  <text x="83" y="55" fill="#273548" font-family="Arial,sans-serif" font-size="27" font-weight="700">DBBL</text>
+  <text x="83" y="84" fill="#273548" font-family="Arial,sans-serif" font-size="18" font-weight="600">WALLET</text>
+  <text x="83" y="103" fill="#596577" font-family="Arial,sans-serif" font-size="9">DUTCH-BANGLA BANK</text>
+</svg>

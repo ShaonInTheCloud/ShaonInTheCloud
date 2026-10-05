@@ -66,6 +66,13 @@
           <a href="#installation" data-en="Installation guide" data-bn="ইনস্টল করার নির্দেশিকা">Installation guide</a>
         </nav>
         <div class="portal-grid">
+        <section class="portal-panel" id="subscription" aria-labelledby="subscription-title">
+          <h2 id="subscription-title" data-en="My subscription" data-bn="আমার সাবস্ক্রিপশন">My subscription</h2>
+          <p id="access-status" role="status" aria-live="polite"></p>
+          <p id="access-period" hidden></p>
+          <p class="note" data-en="This shows your account’s subscription. Check the SafeNest app on your phone to see whether device protection is running. Saving your profile does not activate protection." data-bn="এখানে আপনার অ্যাকাউন্টের সাবস্ক্রিপশন দেখায়। ফোনে সুরক্ষা চলছে কি না SafeNest অ্যাপে দেখুন। প্রোফাইল সংরক্ষণ করলে সুরক্ষা চালু হয় না।">This shows your account’s subscription. Check the SafeNest app on your phone to see whether device protection is running. Saving your profile does not activate protection.</p>
+          <button type="button" class="text-button" id="refresh-access" data-en="Refresh subscription status" data-bn="সাবস্ক্রিপশনের অবস্থা আবার দেখুন">Refresh subscription status</button>
+        </section>
         <section class="portal-panel" id="profile" aria-labelledby="profile-title">
         <h2 id="profile-title" data-en="My profile" data-bn="আমার প্রোফাইল">My profile</h2>
         <form id="profile-form">
@@ -98,6 +105,15 @@
         </section>
         </div>
         <button class="text-button" type="button" id="logout" data-en="Log out on this device" data-bn="এই ডিভাইসে লগআউট করুন">Log out on this device</button>
+        <details class="download-details" id="delete-account">
+          <summary data-en="Delete my SafeNest account" data-bn="আমার SafeNest অ্যাকাউন্ট মুছুন">Delete my SafeNest account</summary>
+          <p class="note" data-en="This permanently deletes your account, profile and server protection entitlement. It does not uninstall the app or immediately erase local device lists. If billing becomes active, cancel renewal through your payment provider separately." data-bn="এতে অ্যাকাউন্ট, প্রোফাইল ও সার্ভারের সুরক্ষার অনুমতি স্থায়ীভাবে মুছবে। অ্যাপ বা ফোনের স্থানীয় তালিকা সঙ্গে সঙ্গে মুছবে না। বিলিং চালু হলে পেমেন্ট সেবায় নবায়ন আলাদাভাবে বাতিল করুন।">This permanently deletes your account, profile and server protection entitlement. It does not uninstall the app or immediately erase local device lists. If billing becomes active, cancel renewal through your payment provider separately.</p>
+          <form id="delete-form">
+            <label><span data-en="Confirm your current password" data-bn="বর্তমান পাসওয়ার্ড দিয়ে নিশ্চিত করুন">Confirm your current password</span><input name="password" type="password" autocomplete="current-password" required maxlength="1024"></label>
+            <label class="deletion-consent"><input name="consent" type="checkbox" required><span data-en="I understand this permanently deletes my account and associated server data." data-bn="আমি বুঝেছি, অ্যাকাউন্ট ও সংশ্লিষ্ট সার্ভারের তথ্য স্থায়ীভাবে মুছে যাবে।">I understand this permanently deletes my account and associated server data.</span></label>
+            <button class="primary" type="submit" data-en="Permanently delete my account" data-bn="আমার অ্যাকাউন্ট স্থায়ীভাবে মুছুন">Permanently delete my account</button>
+          </form>
+        </details>
       </div>
       <div id="recovery" hidden>
         <form id="recovery-form">
@@ -112,6 +128,7 @@
     </section>
   </main>
   <footer><p data-en="Account privacy: Supabase processes your email, password and session. Your profile stores your optional name and language. This page stores a login session on this device and does not collect browsing history." data-bn="অ্যাকাউন্টের গোপনীয়তা: Supabase আপনার ইমেইল, পাসওয়ার্ড ও সেশন পরিচালনা করে। প্রোফাইলে ঐচ্ছিক নাম ও ভাষা থাকে। এই পেজ ডিভাইসে লগইন সেশন সংরক্ষণ করে; ব্রাউজিং ইতিহাস সংগ্রহ করে না।">Account privacy: Supabase processes your email, password and session. Your profile stores your optional name and language. This page stores a login session on this device and does not collect browsing history.</p></footer>
+  <nav class="legal-links" aria-label="Account information"><a href="privacy.html">Privacy / গোপনীয়তা</a><a href="terms.html">Terms / শর্তাবলি</a><a href="delete-account.html">Account deletion / অ্যাকাউন্ট মুছুন</a></nav>
   <script type="module" src="account.js"></script>
 </body>
 </html>

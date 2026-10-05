@@ -1,0 +1,434 @@
+[
+  {
+    "domain": "bet365.com",
+    "observed_at": "2026-09-29T09:30:07.853Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN bet365.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "1xbet.com",
+    "observed_at": "2026-09-29T09:30:07.857Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 1xbet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "stake.com",
+    "observed_at": "2026-09-29T09:30:07.858Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN stake.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betway.com",
+    "observed_at": "2026-09-29T09:30:07.858Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betway.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "parimatch.com",
+    "observed_at": "2026-09-29T09:30:07.866Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN parimatch.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "dafabet.com",
+    "observed_at": "2026-09-29T09:30:07.866Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN dafabet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "1xbetbd.com",
+    "observed_at": "2026-09-29T09:30:07.867Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 1xbetbd.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "1win.in",
+    "observed_at": "2026-09-29T09:30:07.867Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 1win.in",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "22bet.com",
+    "observed_at": "2026-09-29T09:30:07.867Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 22bet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "4rabet.com",
+    "observed_at": "2026-09-29T09:30:07.868Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 4rabet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "888starz.bet",
+    "observed_at": "2026-09-29T09:30:07.868Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN 888starz.bet",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "babu88.com",
+    "observed_at": "2026-09-29T09:30:07.869Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN babu88.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "bajilive.net",
+    "observed_at": "2026-09-29T09:30:07.869Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN bajilive.net",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "bc.game",
+    "observed_at": "2026-09-29T09:30:07.870Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN bc.game",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "bdbet88.com",
+    "observed_at": "2026-09-29T09:30:07.871Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN bdbet88.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betfair.com",
+    "observed_at": "2026-09-29T09:30:07.871Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betfair.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betfred.com",
+    "observed_at": "2026-09-29T09:30:07.871Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betfred.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betjili.com",
+    "observed_at": "2026-09-29T09:30:07.871Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betjili.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betongame.com",
+    "observed_at": "2026-09-29T09:30:07.871Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betongame.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "betvictor.com",
+    "observed_at": "2026-09-29T09:30:07.872Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN betvictor.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "bv88visa.com",
+    "observed_at": "2026-09-29T09:30:07.872Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN bv88visa.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "ck444.pro",
+    "observed_at": "2026-09-29T09:30:07.872Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN ck444.pro",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "f999.com",
+    "observed_at": "2026-09-29T09:30:07.872Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN f999.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "facai777.net",
+    "observed_at": "2026-09-29T09:30:07.873Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN facai777.net",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "jaya9.best",
+    "observed_at": "2026-09-29T09:30:07.873Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN jaya9.best",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "jeetbuzz.com",
+    "observed_at": "2026-09-29T09:30:07.873Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN jeetbuzz.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "jwbangla88.com",
+    "observed_at": "2026-09-29T09:30:07.873Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN jwbangla88.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "krikya.io",
+    "observed_at": "2026-09-29T09:30:07.874Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN krikya.io",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "linebet.com",
+    "observed_at": "2026-09-29T09:30:07.874Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN linebet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "marvelbet.com",
+    "observed_at": "2026-09-29T09:30:07.874Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN marvelbet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "megapari.com",
+    "observed_at": "2026-09-29T09:30:07.874Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN megapari.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "melbetbd.net",
+    "observed_at": "2026-09-29T09:30:07.875Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN melbetbd.net",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "mostplaylive.com",
+    "observed_at": "2026-09-29T09:30:07.875Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN mostplaylive.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "nagad88.com",
+    "observed_at": "2026-09-29T09:30:07.875Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN nagad88.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "netbet.com",
+    "observed_at": "2026-09-29T09:30:07.876Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN netbet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "paddypower.com",
+    "observed_at": "2026-09-29T09:30:07.876Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN paddypower.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "paripesa.africa",
+    "observed_at": "2026-09-29T09:30:07.876Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN paripesa.africa",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "paripulse1.com",
+    "observed_at": "2026-09-29T09:30:07.877Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN paripulse1.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "pin-up.world",
+    "observed_at": "2026-09-29T09:30:07.877Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN pin-up.world",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "sportsbet.io",
+    "observed_at": "2026-09-29T09:30:07.877Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN sportsbet.io",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "pbc888.com",
+    "observed_at": "2026-09-29T09:30:07.878Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN pbc888.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "titanbet.com",
+    "observed_at": "2026-09-29T09:30:07.878Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN titanbet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "unibet.com",
+    "observed_at": "2026-09-29T09:30:07.878Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN unibet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "winwin.bet",
+    "observed_at": "2026-09-29T09:30:07.879Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN winwin.bet",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "jackpotcity.co.uk",
+    "observed_at": "2026-09-29T09:30:07.879Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN jackpotcity.co.uk",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "jackpotcitycasino.co.uk",
+    "observed_at": "2026-09-29T09:30:07.879Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN jackpotcitycasino.co.uk",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "spincasino.co.uk",
+    "observed_at": "2026-09-29T09:30:07.879Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN spincasino.co.uk",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  },
+  {
+    "domain": "melbet.com",
+    "observed_at": "2026-09-29T09:30:07.879Z",
+    "dns_status": "probe_failed",
+    "classification": {
+      "error": "getaddrinfo EAI_AGAIN melbet.com",
+      "confidence": "REVIEW_REQUIRED"
+    }
+  }
+]

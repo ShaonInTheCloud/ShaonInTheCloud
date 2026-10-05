@@ -1,0 +1,103 @@
+{
+  "reviewed_at": "2026-10-03",
+  "scope": "Exact identifiers only, not all apps or every APK variant. Publisher signing identity not independently verified. No downloaded APK was executed or distributed.",
+  "packages": [
+    {
+      "name": "Krikya",
+      "package_name": "com.krikya.krikya",
+      "evidence": "downloaded_apk_manifest",
+      "sources": [
+        "https://krikya.io",
+        "https://www.krikya11.live/js/app~13afa0e0.2d2fc65b.js",
+        "https://app.krikya.tech"
+      ],
+      "apk_sha256": "b7c639623f1fac1dd55f611b4c2ccd5d58072030f45bbaca41cb1bd4964bcb65",
+      "version_name": "1.1"
+    },
+    {
+      "name": "Baji",
+      "package_name": "com.application.yongbao.bj",
+      "evidence": "downloaded_apk_manifest",
+      "sources": [
+        "https://intercom.help/bajilive/en/articles/16499713-baji-app-download-installation-update-login-complete-guide",
+        "https://img.81j1.com/download/bj/bj.apk?t=1766455134625"
+      ],
+      "apk_sha256": "4a8d43151be7856cf0160bf8e61c129a00a91f351e1ae936e82e5bc250ee89d7",
+      "version_name": "1.35"
+    },
+    {
+      "name": "1xBet",
+      "package_name": "org.xbet.client1",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://www.hybrid-analysis.com/sample/8c28d3ab1c0a214546a936eabe70717cf7ee765e21f6e69bc077b8c4b29ade53?environmentId=200"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "22Bet",
+      "package_name": "org.bet22.client",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://22bet-app.en.uptodown.com/android"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "Linebet",
+      "package_name": "org.linebet.client",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://linebet.en.uptodown.com/android"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "MelBet",
+      "package_name": "org.melbet.client",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://melbet.en.uptodown.com/android"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "Mostbet",
+      "package_name": "com.ads.mostbet",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://mostbet.en.uptodown.com/android/download"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "Megapari",
+      "package_name": "org.megapari.client",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://megapari.en.uptodown.com/android/download"
+      ],
+      "independently_downloaded": false
+    },
+    {
+      "name": "Jaya9 listing",
+      "package_name": "com.luckygoal.neonpulse",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://apkpure.net/jaya9/com.luckygoal.neonpulse"
+      ],
+      "independently_downloaded": false,
+      "notes": "Listing for Jaya9 describes sports betting and casino; third-party listing, no APK independently inspected"
+    },
+    {
+      "name": "Jeetbuzz listing",
+      "package_name": "com.playcubely.fall",
+      "evidence": "third_party_package_record",
+      "sources": [
+        "https://apkpure.net/jeetbuzz/com.playcubely.fall"
+      ],
+      "independently_downloaded": false,
+      "notes": "Listing for Jeetbuzz describes live sports betting; third-party listing, no APK independently inspected"
+    }
+  ]
+}

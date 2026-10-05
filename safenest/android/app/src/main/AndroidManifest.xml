@@ -1,0 +1,79 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <queries>
+        <package android:name="com.krikya.krikya" />
+        <package android:name="com.application.yongbao.bj" />
+        <package android:name="org.xbet.client1" />
+        <package android:name="org.bet22.client" />
+        <package android:name="org.linebet.client" />
+        <package android:name="org.melbet.client" />
+        <package android:name="com.ads.mostbet" />
+        <package android:name="org.megapari.client" />
+        <package android:name="com.luckygoal.neonpulse" />
+        <package android:name="com.playcubely.fall" />
+        <package android:name="com.nordvpn.android" />
+        <package android:name="com.surfshark.vpnclient.android" />
+        <package android:name="com.expressvpn.vpn" />
+        <package android:name="ch.protonvpn.android" />
+        <package android:name="com.psiphon3" />
+        <package android:name="com.psiphon3.subscription" />
+        <package android:name="free.vpn.unblock.proxy.turbovpn" />
+        <package android:name="com.fast.free.unblock.thunder.vpn" />
+        <package android:name="com.jrzheng.supervpnfree" />
+        <package android:name="com.windscribe.vpn" />
+        <package android:name="com.tunnelbear.android" />
+        <package android:name="com.cloudflare.onedotonedotonedotone" />
+        <package android:name="hotspotshield.android.vpn" />
+        <package android:name="com.privateinternetaccess.android" />
+        <package android:name="de.mobileconcepts.cyberghost" />
+
+        <intent><action android:name="android.net.VpnService" /></intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <intent><action android:name="android.intent.action.DIAL" /></intent>
+    </queries>
+    <application android:name=".SafeNestApplication" android:allowBackup="false" android:label="@string/app_name" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="false">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name=".CatalogUpdateJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="true" />
+        <service android:name=".CommitmentExpiryJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="true" />
+        <service android:name=".SafeNestVpnService" android:permission="android.permission.BIND_VPN_SERVICE" android:exported="true" android:foregroundServiceType="specialUse">
+            <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
+            <meta-data android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON" android:value="true" />
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Local DNS filtering for user-selected web content categories" />
+        </service>
+        <service android:name=".SafeNestAccessibilityService"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/safenest_accessibility_service" />
+        </service>
+        <receiver android:name=".SafeNestAdminReceiver" android:description="@string/device_admin_description" android:label="@string/app_name" android:permission="android.permission.BIND_DEVICE_ADMIN" android:exported="true">
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/safenest_device_admin" />
+            <intent-filter><action android:name="android.app.action.DEVICE_ADMIN_ENABLED" /></intent-filter>
+        </receiver>
+        <receiver android:name=".VpnPackageAddedReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

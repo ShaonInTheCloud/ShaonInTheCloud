@@ -1,0 +1,138 @@
+# SafeNest market launch checklist
+
+Updated: 5 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+
+**Release decision: development website live; paid sales and Play production release are blocked.** A working website, source tests or a debug APK do not establish reliable protection on customer phones.
+
+Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/material exists but its live release check is still pending.
+
+## 1. Source, hosting and release ownership
+
+- [x] Recover the full Android source and published website; keep the approved pink/white design, slogans and English above smaller Bangla.
+- [x] Restore exact applied Supabase migration history, rather than replaying archive migrations under invented timestamps.
+- [ ] Synchronize complete application, website, backend, catalogues and release documents to GitHub; verify the resulting branch head.
+- [ ] Publish account deletion, privacy, terms, help and checkout-status pages on the existing domain; inspect the deployment result.
+- [ ] Establish one release owner, a verified customer-support/privacy address and final business/legal identity.
+- [ ] Protect `main` with passing checks and reviewed pull requests; require MFA for GitHub, Supabase, email, domain and Play Console accounts.
+- [ ] Record production secrets by name and owner; rotate any previously shared private credentials. No service-role, SMTP or merchant secret belongs in the website, APK or Git history.
+- [ ] Configure a backup/restore drill and uptime alerting, with explicit incident and customer-contact procedures.
+
+## 2. Authentication and private data
+
+- [x] Keep confirmed Supabase Auth accounts, server verification, private profile RLS and server-owned entitlements.
+- [x] Configure production domain and exact confirmation/recovery redirects; preserve custom authentication email delivery.
+- [x] Test account-state isolation and profile ownership restrictions with the existing automated tests.
+- [x] Implement password-confirmed account deletion: verify the live account, derive identity server-side, revoke sessions, then delete the account-linked profile and entitlement.
+- [x] Check deletion scope: current live storage has zero buckets/user-owned objects; profiles and entitlements cascade on account deletion.
+- [ ] Validate signup, confirmation, password login, completed recovery, signout, deletion and repeat-login denial end to end with disposable owned test accounts.
+- [ ] Enable leaked-password protection if available on the Supabase plan. The latest advisor still reports this warning; this is not resolved.
+- [ ] Review email/rate limits and abuse controls before opening public signup traffic; add CAPTCHA if the traffic threat model requires it.
+- [ ] Define exact operational-log/backup retention and deletion dates, and update the privacy notice accordingly.
+- [ ] Review all production write routes for live authorization; a client flag, decoded JWT or payment success redirect is never proof of entitlement.
+- [ ] Separate privileged operator accounts from ordinary customer accounts; audit operator access and never derive admin rights from editable user metadata.
+
+## 3. Android release model and permissions
+
+- [x] Prepare `play` and `direct` distribution flavors. Target SDK is 36, meeting the current new-app target requirement.
+- [x] In `play`, disable Settings/installer interception, browser address-bar Home redirects and the Device Administrator receiver/setup entry points. Keep the direct development behavior separately.
+- [x] Add matching consent/disclosure text and account-deletion/privacy links. Play app guard returns Home only for selected blocked apps and detected VPN apps; Chrome/Firefox stay open.
+- [x] Keep no in-app pause during a finite verified protection period and automatic expiry; accurately disclose that Android uninstall and permission controls remain available in the consumer Play build.
+- [ ] Compile and test both flavors; compare merged manifests and ensure the Play artifact has no Device Administrator receiver or own-uninstall interception.
+- [ ] Verify the Play permission disclosures against the shipped artifact, including app visibility, Accessibility, VpnService and foreground-service declarations.
+- [ ] Record declaration videos showing consent, permission grant, normal browsing and the blocking feature; describe local DNS rather than an encrypted privacy VPN.
+- [ ] Review DNS transport against the VpnService policy with the final design. Current ordinary upstream UDP/TCP is not encrypted and this prototype is not a full traffic tunnel.
+- [ ] Confirm ownership/authorization requirements before offering managed-device protection. Device Owner is a separate enrollment process, usually during device setup; payment is not an OS management permission.
+- [ ] Do not market permanent uninstall prevention, all-VPN blocking or 100% gambling/adult coverage.
+
+Google Play's Accessibility policy limits prevention of disabling/uninstalling an app to authorized parental control or enterprise management. The consumer `play` flavor is prepared around that boundary. A competitor's listing does not prove SafeNest's implementation will be approved.
+
+## 4. Network and device acceptance tests — release blockers
+
+- [x] Run the standalone DNS/domain/alias/transport/signature/commitment regressions, including malformed-packet fuzzing and real loopback UDP/TCP tests.
+- [ ] On Honor and at least one Samsung/Pixel, prove normal browsing works with protection enabled on Wi-Fi and mobile data, including IPv6 and network changes.
+- [ ] Prove listed domains fail in Chrome while Chrome stays open; exercise new local rules, subdomains, brand-family rules and already-open/cached connections.
+- [ ] Test Chrome Secure DNS, system Private DNS, proxies, embedded browser VPNs and another Android VPN taking over. Report bypasses honestly; do not silently equate a foreground Home redirect with packet filtering.
+- [ ] Test detected VPN app IDs, unknown VPNs, rebranded apps, background starts and VPNs configured in Settings.
+- [ ] Test permission denial/revocation, reboot, process death, notification denial, battery optimization, offline startup and period expiry.
+- [ ] Test customer-safe diagnosis of DNS failure. This DNS-only build must leave Android “Block connections without VPN” off.
+- [ ] Verify finite offline entitlement behavior, clock changes, revocation, deleted accounts and expiry. Account deletion is not an instant unlock of an already-cached offline period.
+- [ ] Measure battery/memory/CPU and accessibility event handling on real phones; validate reduced motion and Bangla legibility.
+- [ ] Document supported phones/OS/browser versions and residual bypasses before taking money.
+
+## 5. Payments and entitlement issuance
+
+Prepared release choice: **consumption-only Play app** for existing paid accounts, with no in-app purchase button or external checkout link. This avoids adding unconfigured Play Billing. If in-app sales are added, implement Google Play Billing and server purchase verification unless an approved exception/program applies.
+
+- [x] Keep public prices proposed and checkout inactive; remove any impression that a prototype payment form or payment reference activates protection.
+- [x] Keep `protection-access` authenticated and read-only for customers; client-selected dates/paid flags cannot grant or release access.
+- [ ] Finalize monthly/annual price, currency, taxes, device limits, cancellation/refund policy and whether renewal is manual or automatic. The current pricing page proposes ৳299/month and ৳2,999/year; these are not approved merchant products.
+- [ ] Open/approve a merchant gateway account and provide sandbox credentials through server-secret configuration. Confirm international cards and each requested wallet (bKash, Nagad, Rocket, upay) in the merchant's enabled channels.
+- [ ] Implement hosted website checkout: authenticate customer, create a server-priced order, create a provider session, and redirect only to an allowlisted provider URL. Never collect card/CVV fields in SafeNest.
+- [ ] Implement provider notification validation, exact amount/currency/order matching, idempotency and transactional entitlement issuance; never trust a browser success page or unverified webhook fields.
+- [ ] Test duplicate/out-of-order notifications, pending payments, failures, cancellation, timeout, wrong amount, replayed receipts, provider outage, refunds and chargebacks.
+- [ ] Add scheduled server reconciliation, expiry/revocation updates, customer receipts, refund/cancellation controls and operator audit logs.
+- [ ] If Play purchases are added: configure subscription products/base plans, Play Developer API access and notification delivery; verify receipts server-side, bind purchases to an account, acknowledge valid initial purchases and handle pending/renewed/revoked/refunded states.
+- [ ] Decide cryptocurrency only after an appropriate provider and applicable regulatory/merchant requirements are confirmed. It is not a launch dependency and is not currently accepted.
+- [ ] Run a complete sandbox payment → server entitlement → app activation → expiry/revocation test before opening live checkout.
+
+See `payment-integration-plan.md` for implementation boundaries and credential requirements. No payment gateway credentials or Play Console access are present in the current session.
+
+## 6. Signing, builds and release delivery
+
+- [x] Add GitHub CI for website/account/backend security tests, core network tests, both Android flavors, Play debug APKs and a Play release AAB artifact.
+- [x] Pin CI action revisions and Gradle distribution checksum. Keep build outputs, local SDK settings and upload keys out of source.
+- [x] Prepare optional release signing via `SAFENEST_UPLOAD_KEYSTORE`, `SAFENEST_UPLOAD_STORE_PASSWORD`, `SAFENEST_UPLOAD_KEY_ALIAS`, `SAFENEST_UPLOAD_KEY_PASSWORD`.
+- [ ] Complete CI on the exact GitHub release commit, inspect warnings and test results, and retain build receipts.
+- [ ] Establish a release upload key and backup outside Git. Sign the AAB, enroll Play App Signing and record upload/app-signing fingerprints.
+- [ ] Choose an APK signing strategy for website distribution. Existing installs require matching signing certificates; an arbitrary CI debug key is not an upgrade plan.
+- [ ] Install the signed candidate on physical phones and verify upgrade, rollback/recovery strategy and persisted rules/consent/expiry.
+- [ ] Publish a tested signed APK with version, checksum, install instructions and an accurate support contact; do not replace the existing download with untested source changes.
+- [ ] Fix or retire the profile repository's unrelated npm-publish workflows before creating GitHub releases; they currently try to publish a private/non-root package.
+
+Useful commands from `safenest/android`:
+
+```sh
+./gradlew :app:testPlayDebugUnitTest :app:testDirectDebugUnitTest
+./gradlew :app:assemblePlayDebug :app:assembleDirectDebug
+./gradlew :app:bundlePlayRelease
+```
+
+Without upload signing configuration, the release AAB is a build-check artifact, not a Play-upload-ready release.
+
+## 7. Play Console submission
+
+- [ ] Create/verify the correct developer account and business/contact details; confirm whether the account is subject to mandatory closed testing.
+- [ ] Create SafeNest in Play Console with final package ownership, supported countries, category, content rating and target-audience decisions.
+- [ ] Provide store icon, feature graphic and screenshots from the actual `play` build; the current listing copy is a draft.
+- [ ] Publish final privacy and account-deletion URLs; complete seller/support contact and retention details first.
+- [ ] Complete Data safety answers from the final app/backend behavior and provider contracts, not from the intended marketing description.
+- [ ] Submit Accessibility, VPN, foreground-service and any other required declarations and evidence videos.
+- [ ] Supply working reviewer credentials and an approved test entitlement so reviewers can activate protection without a real charge or an operator bypass in the app.
+- [ ] Start internal testing; then closed testing and production-access application if required. For personal accounts created after 13 November 2023, the current rule requires at least 12 opted-in testers continuously for 14 days before applying.
+- [ ] Upload the signed AAB, resolve pre-launch report issues and reviewer feedback, and start a limited staged rollout.
+- [ ] Monitor crashes/ANRs, DNS failure reports, support/refund traffic and entitlement issuance after rollout. Define rollback thresholds and a customer incident message.
+
+## 8. Evidence and unresolved items
+
+Verified locally in this work: 12 account/deletion/RLS tests; 8 protection-access tests; standalone core regressions with 20,075 DNS codec, 57 domain, 10,082 alias, 22 upstream transport, 59 signature and 19 commitment/guard checks; website build; npm production-dependency audit reports zero known vulnerabilities. This does not certify the entire product.
+
+Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. A disposable-account end-to-end test is still required.
+
+Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. New source is 0.4.2/code 19 with Play/direct flavors. Do not describe the new Play source as already installed or published on Play.
+
+The latest Supabase security advisor still reports leaked-password protection disabled. No merchant credentials, release upload key, Play Console access or verified customer-support/legal identity has been supplied. These dependencies prevent paid/store release today even if the public website deployment succeeds.
+
+## Primary references checked for this release
+
+- Accessibility API policy: https://support.google.com/googleplay/android-developer/answer/9888170
+- Account deletion: https://support.google.com/googleplay/android-developer/answer/13327111
+- Payments and consumption-only apps: https://support.google.com/googleplay/android-developer/answer/10281818
+- VpnService: https://support.google.com/googleplay/android-developer/answer/12564964
+- Target API: https://support.google.com/googleplay/android-developer/answer/11926878
+- Testing: https://support.google.com/googleplay/android-developer/answer/14151465
+- Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
+- Server-side purchase security: https://developer.android.com/google/play/billing/security
+- SSLCOMMERZ hosted checkout/IPN/validation: https://developer.sslcommerz.com/doc/v4/
+- Supabase admin deletion: https://supabase.com/docs/reference/javascript/auth-admin-deleteuser
+
+This checklist is a release tracker, not a promise of Play approval or a claim that payment/blocking/device QA is complete.

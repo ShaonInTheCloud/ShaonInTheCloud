@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Play guard needs app transitions and a root package identity check, not text/view IDs. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="true"
+    android:accessibilityFlags="flagDefault"
+    android:canPerformGestures="false"
+    android:canTakeScreenshot="false"
+    android:isAccessibilityTool="false"
+    android:notificationTimeout="150"
+    android:description="@string/accessibility_service_description"
+    android:summary="@string/accessibility_service_summary"
+    android:settingsActivity="com.safenest.app.MainActivity" />

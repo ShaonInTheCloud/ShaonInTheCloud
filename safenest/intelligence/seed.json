@@ -1,0 +1,737 @@
+{
+  "researched_at": "2026-09-29",
+  "brands": [
+    {
+      "name": "1xbet",
+      "slug": "1xbet",
+      "aliases": []
+    },
+    {
+      "name": "1win",
+      "slug": "1win",
+      "aliases": []
+    },
+    {
+      "name": "22bet",
+      "slug": "22bet",
+      "aliases": []
+    },
+    {
+      "name": "4rabet",
+      "slug": "4rabet",
+      "aliases": []
+    },
+    {
+      "name": "888starz",
+      "slug": "888starz",
+      "aliases": []
+    },
+    {
+      "name": "babu88",
+      "slug": "babu88",
+      "aliases": []
+    },
+    {
+      "name": "baji",
+      "slug": "baji",
+      "aliases": []
+    },
+    {
+      "name": "baji365",
+      "slug": "baji365",
+      "aliases": []
+    },
+    {
+      "name": "baji777",
+      "slug": "baji777",
+      "aliases": []
+    },
+    {
+      "name": "baji888",
+      "slug": "baji888",
+      "aliases": []
+    },
+    {
+      "name": "baji999",
+      "slug": "baji999",
+      "aliases": []
+    },
+    {
+      "name": "bajilive",
+      "slug": "bajilive",
+      "aliases": []
+    },
+    {
+      "name": "bc.game",
+      "slug": "bc-game",
+      "aliases": []
+    },
+    {
+      "name": "bdbet88",
+      "slug": "bdbet88",
+      "aliases": []
+    },
+    {
+      "name": "bet365",
+      "slug": "bet365",
+      "aliases": []
+    },
+    {
+      "name": "betfair",
+      "slug": "betfair",
+      "aliases": []
+    },
+    {
+      "name": "betfred",
+      "slug": "betfred",
+      "aliases": []
+    },
+    {
+      "name": "betjili",
+      "slug": "betjili",
+      "aliases": []
+    },
+    {
+      "name": "betongame",
+      "slug": "betongame",
+      "aliases": []
+    },
+    {
+      "name": "betvisa",
+      "slug": "betvisa",
+      "aliases": []
+    },
+    {
+      "name": "betvictor",
+      "slug": "betvictor",
+      "aliases": []
+    },
+    {
+      "name": "betway",
+      "slug": "betway",
+      "aliases": []
+    },
+    {
+      "name": "betwinner",
+      "slug": "betwinner",
+      "aliases": []
+    },
+    {
+      "name": "ck444",
+      "slug": "ck444",
+      "aliases": []
+    },
+    {
+      "name": "crickex",
+      "slug": "crickex",
+      "aliases": []
+    },
+    {
+      "name": "dafabet",
+      "slug": "dafabet",
+      "aliases": []
+    },
+    {
+      "name": "f999",
+      "slug": "f999",
+      "aliases": []
+    },
+    {
+      "name": "jaya9",
+      "slug": "jaya9",
+      "aliases": []
+    },
+    {
+      "name": "jeetbuzz",
+      "slug": "jeetbuzz",
+      "aliases": []
+    },
+    {
+      "name": "jeetwin",
+      "slug": "jeetwin",
+      "aliases": []
+    },
+    {
+      "name": "krikya",
+      "slug": "krikya",
+      "aliases": []
+    },
+    {
+      "name": "linebet",
+      "slug": "linebet",
+      "aliases": []
+    },
+    {
+      "name": "marvelbet",
+      "slug": "marvelbet",
+      "aliases": []
+    },
+    {
+      "name": "mcw",
+      "slug": "mcw",
+      "aliases": []
+    },
+    {
+      "name": "megapari",
+      "slug": "megapari",
+      "aliases": []
+    },
+    {
+      "name": "melbet",
+      "slug": "melbet",
+      "aliases": []
+    },
+    {
+      "name": "mostbet",
+      "slug": "mostbet",
+      "aliases": []
+    },
+    {
+      "name": "mostplay",
+      "slug": "mostplay",
+      "aliases": []
+    },
+    {
+      "name": "nagad88",
+      "slug": "nagad88",
+      "aliases": []
+    },
+    {
+      "name": "netbet",
+      "slug": "netbet",
+      "aliases": []
+    },
+    {
+      "name": "okbajee",
+      "slug": "okbajee",
+      "aliases": []
+    },
+    {
+      "name": "paddypower",
+      "slug": "paddypower",
+      "aliases": []
+    },
+    {
+      "name": "parimatch",
+      "slug": "parimatch",
+      "aliases": []
+    },
+    {
+      "name": "paripesa",
+      "slug": "paripesa",
+      "aliases": []
+    },
+    {
+      "name": "paripulse",
+      "slug": "paripulse",
+      "aliases": []
+    },
+    {
+      "name": "pin-up",
+      "slug": "pin-up",
+      "aliases": []
+    },
+    {
+      "name": "rajabaji",
+      "slug": "rajabaji",
+      "aliases": []
+    },
+    {
+      "name": "six6s",
+      "slug": "six6s",
+      "aliases": []
+    },
+    {
+      "name": "sportsbet.io",
+      "slug": "sportsbet-io",
+      "aliases": []
+    },
+    {
+      "name": "stake",
+      "slug": "stake",
+      "aliases": []
+    },
+    {
+      "name": "takabet",
+      "slug": "takabet",
+      "aliases": []
+    },
+    {
+      "name": "titanbet",
+      "slug": "titanbet",
+      "aliases": []
+    },
+    {
+      "name": "unibet",
+      "slug": "unibet",
+      "aliases": []
+    },
+    {
+      "name": "winer",
+      "slug": "winer",
+      "aliases": []
+    },
+    {
+      "name": "winwin",
+      "slug": "winwin",
+      "aliases": []
+    },
+    {
+      "name": "jackpotcity",
+      "slug": "jackpotcity",
+      "aliases": []
+    },
+    {
+      "name": "jackpotcitycasino",
+      "slug": "jackpotcitycasino",
+      "aliases": []
+    },
+    {
+      "name": "spincasino",
+      "slug": "spincasino",
+      "aliases": []
+    }
+  ],
+  "domains": [
+    {
+      "domain": "bet365.com",
+      "brand": "bet365",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 55149. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "stake.com",
+      "brand": "stake",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "1xbet.com",
+      "brand": "1xbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "Historical Bangladesh reporting explicitly names this domain; current operation needs re-verification.",
+      "sources": [
+        {
+          "source_name": "The Daily Star, reporting on law enforcement",
+          "source_url": "https://www.thedailystar.net/frontpage/news/online-gambling-crores-siphoned-out-country-2114173",
+          "source_type": "reporting",
+          "verified": true,
+          "evidence_summary": "Historical reporting names 1xbet.com as a gambling site. Historical evidence alone does not confirm present operation."
+        }
+      ]
+    },
+    {
+      "domain": "betway.com",
+      "brand": "betway",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39372. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "parimatch.com",
+      "brand": "parimatch",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "dafabet.com",
+      "brand": "dafabet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "1xbetbd.com",
+      "brand": "1xbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "Historical Bangladesh reporting explicitly names this domain; current operation needs re-verification.",
+      "sources": [
+        {
+          "source_name": "The Daily Star, reporting on law enforcement",
+          "source_url": "https://www.thedailystar.net/news/bangladesh/crime-justice/news/online-gambling-agents-using-mfs-accounts-cid-2230266",
+          "source_type": "reporting",
+          "verified": true,
+          "evidence_summary": "Historical reporting names 1xbetbd.com as a gambling site. Historical evidence alone does not confirm present operation."
+        }
+      ]
+    },
+    {
+      "domain": "1win.in",
+      "brand": "1win",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "22bet.com",
+      "brand": "22bet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "4rabet.com",
+      "brand": "4rabet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "888starz.bet",
+      "brand": "888starz",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "babu88.com",
+      "brand": "babu88",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "bajilive.net",
+      "brand": "bajilive",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "bc.game",
+      "brand": "bc-game",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "bdbet88.com",
+      "brand": "bdbet88",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "betfair.com",
+      "brand": "betfair",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39561. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "betfred.com",
+      "brand": "betfred",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39544. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "betjili.com",
+      "brand": "betjili",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "betongame.com",
+      "brand": "betongame",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "betvictor.com",
+      "brand": "betvictor",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39576. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "bv88visa.com",
+      "brand": null,
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "ck444.pro",
+      "brand": "ck444",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "f999.com",
+      "brand": "f999",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "facai777.net",
+      "brand": null,
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "jaya9.best",
+      "brand": "jaya9",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "jeetbuzz.com",
+      "brand": "jeetbuzz",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "jwbangla88.com",
+      "brand": null,
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "krikya.io",
+      "brand": "krikya",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "linebet.com",
+      "brand": "linebet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "Historical Bangladesh reporting explicitly names this domain; current operation needs re-verification.",
+      "sources": [
+        {
+          "source_name": "The Daily Star, reporting on law enforcement",
+          "source_url": "https://www.thedailystar.net/frontpage/news/online-gambling-crores-siphoned-out-country-2114173",
+          "source_type": "reporting",
+          "verified": true,
+          "evidence_summary": "Historical reporting names linebet.com as a gambling site. Historical evidence alone does not confirm present operation."
+        }
+      ]
+    },
+    {
+      "domain": "marvelbet.com",
+      "brand": "marvelbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "megapari.com",
+      "brand": "megapari",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "melbetbd.net",
+      "brand": "melbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "mostplaylive.com",
+      "brand": "mostplay",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "nagad88.com",
+      "brand": "nagad88",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "netbet.com",
+      "brand": "netbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "paddypower.com",
+      "brand": "paddypower",
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh.",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 52819. Checked 2026-09-29."
+        }
+      ]
+    },
+    {
+      "domain": "paripesa.africa",
+      "brand": "paripesa",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "paripulse1.com",
+      "brand": "paripulse",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "pin-up.world",
+      "brand": "pin-up",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "pbc888.com",
+      "brand": null,
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "sportsbet.io",
+      "brand": "sportsbet-io",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "titanbet.com",
+      "brand": "titanbet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "unibet.com",
+      "brand": "unibet",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "winwin.bet",
+      "brand": "winwin",
+      "confidence": "REVIEW_REQUIRED",
+      "notes": "User seed; not independently verified.",
+      "sources": []
+    },
+    {
+      "domain": "jackpotcity.co.uk",
+      "brand": "jackpotcity",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39372. Checked 2026-09-29."
+        }
+      ],
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh."
+    },
+    {
+      "domain": "jackpotcitycasino.co.uk",
+      "brand": "jackpotcitycasino",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39372. Checked 2026-09-29."
+        }
+      ],
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh."
+    },
+    {
+      "domain": "spincasino.co.uk",
+      "brand": "spincasino",
+      "sources": [
+        {
+          "source_name": "UK Gambling Commission domain register",
+          "source_url": "https://www.gamblingcommission.gov.uk/downloads/business-licence-register-domain-names.csv",
+          "source_type": "regulator",
+          "verified": true,
+          "evidence_summary": "Active domain in regulator domain CSV; account 39372. Checked 2026-09-29."
+        }
+      ],
+      "confidence": "CONFIRMED",
+      "notes": "Active domain explicitly listed by UKGC; does not establish availability or licensing in Bangladesh."
+    },
+    {
+      "domain": "melbet.com",
+      "brand": "melbet",
+      "confidence": "REVIEW_REQUIRED",
+      "sources": [
+        {
+          "source_name": "The Daily Star, reporting on law enforcement",
+          "source_url": "https://www.thedailystar.net/frontpage/news/online-gambling-crores-siphoned-out-country-2114173",
+          "source_type": "reporting",
+          "verified": true,
+          "evidence_summary": "Historical reporting names melbet.com as a gambling site. Historical evidence alone does not confirm present operation."
+        }
+      ],
+      "notes": "Historical Bangladesh reporting explicitly names this domain; current operation needs re-verification."
+    }
+  ]
+}

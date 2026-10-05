@@ -1,0 +1,4 @@
+<resources>
+    <string name="accessibility_service_summary">Returns Home from selected blocked apps and detected VPN apps during your chosen protection period.</string>
+    <string name="accessibility_service_description">After your separate consent, SafeNest checks the foreground app package ID to identify selected blocked apps and detected VPN apps. It returns Home when one is opened during an active protection period. These observations stay on this phone and are not recorded or uploaded. SafeNest does not read browser pages, messages, passwords, Settings controls or installer labels in this Play build. Browsers stay open and website filtering uses the separate local DNS service. Android permission controls and uninstall remain available. There is no in-app pause during the finite commitment; it ends automatically at expiry.</string>
+</resources>
