@@ -2,13 +2,15 @@
 
 Prepared for Supabase project `kflenmeizngmafwnwhgv`. The private profiles
 migration is now applied in the hosted database (version `20260924212500`).
-The account page is published as an unlinked pilot at
+The personal account portal is published with Log in links in the public
+header and footer at
 `https://mysafenestbd.com/account`. On 5 October 2026 the Auth Site URL,
 exact redirect allowlist and Resend custom SMTP were configured. Signup,
 confirmation-email delivery, email verification and private profile saving
 were verified with an owner-controlled test account. Password reset and
-email/password login still require an end-to-end test before adding the public
-registration link.
+email/password login still require an end-to-end test. The owner requested
+a visible login entry on 5 October 2026; navigation availability does not
+mean that the complete registration flow or paid protection is verified.
 The GitHub repository currently also holds the owner's profile README, so all
 SafeNest files live under `safenest/`.
 
@@ -85,10 +87,10 @@ Without a key, the page clearly says account setup is in progress and all
 account forms remain hidden. A secret/service-role key is rejected by the build.
 
 The existing Sites project serves the compiled account portal at `/account`
-(`/account.html` redirects there). Its homepage remains unlinked while the
-password-reset and password-login checks are pending. Add the Account link and
-update public availability copy only after those tests pass. GitHub commits do
-not automatically publish that website.
+(`/account.html` redirects there). Each public page now includes a bilingual
+Log in link in its header and footer. Password-reset and password-login checks
+remain pending; keep that verification status explicit. GitHub commits do not
+automatically publish that website.
 
 ## Android download and installation
 
