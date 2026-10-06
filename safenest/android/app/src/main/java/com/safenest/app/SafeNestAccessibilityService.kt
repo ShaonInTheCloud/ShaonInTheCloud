@@ -2,6 +2,7 @@ package com.safenest.app
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.os.Handler
 import android.os.Looper
@@ -21,6 +22,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
             private set
         @Volatile var lastBlockReason: String? = null
             private set
+        @Volatile var lastControlExitOutcome: String? = null
+            private set
     }
 
     private var lastHomeAction = 0L
@@ -31,6 +34,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var pendingControlScan: Runnable? = null
     private var pendingControlPackage: String? = null
+    private var pendingControlWindowId = -1
     private val expiryPoll = object : Runnable {
         override fun run() {
             ProtectionCommitment.checkpoint(this@SafeNestAccessibilityService)
@@ -48,7 +52,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
             override fun home() = performGlobalAction(GLOBAL_ACTION_HOME)
             override fun foregroundPackage(): String? {
                 val root = rootInActiveWindow ?: return null
-                return try { root.packageName?.toString() } finally { @Suppress("DEPRECATION") root.recycle() }
+                return try {
+                    // Status/navigation windows may temporarily take focus during Back.
+                    root.packageName?.toString()?.takeUnless { it == "com.android.systemui" }
+                } finally { @Suppress("DEPRECATION") root.recycle() }
             }
             override fun protectedDetail(): Boolean {
                 val root = rootInActiveWindow ?: return false
@@ -61,6 +68,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 } finally { @Suppress("DEPRECATION") root.recycle() }
             }
             override fun post(action: Runnable, delayMs: Long) { handler.postDelayed(action, delayMs) }
+            override fun note(outcome: String) { lastControlExitOutcome = outcome }
+            override fun isHomePackage(pkg: String) = packageManager.resolveActivity(
+                Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), PackageManager.MATCH_DEFAULT_ONLY
+            )?.activityInfo?.packageName == pkg
         })
         handler.post(expiryPoll)
     }
@@ -70,6 +81,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
         val name = event.packageName?.toString() ?: return
+        controlExit?.observeForeground(name)
         if (!SystemScreenGuard.isSystemSurface(name)) cancelControlScan()
         if (name == packageName) return
         val now = SystemClock.elapsedRealtime()
@@ -77,7 +89,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
             // The consumer Play build must leave uninstall, permissions and Settings usable.
             val testControls = GuardPreferences.testControlsActive(this)
             if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return
-            if (!inspectControlScreen(name)) scheduleControlScan(name)
+            if (!inspectControlScreen(name, event.windowId)) scheduleControlScan(name, event.windowId)
             return
         }
         if (GuardRules.isBrowserExempt(name)) {
@@ -121,13 +133,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private data class ControlLabels(val labels: Set<String>, val actions: Set<String>,
                                      val titles: Set<String>, val detailTitles: Set<String>, val checkedToggle: Boolean)
 
-    private fun inspectControlScreen(name: String): Boolean {
+    private fun inspectControlScreen(name: String, expectedWindowId: Int = -1): Boolean {
         if (!isConnected || !GuardPreferences.isEnabled(this)) return false
         val testControls = GuardPreferences.testControlsActive(this)
         if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return false
         val root = rootInActiveWindow ?: return false
         try {
             if (root.packageName?.toString() != name) return false
+            // A new Settings activity can report its event while the previous
+            // Settings page is still the active root. Package equality alone
+            // must not let that older page trigger navigation for this event.
+            if (expectedWindowId >= 0 && root.windowId != expectedWindowId) return false
             val screen = readControlLabels(root)
             val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions) else ""
             val now = SystemClock.elapsedRealtime()
@@ -150,10 +166,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
     }
 
     /** A Settings window event can arrive before its Compose/toolbar content is ready. */
-    private fun scheduleControlScan(name: String) {
-        if (pendingControlPackage == name) return
+    private fun scheduleControlScan(name: String, expectedWindowId: Int) {
+        if (pendingControlPackage == name && pendingControlWindowId == expectedWindowId) return
         cancelControlScan()
         pendingControlPackage = name
+        pendingControlWindowId = expectedWindowId
         var attempt = 0
         val scan = object : Runnable {
             override fun run() {
@@ -162,7 +179,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
                     (!BuildConfig.ALLOW_SYSTEM_GUARD && !GuardPreferences.testControlsActive(this@SafeNestAccessibilityService))) {
                     cancelControlScan(); return
                 }
-                if (inspectControlScreen(name)) return
+                if (inspectControlScreen(name, expectedWindowId)) return
                 if (++attempt < 3) handler.postDelayed(this, 100) else cancelControlScan()
             }
         }
@@ -174,6 +191,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         pendingControlScan?.let { handler.removeCallbacks(it) }
         pendingControlScan = null
         pendingControlPackage = null
+        pendingControlWindowId = -1
     }
 
     /** Bounded traversal on system/installer surfaces only; values are never logged or uploaded. */
@@ -221,7 +239,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         lastHomeAction = now
         if (controlPackage != null) {
             // Pop the detail/dialog before Home so Settings restores its unguarded parent next time.
-            if (controlExit?.exit(controlPackage) { recordHome(reason, message) } == true) lastBlockReason = reason
+            controlExit?.exit(controlPackage) { recordHome(reason, message) }
         } else finishHome(reason, message)
     }
 

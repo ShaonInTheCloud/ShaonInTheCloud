@@ -65,7 +65,7 @@ public final class SystemScreenGuard {
         Set<String> text = new HashSet<>();
         labels.stream().map(SystemScreenGuard::normalize).forEach(text::add);
         Set<String> pageTitles = new HashSet<>();
-        titles.stream().map(SystemScreenGuard::normalize).filter(s -> !PAGE_CHROME.contains(s)).forEach(pageTitles::add);
+        titles.stream().map(SystemScreenGuard::normalize).filter(s -> !s.isEmpty() && !PAGE_CHROME.contains(s)).forEach(pageTitles::add);
         // The exact Use label occurs on our service detail page, not the services list.
         if (settings && text.contains("use safenest test app guard") &&
             text.contains("safenest test app guard")) return "test_accessibility";
@@ -99,5 +99,5 @@ public final class SystemScreenGuard {
         return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter") ||
             s.equals("safenest") || s.equals("com.safenest.app") || s.equals("safenest local dns filter");
     }
-    private static String normalize(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
+    private static String normalize(String s) { return s == null ? "" : s.replace('\u00a0', ' ').trim().toLowerCase(Locale.ROOT); }
 }

@@ -34,6 +34,7 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("com.safenest.app.lab"), List.of(), List.of("Disconnect")), "test package identity");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Another VPN"), List.of("Another VPN"), List.of("Forget VPN")), "another VPN remains accessible");
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest", "Archive", "Uninstall", "Force stop", "Notifications"), List.of("App info"), List.of("Uninstall", "Force stop")), "regular SafeNest App info from supplied first screenshot");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Uninstall"), List.of("App info", "\u00a0", "  "), List.of("Uninstall")), "blank Compose section headings do not hide own uninstall page");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Another VPN"), List.of("Another VPN"), List.of("Disconnect")), "background test label cannot target another VPN detail");
         check(!SystemScreenGuard.blocksTestControl("com.android.chrome", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test phrase in browser is not a control");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Accessibility", "SafeNest Test app guard", "TalkBack"), List.of("Accessibility"), List.of("SafeNest Test app guard")), "Accessibility list stays available");

@@ -96,6 +96,7 @@ object GuardPreferences {
 
     fun isServiceConnected(): Boolean = SafeNestAccessibilityService.isConnected
     fun lastBlockReason(): String? = SafeNestAccessibilityService.lastBlockReason
+    fun lastControlExitOutcome(): String? = SafeNestAccessibilityService.lastControlExitOutcome
 
     fun isAdminActive(context: Context): Boolean =
         context.getSystemService(DevicePolicyManager::class.java)?.isAdminActive(

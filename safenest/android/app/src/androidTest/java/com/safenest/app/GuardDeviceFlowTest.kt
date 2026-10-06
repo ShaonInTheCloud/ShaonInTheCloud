@@ -47,9 +47,11 @@ class GuardDeviceFlowTest {
             pass("Always-on enabled through Android UI before guarding")
             appInfo(context.packageName)
             assertSettings("Test App info available before starting")
+            assertNotNull("Actual uninstall page before guarding", device.wait(Until.findObject(By.text("Uninstall")), 5000))
             capture("test-app-info-before-guard")
             appInfo("com.safenest.app")
             assertSettings("Regular SafeNest App info available before starting")
+            assertNotNull("Actual regular uninstall page before guarding", device.wait(Until.findObject(By.text("Uninstall")), 5000))
             capture("regular-app-info-before-guard")
             prepareAndStart()
 
@@ -98,6 +100,7 @@ class GuardDeviceFlowTest {
             stopTest()
             appInfo(context.packageName)
             assertSettings("Stop test releases uninstall page")
+            assertNotNull("Uninstall control released after Stop test", device.wait(Until.findObject(By.text("Uninstall")), 5000))
             capture("uninstall-page-released")
             pass("Stop test releases uninstall/force-stop page")
             ownAccessibilityDetail()
@@ -114,7 +117,9 @@ class GuardDeviceFlowTest {
             preserveEvidence()
         } catch (failure: Throwable) {
             capture("failure")
-            File(evidence, "result.txt").writeText("FAIL SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n" + failure.stackTraceToString())
+            val state = "Guard ready: ${GuardPreferences.testControlGuardReady(context)}; " +
+                "last action: ${GuardPreferences.lastBlockReason()}; exit: ${GuardPreferences.lastControlExitOutcome()}"
+            File(evidence, "result.txt").writeText("FAIL SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n" + state + "\n" + failure.stackTraceToString())
             preserveEvidence()
             val hierarchy = java.io.ByteArrayOutputStream()
             try { device.dumpWindowHierarchy(hierarchy); println("SafeNest QA failure UI: " + hierarchy.toString("UTF-8")) }

@@ -24,7 +24,7 @@ The guard sends Back from the protected detail/dialog before a delayed Home acti
 5. Tap either the SafeNest Test VPN row or its gear, then do the same for 1.1.1.1: recognized detail/connection screens should leave and return Home. Check that Settings/VPN list can be opened again after each redirect.
 6. Test App info/removal controls for both SafeNest and SafeNest Test. Check unrelated app info and another Accessibility service remain usable.
 7. Press **Stop test** and reopen all these pages: they should be available normally.
-8. If a result differs, copy **Test tools → Copy feedback for ChatGPT**, with phone model/Android version. Feedback now includes Accessibility, connection/guard state and a coarse last-action reason; it does not include Settings labels.
+8. If a result differs, copy **Test tools → Copy feedback for ChatGPT**, with phone model/Android version. Feedback includes Accessibility, connection/guard state, a coarse last-action reason and the last navigation result; it does not include Settings labels.
 
 This Accessibility test guard is not Device Owner enrollment. CI now runs a disposable Android 16 emulator in addition to compilation and pure Java regressions. Its instrumented test uses real consent buttons, Accessibility, app-info pages and the Always-on VPN setting; the test keeps Accessibility services enabled while inspecting the UI. Evidence is saved in the safenest-guard-device-QA artifact. Confirm the device job result before calling a build device-tested. A phone with a different Settings interface still requires a check on that phone.
 
@@ -40,3 +40,5 @@ CI also checks Play/direct tests and lint, assembles debug APKs and builds the u
 ## Screenshot fixes in 0.4.6
 
 The supplied uninstall screenshot names the regular SafeNest app; the VPN screenshot shows 0.4.4-test. The finite test guard now covers both installed SafeNest identities after fresh consent. It distinguishes page headers from preference-row titles, handles toolbar titles without resource IDs, and checks VPN management-page controls before redirecting. Short bounded rescans handle window events that arrive before content is ready. Test tools report the control guard active only when Accessibility is enabled and the service is connected.
+
+Events with a window ID must match the active root's ID, so an older page in the same Settings package cannot trigger the new page's navigation. Blank section headings are ignored. Repeated content events share one Back/Home transaction, with bounded focus-transition retries. Home completion is recorded after sending Home or observing that Back already reached the launcher. The pending transaction releases when Home appears, allowing a newly opened protected page to be guarded immediately. Stop, expiry, unbind and movement to an unrelated app still cancel navigation.

@@ -48,6 +48,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     var guardConnected by remember { mutableStateOf(GuardPreferences.isServiceConnected()) }
     var controlsActive by remember { mutableStateOf(GuardPreferences.testControlGuardReady(context)) }
     var lastGuardAction by remember { mutableStateOf(GuardPreferences.lastBlockReason().orEmpty()) }
+    var lastGuardExit by remember { mutableStateOf(GuardPreferences.lastControlExitOutcome().orEmpty()) }
     var sessionActive by remember { mutableStateOf(LocalTestSession.isActive(context)) }
     LaunchedEffect(context) {
         while (true) {
@@ -60,6 +61,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
             guardConnected = GuardPreferences.isServiceConnected()
             controlsActive = GuardPreferences.testControlGuardReady(context)
             lastGuardAction = GuardPreferences.lastBlockReason().orEmpty()
+            lastGuardExit = GuardPreferences.lastControlExitOutcome().orEmpty()
             delay(750)
         }
     }
@@ -75,6 +77,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     Text(t("Guard connected: ", "গার্ড সংযুক্ত: ") + guardConnected)
     Text(t("Control guard active: ", "নিয়ন্ত্রণ গার্ড সক্রিয়: ") + controlsActive)
     Text(t("Last guard action: ", "শেষ গার্ডের কাজ: ") + lastGuardAction.ifBlank { t("None yet", "এখনো নেই") })
+    Text(t("Last guard exit: ", "শেষ গার্ডের ফল: ") + lastGuardExit.ifBlank { t("None yet", "এখনো নেই") })
     Text(t("DNS service: ", "DNS সেবা: ") + if (running) t("Running", "চালু") else t("Stopped", "বন্ধ"))
     Text(t("DNS lookup status: ", "DNS অনুরোধের অবস্থা: ") + dns)
     Text(t("Last blocked request: ", "শেষ ব্লক অনুরোধ: ") + blocked.ifBlank { t("None yet", "এখনো নেই") })
@@ -105,7 +108,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     }) { Text(t("Save notes", "নোট সংরক্ষণ করুন")) }
     OutlinedButton(onClick = {
         prefs.edit().putString("notes", notes).apply()
-        val report = "SafeNest Test ${BuildConfig.VERSION_NAME}\nDNS running: $running\nDNS status: $dns\nAccessibility enabled: $accessEnabled\nGuard connected: $guardConnected\nControl guard active: $controlsActive\nLast guard action: $lastGuardAction\nError: $error\nNotes: $notes"
+        val report = "SafeNest Test ${BuildConfig.VERSION_NAME}\nDNS running: $running\nDNS status: $dns\nAccessibility enabled: $accessEnabled\nGuard connected: $guardConnected\nControl guard active: $controlsActive\nLast guard action: $lastGuardAction\nLast guard exit: $lastGuardExit\nError: $error\nNotes: $notes"
         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("SafeNest test feedback", report))
         message = t("Copied. Paste the report into this ChatGPT conversation.", "কপি হয়েছে। এই ChatGPT কথোপকথনে রিপোর্ট পেস্ট করুন।")
     }) { Text(t("Copy feedback for ChatGPT", "ChatGPT-র জন্য মতামত কপি করুন")) }
