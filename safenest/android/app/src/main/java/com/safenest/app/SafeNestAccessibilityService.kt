@@ -266,13 +266,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
     }
 
     private fun returnHome(now: Long, reason: String, message: String, controlPackage: String? = null) {
-        val cooldown = if (controlPackage != null) 350L else 1000L
-        if (!GuardPreferences.isEnabled(this) || now - lastHomeAction < cooldown) return
-        lastHomeAction = now
+        if (!GuardPreferences.isEnabled(this)) return
         if (controlPackage != null) {
             // Pop the detail/dialog before Home so Settings restores its unguarded parent next time.
+            // The controller coalesces repeated events. A time cooldown here
+            // could leave a newly opened protected page unguarded.
             controlExit?.exit(controlPackage) { recordHome(reason, message) }
-        } else finishHome(reason, message)
+        } else {
+            if (now - lastHomeAction < 1000L) return
+            lastHomeAction = now
+            finishHome(reason, message)
+        }
     }
 
     private fun finishHome(reason: String, message: String) {
