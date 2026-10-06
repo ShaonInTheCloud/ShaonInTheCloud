@@ -176,9 +176,21 @@ class GuardDeviceFlowTest {
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
     private fun openApp() = start(Intent().setComponent(ComponentName(context.packageName, MainActivity::class.java.name)))
     private fun start(intent: Intent) {
-        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        // The app is in the background while Settings is open. Use the QA
+        // shell to launch only these public activities, as an owner would from
+        // the launcher; a blocked background start must not masquerade as Home.
+        val command = buildString {
+            append("am start -W -f 0x10000000")
+            intent.component?.let { append(" -n ").append(shellQuote(it.flattenToString())) }
+            intent.action?.let { append(" -a ").append(shellQuote(it)) }
+            intent.data?.let { append(" -d ").append(shellQuote(it.toString())) }
+        }
+        val output = device.executeShellCommand(command)
+        check(!output.contains("Error:") && !output.contains("Exception")) { "Public activity launch failed: $output" }
         SystemClock.sleep(500)
     }
+
+    private fun shellQuote(value: String) = "'" + value.replace("'", "'\\''") + "'"
 
     private fun openVpnDetails() {
         start(Intent(Settings.ACTION_VPN_SETTINGS))
