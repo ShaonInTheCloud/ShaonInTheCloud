@@ -159,7 +159,7 @@ class SafeNestVpnService : VpnService() {
                 return
             }
             val descriptor = Builder()
-                .setSession("SafeNest local DNS filter")
+                .setSession(if (LocalTestSession.enabled) "SafeNest Test local DNS filter" else "SafeNest local DNS filter")
                 .setMtu(1500)
                 .setBlocking(true)
                 .setUnderlyingNetworks(initialNetwork?.let { arrayOf(it) })

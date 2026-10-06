@@ -18,7 +18,7 @@ object LocalTestSession {
     fun hasSession(c: Context): Boolean = enabled && prefs(c).getLong("elapsed_end", 0) > 0
 
     @Synchronized fun begin(c: Context): Boolean {
-        if (!enabled || boot(c) < 0) return false
+        if (!enabled || boot(c) < 0 || !GuardPreferences.isTestSetupReady(c)) return false
         if (isActive(c)) return true
         return prefs(c).edit().clear()
             .putInt("boot", boot(c))

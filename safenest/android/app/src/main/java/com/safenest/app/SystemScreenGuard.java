@@ -50,5 +50,22 @@ public final class SystemScreenGuard {
             s.equals("install") || s.equals("update") || s.equals("ইনস্টল") || s.equals("asenna"));
         return install && titles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
     }
+    /** Lab-only self controls; permission revocation and unrelated apps stay accessible. */
+    public static boolean blocksTestControl(String pkg, Collection<String> labels,
+                                           Collection<String> titles, Collection<String> actions) {
+        if (!SETTINGS.contains(pkg) && !INSTALLERS.contains(pkg)) return false;
+        boolean target = labels.stream().map(SystemScreenGuard::normalize).anyMatch(SystemScreenGuard::isTestIdentity);
+        if (!target) return false;
+        // A titled unrelated detail page must not match a background/list mention of SafeNest Test.
+        if (!titles.isEmpty() && titles.stream().map(SystemScreenGuard::normalize).noneMatch(SystemScreenGuard::isTestIdentity)) return false;
+        return actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("disconnect") || s.equals("forget vpn") || s.equals("delete vpn") ||
+            s.equals("forget") || s.equals("uninstall") || s.equals("force stop") ||
+            s.equals("সংযোগ বিচ্ছিন্ন") || s.equals("আনইনস্টল") ||
+            s.equals("katkaise yhteys") || s.equals("poista asennus"));
+    }
+    private static boolean isTestIdentity(String s) {
+        return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter");
+    }
     private static String normalize(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
 }

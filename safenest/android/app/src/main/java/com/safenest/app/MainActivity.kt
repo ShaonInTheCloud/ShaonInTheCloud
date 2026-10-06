@@ -167,8 +167,9 @@ private fun SafeNestApp() {
     val vpnPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             if (!ProtectionCommitment.begin(context)) {
-                page = "account"
-                toast = s(language, "Verify paid access and complete app guard setup before activation.", "চালুর আগে পেইড মেয়াদ যাচাই ও অ্যাপ গার্ড সেটআপ সম্পূর্ণ করুন।")
+                page = if (LocalTestSession.enabled) "setup" else "account"
+                toast = if (LocalTestSession.enabled) s(language, "Complete Accessibility setup and retry the test.", "Accessibility সেটআপ শেষ করে আবার চেষ্টা করুন।")
+                    else s(language, "Verify paid access and complete app guard setup before activation.", "চালুর আগে পেইড মেয়াদ যাচাই ও অ্যাপ গার্ড সেটআপ সম্পূর্ণ করুন।")
                 return@rememberLauncherForActivityResult
             }
             val start = Intent(context, SafeNestVpnService::class.java).setAction(SafeNestVpnService.ACTION_START)
@@ -227,6 +228,11 @@ private fun SafeNestApp() {
     fun startProtection() {
         if (protectionOn) return
         if (!ProtectionCommitment.hasVerifiedAccess(context)) { page = "account"; return }
+        if (LocalTestSession.enabled && !GuardPreferences.isTestSetupReady(context)) {
+            page = "setup"
+            toast = s(language, "First review the test guard, grant Accessibility, then return and start the test.", "আগে টেস্ট গার্ডে সম্মতি ও Accessibility অনুমতি দিন, তারপর ফিরে পরীক্ষা চালু করুন।")
+            return
+        }
         if (!LocalTestSession.enabled && (!GuardPreferences.isSelected(context) || !GuardPreferences.isAccessibilityEnabled(context))) {
             page = "setup"
             toast = s(language, "Complete the app guard consent and Accessibility step first.", "আগে অ্যাপ গার্ডের সম্মতি ও Accessibility ধাপ শেষ করুন।")
@@ -234,7 +240,7 @@ private fun SafeNestApp() {
         }
         val prepare = VpnService.prepare(context)
         if (prepare == null) {
-            if (!ProtectionCommitment.begin(context)) { page = "account"; return }
+            if (!ProtectionCommitment.begin(context)) { page = if (LocalTestSession.enabled) "setup" else "account"; return }
             try {
                 ContextCompat.startForegroundService(context, Intent(context, SafeNestVpnService::class.java).setAction(SafeNestVpnService.ACTION_START))
                 page = "setup"
@@ -246,7 +252,10 @@ private fun SafeNestApp() {
 
     val t = { english: String, bangla: String -> s(language, english, bangla) }
     fun requestActivation() {
-        if (ProtectionCommitment.hasVerifiedAccess(context)) showActivationConfirm = true else page = "account"
+        if (LocalTestSession.enabled && !GuardPreferences.isTestSetupReady(context)) {
+            page = "setup"
+            toast = s(language, "Review and enable the test guard first. Grant Accessibility, then return here.", "আগে টেস্ট গার্ডে সম্মতি দিন ও Accessibility চালু করুন, তারপর ফিরে আসুন।")
+        } else if (ProtectionCommitment.hasVerifiedAccess(context)) showActivationConfirm = true else page = "account"
     }
 
     var metalMotion by remember { mutableStateOf(prefs.getBoolean("metal_motion", true)) }
@@ -313,7 +322,7 @@ private fun SafeNestApp() {
         title={Text(if(LocalTestSession.enabled)t("Start a local test?", "ফোনে পরীক্ষা চালু করবেন?")else t("Commit to your paid protection period?", "পেইড মেয়াদের সুরক্ষায় সম্মত?"))},
         text={Column(Modifier.verticalScroll(rememberScrollState())) {
             if(LocalTestSession.enabled) {
-                Text(t("No login or payment is needed. This starts a 60-minute local DNS filtering test that you can stop at any time. Android will ask for VPN permission. Normal traffic stays on your network; allowed DNS queries use your resolver or Cloudflare/Google fallback. This is not an encrypted privacy VPN. Keep Block connections without VPN off. App blocking is optional and needs separate Accessibility consent in Setup.", "লগইন বা পেমেন্ট লাগবে না। ফোনে ৬০ মিনিটের DNS পরীক্ষা চলবে; যেকোনো সময় বন্ধ করতে পারবেন। Android VPN অনুমতি চাইবে। সাধারণ ট্রাফিক আপনার নেটওয়ার্কে থাকে; অনুমোদিত DNS অনুরোধ নেটওয়ার্কের resolver বা Cloudflare/Google-এ যায়। এটি এনক্রিপ্টেড VPN নয়। Block connections without VPN বন্ধ রাখুন। অ্যাপ ব্লক ঐচ্ছিক; সেটআপে আলাদা Accessibility সম্মতি লাগবে।"),fontSize=12.sp)
+                Text(t("No login or payment is needed. This starts a 60-minute local DNS filtering test that you can stop at any time. Android will ask for VPN permission. Normal traffic stays on your network; allowed DNS queries use your resolver or Cloudflare/Google fallback. This is not an encrypted privacy VPN. Keep Block connections without VPN off. Accessibility setup is complete. During this test, recognized SafeNest Test disconnect, Forget VPN and uninstall screens return Home. Stop test in this app ends the guard.", "লগইন বা পেমেন্ট লাগবে না। ফোনে ৬০ মিনিটের DNS পরীক্ষা চলবে; যেকোনো সময় বন্ধ করতে পারবেন। Android VPN অনুমতি চাইবে। সাধারণ ট্রাফিক আপনার নেটওয়ার্কে থাকে; অনুমোদিত DNS অনুরোধ নেটওয়ার্কের resolver বা Cloudflare/Google-এ যায়। এটি এনক্রিপ্টেড VPN নয়। Block connections without VPN বন্ধ রাখুন। Accessibility সেটআপ সম্পূর্ণ। পরীক্ষার সময়ে শনাক্ত SafeNest Test বন্ধ, Forget VPN ও আনইনস্টল স্ক্রিন হোমে ফেরাবে। অ্যাপের Stop test গার্ড বন্ধ করে।"),fontSize=12.sp)
             } else {
             Text(appGuardDisclosure(language), fontSize=12.sp)
             Spacer(Modifier.height(10.dp))

@@ -1,6 +1,10 @@
 package com.safenest.app
 
 fun appGuardDisclosure(language: String): String {
+    if (LocalTestSession.enabled) return if (language == "bn")
+        "আপনার সম্মতিতে Accessibility দিয়ে নির্বাচিত অ্যাপ ব্লক ও SafeNest Test-এর VPN বন্ধ, Forget VPN, আনইনস্টল বা Force stop নিয়ন্ত্রণের স্ক্রিন শনাক্ত করে হোমে ফেরাবে। শনাক্ত স্ক্রিন খুললেই হোমে ফেরাতে পারে। শুধু সক্রিয় ৬০ মিনিটের পরীক্ষায় কাজ করে; অ্যাপের Stop test চাপলে বন্ধ হয়। সীমিত সেটিংস ও ইনস্টলার লেবেল ফোনেই পরীক্ষা হয়; সংরক্ষণ বা আপলোড হয় না। ব্রাউজারের বিষয়বস্তু, বার্তা বা পাসওয়ার্ড পড়ে না। এটি Device Owner অনুমতি নয়। অন্য অ্যাপ ও Accessibility অনুমতি বন্ধ করার স্ক্রিন ব্যবহার করা যায়।"
+    else
+        "With your consent, Accessibility returns Home from selected blocked apps and recognized SafeNest Test VPN disconnect, Forget VPN, Uninstall or Force stop screens. It may return Home as soon as a protected screen opens. This runs only during an active 60-minute test; Stop test in the app ends it. Narrow Settings and installer labels are checked on this phone and are not recorded or uploaded. Browser pages, messages and passwords are not read. This is not Device Owner permission. Other apps and Accessibility permission controls remain available."
     val play = !BuildConfig.ALLOW_SYSTEM_GUARD
     val en = if (play)
         "With your consent, SafeNest uses Accessibility to identify foreground app IDs and return Home from selected blocked apps and detected VPN apps during an active protection period. These observations stay on this device and are not recorded or uploaded. It does not read page bodies, messages, passwords, Settings controls or installer labels. Browsers remain open; website filtering uses the separate local DNS service. Android uninstall and permission controls remain available."

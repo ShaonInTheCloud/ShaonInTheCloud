@@ -19,6 +19,15 @@ object GuardPreferences {
 
     fun isSelected(context: Context): Boolean = prefs(context).getBoolean("enabled", false)
     fun isEnabled(context: Context): Boolean = isSelected(context) && ProtectionCommitment.isActive(context)
+    fun hasTestControlConsent(context: Context): Boolean = LocalTestSession.enabled &&
+        prefs(context).getBoolean("test_control_consent", false)
+    fun consentToTestControls(context: Context) {
+        if (LocalTestSession.enabled) prefs(context).edit().putBoolean("test_control_consent", true).apply()
+    }
+    fun isTestSetupReady(context: Context): Boolean = hasTestControlConsent(context) &&
+        isSelected(context) && isAccessibilityEnabled(context) && isServiceConnected()
+    fun testControlsActive(context: Context): Boolean = hasTestControlConsent(context) &&
+        isEnabled(context) && LocalTestSession.isActive(context)
     fun setEnabled(context: Context, value: Boolean) {
         if (value && !ProtectionCommitment.hasVerifiedAccess(context)) return
         if (!value && (ProtectionCommitment.isActive(context) || ManagedProtection.isConfigured(context))) return
@@ -36,7 +45,8 @@ object GuardPreferences {
         prefs(context).edit().putBoolean("enabled", true).putBoolean("block_vpn_apps", true).apply()
     }
     internal fun clearForExpiry(context: Context) {
-        prefs(context).edit().putBoolean("enabled", false).putBoolean("block_vpn_apps", false).commit()
+        prefs(context).edit().putBoolean("enabled", false).putBoolean("block_vpn_apps", false)
+            .putBoolean("test_control_consent", false).commit()
     }
 
     /** Foreground event path: no installed-app inventory scan per event. */

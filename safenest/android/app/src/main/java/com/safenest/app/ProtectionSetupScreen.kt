@@ -124,7 +124,7 @@ fun ProtectionSetupScreen(
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(t("SET UP SAFENEST", "SAFENEST সেটআপ"), fontSize = 10.sp, color = SetupMuted)
         Text(t("Protection you can check.", "সুরক্ষা নিজেই যাচাই করুন।"), fontSize = 25.sp, color = SetupInk, fontWeight = FontWeight.Bold)
-        Text(t("Complete each permission yourself. DNS filtering and app guard work independently.", "প্রতিটি অনুমতি নিজে দিন। DNS ফিল্টার ও অ্যাপ গার্ড আলাদাভাবে কাজ করে।"), fontSize = 12.sp, color = SetupMuted)
+        Text(if (LocalTestSession.enabled) t("Complete each permission yourself. For SafeNest Test: review the test guard, enable Accessibility, return here, then start and approve VPN access.", "প্রতিটি অনুমতি নিজে দিন। SafeNest Test-এ গার্ডে সম্মতি, Accessibility চালু, তারপর ফিরে পরীক্ষা চালু ও VPN অনুমতি দিন।") else t("Complete each permission yourself. DNS filtering and app guard work independently.", "প্রতিটি অনুমতি নিজে দিন। DNS ফিল্টার ও অ্যাপ গার্ড আলাদাভাবে কাজ করে।"), fontSize = 12.sp, color = SetupMuted)
 
         SetupCard(t("Live protection status", "সুরক্ষার বর্তমান অবস্থা")) {
             StatusLine(t("DNS service", "DNS সেবা"), if (running) t("Running", "চালু") else t("Stopped", "বন্ধ"))
@@ -155,7 +155,14 @@ fun ProtectionSetupScreen(
             if (error.isNotBlank()) Text(t("Diagnostic: ", "ত্রুটির তথ্য: ") + error, fontSize = 11.sp, color = Color(0xFFB53A3A))
         }
 
-        SetupCard(t("1. Website filtering", "১. ওয়েবসাইট ফিল্টার")) {
+        SetupCard(t("1. App guard and Accessibility", "১. অ্যাপ গার্ড ও Accessibility")) {
+            Text(appGuardDisclosure(language), fontSize = 12.sp)
+            if (!guardEnabled || (LocalTestSession.enabled && !GuardPreferences.hasTestControlConsent(context))) Button(enabled = ProtectionCommitment.hasVerifiedAccess(context), onClick = { showConsent = true }) { Text(if(LocalTestSession.enabled)t("Review and enable test guard", "টেস্ট গার্ড পড়ে চালু করুন")else t("Review and enable app guard", "বিস্তারিত পড়ে অ্যাপ গার্ড চালু করুন")) }
+            if (guardEnabled && !accessEnabled) Button(onClick = { openSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) { Text(t("Grant Accessibility permission", "Accessibility অনুমতি দিন")) }
+            Text(t("Detection depends on Android permissions and app visibility. This service does not decrypt VPN traffic or provide complete proxy coverage.", "শনাক্তকরণ Android-এর অনুমতি ও অ্যাপ দৃশ্যমানতার ওপর নির্ভর করে। এই সেবা VPN ট্রাফিকের এনক্রিপশন খোলে না এবং সব প্রক্সি নিয়ন্ত্রণ করে না।"), fontSize = 11.sp, color = SetupMuted)
+        }
+
+        SetupCard(t("2. Website filtering", "২. ওয়েবসাইট ফিল্টার")) {
             Text(t("Your domain lists include gambling, adult content and custom sites. Subdomains are included. Test normal browsing before enabling Always-on.", "জুয়া, প্রাপ্তবয়স্ক ও নিজের তালিকার ডোমেইন এবং সাবডোমেইন ব্লক হবে। Always-on চালুর আগে সাধারণ ব্রাউজিং পরীক্ষা করুন।"), fontSize = 12.sp)
             if (!running) Button(onClick = onStart) { Text(if(LocalTestSession.enabled)t("Start local test", "ফোনে পরীক্ষা চালু করুন")else if (ProtectionCommitment.hasVerifiedAccess(context)) t("Start paid protection", "পেইড সুরক্ষা চালু করুন") else t("Verify paid access first", "আগে পেইড মেয়াদ যাচাই করুন")) }
             OutlinedButton(onClick = onTestInternet) { Text(t("Open example.com to test", "example.com খুলে পরীক্ষা করুন")) }
@@ -172,13 +179,6 @@ fun ProtectionSetupScreen(
             })
             Text(t("System Private DNS and a browser's Secure DNS are different. Browser settings can bypass DNS lists. Check both using normal and blocked test sites. On Android 9 this version cannot forward active Private DNS safely; review the diagnostic before continuing.", "সিস্টেমের Private DNS এবং ব্রাউজারের Secure DNS আলাদা। ব্রাউজারের সেটিংস DNS তালিকা এড়াতে পারে। সাধারণ ও ব্লক করা সাইট দিয়ে দুটিই পরীক্ষা করুন। Android 9-এ এই সংস্করণ সক্রিয় Private DNS নিরাপদে ফরওয়ার্ড করতে পারে না; ত্রুটির তথ্য দেখুন।"), fontSize = 12.sp)
             OutlinedButton(onClick = { openSettings(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }) { Text(t("Open network settings", "নেটওয়ার্ক সেটিংস খুলুন")) }
-        }
-
-        SetupCard(t("2. App guard and Accessibility", "২. অ্যাপ গার্ড ও Accessibility")) {
-            Text(appGuardDisclosure(language), fontSize = 12.sp)
-            if (!guardEnabled) Button(enabled = ProtectionCommitment.hasVerifiedAccess(context), onClick = { showConsent = true }) { Text(t("Review and enable app guard", "বিস্তারিত পড়ে অ্যাপ গার্ড চালু করুন")) }
-            if (guardEnabled && !accessEnabled) Button(onClick = { openSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) { Text(t("Grant Accessibility permission", "Accessibility অনুমতি দিন")) }
-            Text(t("Detection depends on Android permissions and app visibility. This service does not decrypt VPN traffic or provide complete proxy coverage.", "শনাক্তকরণ Android-এর অনুমতি ও অ্যাপ দৃশ্যমানতার ওপর নির্ভর করে। এই সেবা VPN ট্রাফিকের এনক্রিপশন খোলে না এবং সব প্রক্সি নিয়ন্ত্রণ করে না।"), fontSize = 11.sp, color = SetupMuted)
         }
 
         SetupCard(t("Choose apps to block", "ব্লক করার অ্যাপ বাছুন")) {
@@ -262,11 +262,12 @@ fun ProtectionSetupScreen(
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appGuardDisclosure(language))
             Text(t("These observations stay on your phone, are not recorded as history and are not sent to a server. SafeNest does not inspect page bodies, messages or passwords. Calls and unrelated settings remain usable.", "পর্যবেক্ষণ ফোনেই থাকে; ইতিহাস হিসেবে সংরক্ষণ বা সার্ভারে পাঠানো হয় না। পৃষ্ঠার বিষয়বস্তু, বার্তা বা পাসওয়ার্ড পরীক্ষা করা হয় না। কল ও অন্য সেটিংস ব্যবহার করা যায়।"))
-            if(LocalTestSession.enabled) Text(t("App blocking is optional in this test build. It runs only during a local test session, and Stop test turns it off. Website DNS filtering can be tested without Accessibility.", "এই পরীক্ষায় অ্যাপ ব্লক ঐচ্ছিক। ফোনের পরীক্ষার মেয়াদে কাজ করে; Stop test চাপলে বন্ধ হয়। Accessibility ছাড়াই DNS পরীক্ষা করতে পারেন।"))
+            if(LocalTestSession.enabled) Text(t("First enable SafeNest Test in Android Accessibility, then return here and start the test. Android will ask for VPN access next. Stop test ends both guards. If a sideloaded APK has restricted settings, allow them in SafeNest Test App info before starting the session.", "আগে Android Accessibility-তে SafeNest Test চালু করুন। তারপর ফিরে পরীক্ষা চালু করুন; VPN অনুমতি চাওয়া হবে। Stop test চাপলে দুই গার্ড বন্ধ হয়। APK-তে restricted settings থাকলে পরীক্ষা শুরুর আগে App info-তে অনুমোদন দিন।"))
             else Text(t("This step prepares the permission only. Protection starts after paid verification and activation, has no in-app pause, and ends automatically at expiry. Detection depends on Android and the phone's interface. It is not root access or a promise of impossible removal.", "এই ধাপ শুধু অনুমতি প্রস্তুত করে। পেইড যাচাই ও চালুর পরে সুরক্ষা কাজ করে; অ্যাপে বিরতি নেই এবং মেয়াদ শেষে শেষ হয়। শনাক্তকরণ ফোন ও Android-এর ওপর নির্ভর করে। এটি root access নয় এবং সরানো অসম্ভবের প্রতিশ্রুতি নয়।"))
         } },
         confirmButton = { TextButton(onClick = {
             GuardPreferences.setEnabled(context, true)
+            if (LocalTestSession.enabled) GuardPreferences.consentToTestControls(context)
             if (enableVpnAfterConsent) {
                 GuardPreferences.setBlockVpnApps(context, true)
                 blockVpns = true

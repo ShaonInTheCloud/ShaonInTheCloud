@@ -60,13 +60,13 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
         catch (_: Exception) { message = t("No browser is available.", "ব্রাউজার পাওয়া যায়নি।") }
     }
     Text(t("Try it. Shape what comes next.", "পরীক্ষা করুন। পরের পরিবর্তন বেছে নিন।"), style = MaterialTheme.typography.headlineSmall)
-    Text(t("No account or payment is required in this test app. It has separate settings from SafeNest. Use Setup for optional app blocking; DNS filtering needs VPN permission only.",
-        "এই পরীক্ষার অ্যাপে অ্যাকাউন্ট বা পেমেন্ট লাগবে না। SafeNest থেকে সেটিংস আলাদা। ঐচ্ছিক অ্যাপ ব্লকের জন্য সেটআপ ব্যবহার করুন; DNS ফিল্টারের জন্য শুধু VPN অনুমতি লাগে।"))
+    Text(t("No account or payment is required in this test app. It has separate settings from SafeNest. Use Setup to consent to the test guard and enable Accessibility first. Then start the test and approve VPN permission. SafeNest Test control screens return Home while the test is active.",
+        "এই পরীক্ষার অ্যাপে অ্যাকাউন্ট বা পেমেন্ট লাগবে না। SafeNest থেকে সেটিংস আলাদা। আগে সেটআপে টেস্ট গার্ডে সম্মতি ও Accessibility চালু করুন। তারপর পরীক্ষা চালু ও VPN অনুমতি দিন। সক্রিয় পরীক্ষায় SafeNest Test-এর নিয়ন্ত্রণ স্ক্রিন হোমে ফেরাবে।"))
     Text(t("DNS service: ", "DNS সেবা: ") + if (running) t("Running", "চালু") else t("Stopped", "বন্ধ"))
     Text(t("DNS lookup status: ", "DNS অনুরোধের অবস্থা: ") + dns)
     Text(t("Last blocked request: ", "শেষ ব্লক অনুরোধ: ") + blocked.ifBlank { t("None yet", "এখনো নেই") })
     if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
-    if (!running) Button(onClick = onStart) { Text(t("Start or retry DNS test", "DNS পরীক্ষা চালু বা আবার চেষ্টা করুন")) }
+    if (!running) Button(onClick = onStart) { Text(t("Start or retry guarded test", "DNS পরীক্ষা চালু বা আবার চেষ্টা করুন")) }
     OutlinedButton(onClick = onSetup) { Text(t("Permissions and app blocking", "অনুমতি ও অ্যাপ ব্লক")) }
     Text(t("Harmless website test", "নিরাপদ ওয়েবসাইট পরীক্ষা"), style = MaterialTheme.typography.titleMedium)
     Text(t("Add example.org as a test rule, then open it. Keep example.com allowed. Close old tabs and retry if the browser uses a cached connection. A blocked DNS request should appear above.",

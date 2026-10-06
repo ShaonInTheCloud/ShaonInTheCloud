@@ -49,14 +49,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
         val now = SystemClock.elapsedRealtime()
         if (SystemScreenGuard.isSystemSurface(name)) {
             // The consumer Play build must leave uninstall, permissions and Settings usable.
-            if (!BuildConfig.ALLOW_SYSTEM_GUARD) return
+            val testControls = GuardPreferences.testControlsActive(this)
+            if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return
             val root = rootInActiveWindow ?: return
             try {
                 if (root.packageName?.toString() != name) return
                 val screen = readControlLabels(root)
-                if (SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
+                if (testControls && SystemScreenGuard.blocksTestControl(name, screen.labels, screen.titles, screen.actions)) {
+                    returnHome(now, "test_safenest_control", "SafeNest Test controls are guarded. Use Stop test in the app to end the test.")
+                } else if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
                     returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
-                } else if (GuardPreferences.blocksVpnApps(this) &&
+                } else if (BuildConfig.ALLOW_SYSTEM_GUARD && GuardPreferences.blocksVpnApps(this) &&
                     SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
                     returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
                 }
@@ -108,24 +111,29 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private fun readControlLabels(root: AccessibilityNodeInfo): ControlLabels {
         val labels = mutableSetOf<String>(); val actions = mutableSetOf<String>(); val titles = mutableSetOf<String>()
         var checkedToggle = false; var visited = 0
-        val queue = java.util.ArrayDeque<AccessibilityNodeInfo>()
-        for (i in 0 until root.childCount) root.getChild(i)?.let(queue::add)
+        // Settings often puts the label inside a clickable row, rather than on the clickable node.
+        val queue = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Boolean>>()
+        for (i in 0 until root.childCount) root.getChild(i)?.let { queue.add(it to (root.isEnabled && root.isClickable)) }
         try {
             while (queue.isNotEmpty() && visited++ < 180) {
-                val node = queue.removeFirst()
+                val (node, parentActionable) = queue.removeFirst()
                 try {
                     if (!node.isVisibleToUser || node.isPassword || node.isEditable) continue
                     val values = listOfNotNull(node.text?.toString(), node.contentDescription?.toString())
                         .filter { it.length in 1..240 }
                     labels.addAll(values)
-                    if (node.isEnabled && node.isClickable) actions.addAll(values)
+                    val actionable = node.isEnabled && (node.isClickable || parentActionable)
+                    if (actionable) actions.addAll(values)
                     val id = node.viewIdResourceName.orEmpty().lowercase()
                     if (id.contains("title") || id.contains("app_name") || id.contains("headline")) titles.addAll(values)
                     if (node.isEnabled && node.isCheckable && node.isChecked) checkedToggle = true
-                    if (queue.size < 180) for (i in 0 until node.childCount) node.getChild(i)?.let(queue::add)
+                    for (i in 0 until node.childCount) {
+                        if (queue.size >= 180) break
+                        node.getChild(i)?.let { queue.add(it to actionable) }
+                    }
                 } finally { @Suppress("DEPRECATION") node.recycle() }
             }
-        } finally { queue.forEach { @Suppress("DEPRECATION") it.recycle() } }
+        } finally { queue.forEach { @Suppress("DEPRECATION") it.first.recycle() } }
         return ControlLabels(labels, actions, titles, checkedToggle)
     }
 
