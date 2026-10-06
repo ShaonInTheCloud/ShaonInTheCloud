@@ -181,16 +181,21 @@ class GuardDeviceFlowTest {
         // the launcher; a blocked background start must not masquerade as Home.
         val command = buildString {
             append("am start -W -f 0x10000000")
-            intent.component?.let { append(" -n ").append(shellQuote(it.flattenToString())) }
-            intent.action?.let { append(" -a ").append(shellQuote(it)) }
-            intent.data?.let { append(" -d ").append(shellQuote(it.toString())) }
+            intent.component?.let { append(" -n ").append(commandToken(it.flattenToString())) }
+            intent.action?.let { append(" -a ").append(commandToken(it)) }
+            intent.data?.let { append(" -d ").append(commandToken(it.toString())) }
         }
         val output = device.executeShellCommand(command)
         check(!output.contains("Error:") && !output.contains("Exception")) { "Public activity launch failed: $output" }
         SystemClock.sleep(500)
     }
 
-    private fun shellQuote(value: String) = "'" + value.replace("'", "'\\''") + "'"
+    private fun commandToken(value: String): String {
+        // UiAutomation tokenizes this command without shell quote processing.
+        // Only our fixed component/action/package URI tokens are permitted.
+        check(value.matches(Regex("[A-Za-z0-9._:/-]+"))) { "Unexpected QA activity token" }
+        return value
+    }
 
     private fun openVpnDetails() {
         start(Intent(Settings.ACTION_VPN_SETTINGS))
