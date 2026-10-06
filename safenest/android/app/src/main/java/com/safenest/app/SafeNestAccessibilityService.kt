@@ -51,14 +51,14 @@ class SafeNestAccessibilityService : AccessibilityService() {
             override fun back() = performGlobalAction(GLOBAL_ACTION_BACK)
             override fun home() = performGlobalAction(GLOBAL_ACTION_HOME)
             override fun foregroundPackage(): String? {
-                val root = rootInActiveWindow ?: return null
+                val root = controlForegroundRoot() ?: return null
                 return try {
                     // Status/navigation windows may temporarily take focus during Back.
                     root.packageName?.toString()?.takeUnless { it == "com.android.systemui" }
                 } finally { @Suppress("DEPRECATION") root.recycle() }
             }
             override fun protectedDetail(): Boolean {
-                val root = rootInActiveWindow ?: return false
+                val root = controlForegroundRoot() ?: return false
                 return try {
                     val name = root.packageName?.toString().orEmpty()
                     if (!SystemScreenGuard.isSystemSurface(name)) false else {
@@ -78,6 +78,21 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null || !GuardPreferences.isEnabled(this)) return
+        if (LocalTestSession.enabled && event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+            // Window-focus changes need not emit a new Settings content event.
+            // Inspect only the focused root, never a Settings window behind a
+            // different focused app, permission dialog or notification shade.
+            val root = controlForegroundRoot() ?: return
+            val name: String
+            val windowId: Int
+            try { name = root.packageName?.toString() ?: return; windowId = root.windowId }
+            finally { @Suppress("DEPRECATION") root.recycle() }
+            controlExit?.observeForeground(name)
+            if (SystemScreenGuard.isSystemSurface(name)) {
+                if (!inspectControlScreen(name, windowId)) scheduleControlScan(name, windowId)
+            } else cancelControlScan()
+            return
+        }
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
         val name = event.packageName?.toString() ?: return
@@ -133,11 +148,28 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private data class ControlLabels(val labels: Set<String>, val actions: Set<String>,
                                      val titles: Set<String>, val detailTitles: Set<String>, val checkedToggle: Boolean)
 
+    /** Lab-only focus lookup. Active touch windows can outlive Back transitions. */
+    private fun controlForegroundRoot(): AccessibilityNodeInfo? {
+        if (!LocalTestSession.enabled) return rootInActiveWindow
+        val interactive = windows
+        try {
+            val focused = interactive.take(12).firstOrNull { it.isFocused }
+            if (focused != null) {
+                focused.root?.let { return it }
+                val active = rootInActiveWindow ?: return null
+                if (active.windowId == focused.id) return active
+                @Suppress("DEPRECATION") active.recycle()
+                return null
+            }
+            return rootInActiveWindow
+        } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
+    }
+
     private fun inspectControlScreen(name: String, expectedWindowId: Int = -1): Boolean {
         if (!isConnected || !GuardPreferences.isEnabled(this)) return false
         val testControls = GuardPreferences.testControlsActive(this)
         if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return false
-        val root = rootInActiveWindow ?: return false
+        val root = controlForegroundRoot() ?: return false
         try {
             if (root.packageName?.toString() != name) return false
             // A new Settings activity can report its event while the previous
