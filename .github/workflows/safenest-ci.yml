@@ -47,7 +47,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Check runner Android SDK tools
+        id: runner-sdk
+        run: |
+          for safenest_sdk_manager in "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager; do
+            if [ -x "$safenest_sdk_manager" ]; then
+              dirname "$safenest_sdk_manager" >> "$GITHUB_PATH"
+              echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+              echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
+              echo 'ready=true' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo 'ready=false' >> "$GITHUB_OUTPUT"
       - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        if: steps.runner-sdk.outputs.ready != 'true'
       - run: sh run-core-tests.sh
       - run: chmod +x android/gradlew
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'

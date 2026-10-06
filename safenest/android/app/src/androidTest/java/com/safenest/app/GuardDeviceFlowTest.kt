@@ -156,9 +156,22 @@ class GuardDeviceFlowTest {
         await("Test stopped") { !LocalTestSession.isActive(context) && !GuardPreferences.testControlGuardReady(context) }
     }
 
-    private fun ownAccessibilityDetail() = start(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
-        .putExtra("android.intent.extra.COMPONENT_NAME",
-            ComponentName(context.packageName, SafeNestAccessibilityService::class.java.name).flattenToString()))
+    private fun ownAccessibilityDetail() {
+        // Android 16 reserves the details intent for privileged callers. Follow
+        // the same public Accessibility list and service row as the owner.
+        start(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        val service = device.wait(Until.findObject(By.text("SafeNest Test app guard")), 3000)
+        if (service != null) {
+            service.click()
+            return
+        }
+        capture("accessibility-list-navigation")
+        val apps = device.wait(Until.findObject(By.text(Pattern.compile(
+            "(?i)^(downloaded apps|installed apps|downloaded services|installed services)$"))), 5000)
+            ?: error("Accessibility downloaded-apps row missing")
+        apps.click()
+        tap("SafeNest Test app guard", scroll = true)
+    }
 
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
     private fun openApp() = start(Intent().setComponent(ComponentName(context.packageName, MainActivity::class.java.name)))
