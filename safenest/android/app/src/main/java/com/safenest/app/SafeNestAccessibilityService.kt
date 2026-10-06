@@ -24,6 +24,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
             private set
         @Volatile var lastControlExitOutcome: String? = null
             private set
+        private var connectedService: SafeNestAccessibilityService? = null
+        internal fun windowStatusForQa(): String = if (BuildConfig.DEBUG && LocalTestSession.enabled)
+            connectedService?.windowStatusForQa().orEmpty() else "disabled"
     }
 
     private var lastHomeAction = 0L
@@ -45,6 +48,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         isConnected = true
+        connectedService = this
         controlExit?.cancel()
         if (LocalTestSession.enabled) controlExit = ControlScreenExit(packageName, object : ControlScreenExit.Driver {
             override fun active() = isConnected && GuardPreferences.testControlsActive(this@SafeNestAccessibilityService)
@@ -162,6 +166,21 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 return null
             }
             return rootInActiveWindow
+        } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
+    }
+
+    /** Disposable emulator diagnostic: window metadata/package only, no labels. */
+    private fun windowStatusForQa(): String {
+        val active = rootInActiveWindow
+        val activeState = try { "active=${active?.packageName}:${active?.windowId}" }
+            finally { @Suppress("DEPRECATION") active?.recycle() }
+        val interactive = windows
+        return try {
+            activeState + "; windows=" + interactive.take(12).joinToString("|") { window ->
+                val root = window.root
+                try { "${window.id},type=${window.type},focus=${window.isFocused},active=${window.isActive},pkg=${root?.packageName}" }
+                finally { @Suppress("DEPRECATION") root?.recycle() }
+            }
         } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
     }
 
@@ -296,6 +315,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onInterrupt() = Unit
     override fun onUnbind(intent: Intent?): Boolean {
         isConnected = false
+        if (connectedService === this) connectedService = null
         handler.removeCallbacks(expiryPoll)
         cancelControlScan()
         controlExit?.cancel()
@@ -303,5 +323,5 @@ class SafeNestAccessibilityService : AccessibilityService() {
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; super.onDestroy() }
+    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
 }

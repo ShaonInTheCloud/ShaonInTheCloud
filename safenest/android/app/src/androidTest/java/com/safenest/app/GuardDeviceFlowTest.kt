@@ -119,7 +119,19 @@ class GuardDeviceFlowTest {
             capture("failure")
             val state = "Guard ready: ${GuardPreferences.testControlGuardReady(context)}; " +
                 "last action: ${GuardPreferences.lastBlockReason()}; exit: ${GuardPreferences.lastControlExitOutcome()}"
-            File(evidence, "result.txt").writeText("FAIL SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n" + state + "\n" + failure.stackTraceToString())
+            var windows = ""
+            instrumentation.runOnMainSync { windows = SafeNestAccessibilityService.windowStatusForQa() }
+            val automationWindows = instrumentation.uiAutomation.windows
+            try {
+                windows += "; automation=" + automationWindows.take(12).joinToString("|") { window ->
+                    val root = window.root
+                    try { "${window.id},type=${window.type},focus=${window.isFocused},active=${window.isActive},pkg=${root?.packageName}" }
+                    finally { @Suppress("DEPRECATION") root?.recycle() }
+                }
+            } finally { automationWindows.forEach { @Suppress("DEPRECATION") it.recycle() } }
+            File(evidence, "result.txt").writeText("FAIL SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n" + state + "\n" + windows + "\n" + failure.stackTraceToString())
+            File(evidence, "accessibility-before-teardown.txt").writeText(device.executeShellCommand("dumpsys accessibility"))
+            File(evidence, "activities-before-teardown.txt").writeText(device.executeShellCommand("dumpsys activity activities"))
             preserveEvidence()
             val hierarchy = java.io.ByteArrayOutputStream()
             try { device.dumpWindowHierarchy(hierarchy); println("SafeNest QA failure UI: " + hierarchy.toString("UTF-8")) }
