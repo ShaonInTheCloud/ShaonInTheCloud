@@ -93,7 +93,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (LocalTestSession.enabled) {
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
                 windowPackages.observe(event.windowId, event.packageName?.toString())
-            if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
+            if (Build.VERSION.SDK_INT >= 28 && event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
                 (event.windowChanges and AccessibilityEvent.WINDOWS_CHANGE_REMOVED) != 0)
                 windowPackages.remove(event.windowId)
         }
