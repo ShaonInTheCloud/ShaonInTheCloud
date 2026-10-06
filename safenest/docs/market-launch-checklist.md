@@ -1,6 +1,6 @@
 # SafeNest market launch checklist
 
-Updated: 6 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+Updated: 7 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
 
 Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
 
@@ -13,7 +13,7 @@ Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/materi
 - [x] Recover the full Android source and published website; keep the approved pink/white design, slogans and English above smaller Bangla.
 - [x] Restore exact applied Supabase migration history, rather than replaying archive migrations under invented timestamps.
 - [x] Synchronize complete application, website, backend, catalogues and release documents to GitHub; verify the resulting branch head. Latest previously verified head: `7ef13f8448032f332c70e79e2684a08e7d34fa07`.
-- [ ] Publish account deletion, privacy, terms, help and checkout-status pages on the existing domain; inspect the deployment result.
+- [x] Publish account deletion, privacy, terms, help and checkout-status pages on the existing domain; inspect the deployment result. Verified 7 October: Sites version 21 succeeded, all five generated URLs resolve over HTTPS with HTTP 200, and all legal-navigation links and anchors passed. See the release-page verification record below.
 - [ ] Establish one release owner, a verified customer-support/privacy address and final business/legal identity.
 - [ ] Protect `main` with passing checks and reviewed pull requests; require MFA for GitHub, Supabase, email, domain and Play Console accounts.
 - [ ] Record production secrets by name and owner; rotate any previously shared private credentials. No service-role, SMTP or merchant secret belongs in the website, APK or Git history.
@@ -144,6 +144,26 @@ Verified against production project `kflenmeizngmafwnwhgv`, the deployed `delete
 | Leaked-password protection | Still disabled. Organization is Free; dashboard and current Supabase documentation state Pro or above is required. Fresh advisor has zero errors and one warning: `auth_leaked_password_protection`. |
 
 Scope: real production email/API integration, not mocks or administrator confirmation shortcuts. Browser-form interaction/rendering, Android authentication, load/abuse testing and paid billing were not exercised. Existing production redirects, custom email delivery, private RLS and account-deletion implementation remain recorded complete; the plan restriction is a separate open security item. Passwords, email tokens, sessions and SMTP/admin keys are excluded from this record.
+
+### Release-page publication verification — 7 October 2026
+
+The privacy, terms and help copy now matches the 0.4.7 source in `SafeNestVpnService.kt` and `DnsHttpsTransport.java`: local domain checks; allowed DNS over certificate/hostname-verified Cloudflare HTTPS; validated strict system Private DNS on Android 10+; failure without plain UDP/TCP fallback or switching a strict provider. Android 9 strict Private DNS is unsupported. Cloudflare receives allowed domain names and the network IP; account credentials are not added to resolver requests.
+
+Both English and Bangla explain that this remains a DNS-based local interface, not an all-traffic tunnel or HTTPS content inspector. Browser Secure DNS, direct IP, proxies, cached connections, VPN replacement and permission revocation remain limitations. The website download is still the older 0.4.0 test APK; these pages do not claim it implements 0.4.7 or that a signed customer release/Play approval exists.
+
+Publication: Sites version 21, source commit `abd25f0854430054378bb0a0d2cd2d15ff00753c`, deployment `appgdep_6ac57b46534c8191a74fa145a070b078` succeeded. The existing custom domain remained active with HTTPS.
+
+| Generated URL | Verified final URL | Result |
+| --- | --- | --- |
+| https://mysafenestbd.com/privacy.html | https://mysafenestbd.com/privacy | HTTP 200; updated DNS copy present |
+| https://mysafenestbd.com/terms.html | https://mysafenestbd.com/terms | HTTP 200; development/release limits present |
+| https://mysafenestbd.com/support.html | https://mysafenestbd.com/support | HTTP 200; encrypted-DNS troubleshooting present |
+| https://mysafenestbd.com/delete-account.html | https://mysafenestbd.com/delete-account | HTTP 200; account deletion instructions linked |
+| https://mysafenestbd.com/checkout.html | https://mysafenestbd.com/checkout | HTTP 200; checkout remains inactive |
+
+Verification: `npm test` passed all 18 existing tests; `npm run build` succeeded. Local and live-domain checks covered all 11 HTML pages and 227 local navigation/download links and anchors, with zero errors. Privacy, terms, deletion and help links exist on every page, including the account page. The host redirects .html URLs to extensionless routes; the account deletion fragment resolves to its existing section. This checks publication, copy and navigation, not a new Auth/deletion flow or Android-device acceptance run.
+
+Seller identity, verified support/privacy contact, exact provider/log/backup retention, final commercial terms and payment activation remain unresolved. No seller, contact address, retention period, live payment channel, certification or approval was invented. Final paid/Play privacy and legal readiness remains pending in section 7.
 
 ## Primary references checked for this release
 
