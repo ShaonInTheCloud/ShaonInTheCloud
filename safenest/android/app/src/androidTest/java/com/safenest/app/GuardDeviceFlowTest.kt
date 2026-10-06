@@ -80,9 +80,14 @@ class GuardDeviceFlowTest {
                 device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
             }
             pass("Own Accessibility detail returns Home")
+            assertEquals("VPN check needs a different prior action", "test_accessibility", GuardPreferences.lastBlockReason())
             openVpnDetails()
             await("VPN gear returns Home") {
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("test_vpn_detail", "test_settings_detail")
+                // An early page event can expose the protected Forget VPN
+                // action before the other rows load: the matcher then reports
+                // test_app_control. It is a fresh action after Accessibility.
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in
+                    setOf("test_vpn_detail", "test_settings_detail", "test_app_control")
             }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
             capture("vpn-guard-home")
