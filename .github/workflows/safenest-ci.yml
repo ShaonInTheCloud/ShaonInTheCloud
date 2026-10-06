@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: safenest-${{ github.ref }}
+  group: safenest-guard-qa-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   web-and-security:
@@ -37,6 +37,7 @@ jobs:
           retention-days: 14
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: safenest
@@ -92,11 +93,14 @@ jobs:
         working-directory: safenest/android
       - name: Capture emulator evidence
         if: always()
+        timeout-minutes: 1
         run: |
           mkdir -p android/app/build/guard-device-evidence
-          adb pull /sdcard/Android/data/com.safenest.app.lab/files/guard-qa android/app/build/guard-device-evidence || true
-          adb logcat -d -b crash > android/app/build/guard-device-evidence/crash-log.txt || true
-          adb shell dumpsys accessibility > android/app/build/guard-device-evidence/accessibility-state.txt || true
+          if adb devices | awk 'NR>1 && $2=="device" {found=1} END {exit !found}'; then
+            timeout 15 adb pull /sdcard/Android/data/com.safenest.app.lab/files/guard-qa android/app/build/guard-device-evidence || true
+            timeout 10 adb logcat -d -b crash > android/app/build/guard-device-evidence/crash-log.txt || true
+            timeout 10 adb shell dumpsys accessibility > android/app/build/guard-device-evidence/accessibility-state.txt || true
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
