@@ -34,3 +34,11 @@ verify_jwt = true
 # Preserve the live function's own authorization model.
 [functions.intelligence]
 verify_jwt = false
+
+[functions.payment-order]
+verify_jwt = true
+
+# Provider notifications have no buyer JWT; handler rejects until a real,
+# independently verified provider adapter is implemented and approved.
+[functions.payment-notification]
+verify_jwt = false

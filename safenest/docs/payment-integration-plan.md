@@ -1,6 +1,8 @@
 # SafeNest payment implementation plan
 
-Current state: no merchant credentials, no live checkout and no receipt-driven entitlement issuance. Checkout remains inactive. Do not create sample paid rows in production or treat client flags as payment evidence.
+Current state: credential-independent order/receipt processing and transactional entitlement issuance are implemented and tested in an isolated PostgreSQL runner. No concrete merchant adapter, credentials, approved products or live checkout exist. Checkout remains inactive; unverified HTTP callbacks cannot issue entitlements. Do not create sample paid rows in production or treat client flags as payment evidence.
+
+See `payment-foundation.md` for the schema, server trust boundary, disabled deployment and test evidence. Provider-specific hosted checkout/notification validation, genuine sandbox integration, scheduling and commercial approval remain open.
 
 ## Website path
 
