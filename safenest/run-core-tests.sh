@@ -13,7 +13,7 @@ trap 'rm -rf "$safenest_out"' EXIT HUP INT TERM
 "$safenest_java" -m jdk.compiler/com.sun.tools.javac.Main --release 17 -Xlint:all -d "$safenest_out" \
     "$safenest_main/DnsPacketCodec.java" "$safenest_main/DomainRules.java" "$safenest_main/CatalogVerifier.java" \
     "$safenest_main/DnsAliasInspector.java" "$safenest_main/DnsUpstreamTransport.java" \
-    "$safenest_main/CommitmentRules.java" "$safenest_main/SystemScreenGuard.java" "$safenest_main/ControlScreenExit.java" \
+    "$safenest_main/CommitmentRules.java" "$safenest_main/SystemScreenGuard.java" "$safenest_main/ControlScreenExit.java" "$safenest_main/WindowPackageCache.java" \
     "$safenest_test/DnsPacketCodecRegression.java" "$safenest_test/DomainRulesRegression.java" \
     "$safenest_test/DnsAliasInspectorRegression.java" "$safenest_test/DnsUpstreamTransportRegression.java" \
     "$safenest_test/CatalogVerifierRegression.java" "$safenest_test/CommitmentGuardRegression.java" "$safenest_test/ControlScreenExitRegression.java"

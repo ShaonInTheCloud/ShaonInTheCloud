@@ -9,6 +9,7 @@ import android.os.Looper
 import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Toast
 
 /**
@@ -34,6 +35,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private var lastVpnRefresh = 0L
     private var vpnPackages: Set<String> = emptySet()
     private var controlExit: ControlScreenExit? = null
+    private val windowPackages = WindowPackageCache()
     private val handler = Handler(Looper.getMainLooper())
     private var pendingControlScan: Runnable? = null
     private var pendingControlPackage: String? = null
@@ -55,6 +57,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
             override fun back() = performGlobalAction(GLOBAL_ACTION_BACK)
             override fun home() = performGlobalAction(GLOBAL_ACTION_HOME)
             override fun foregroundPackage(): String? {
+                focusedControlWindow()?.pkg?.let { return it.takeUnless { it == "com.android.systemui" } }
                 val root = controlForegroundRoot() ?: return null
                 return try {
                     // Status/navigation windows may temporarily take focus during Back.
@@ -62,6 +65,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 } finally { @Suppress("DEPRECATION") root.recycle() }
             }
             override fun protectedDetail(): Boolean {
+                focusedControlWindow()?.let {
+                    if (SystemScreenGuard.testFocusedWindowReason(it.pkg, it.title).isNotEmpty()) return true
+                }
                 val root = controlForegroundRoot() ?: return false
                 return try {
                     val name = root.packageName?.toString().orEmpty()
@@ -81,16 +87,24 @@ class SafeNestAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null || !GuardPreferences.isEnabled(this)) return
+        if (event == null) return
+        // Public package/window IDs only. Remember ownership of reused Settings
+        // windows even during consent/setup; no content or title is retained.
+        if (LocalTestSession.enabled) {
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
+                windowPackages.observe(event.windowId, event.packageName?.toString())
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
+                (event.windowChanges and AccessibilityEvent.WINDOWS_CHANGE_REMOVED) != 0)
+                windowPackages.remove(event.windowId)
+        }
+        if (!GuardPreferences.isEnabled(this)) return
         if (LocalTestSession.enabled && event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
             // Window-focus changes need not emit a new Settings content event.
             // Inspect only the focused root, never a Settings window behind a
             // different focused app, permission dialog or notification shade.
-            val root = controlForegroundRoot() ?: return
-            val name: String
-            val windowId: Int
-            try { name = root.packageName?.toString() ?: return; windowId = root.windowId }
-            finally { @Suppress("DEPRECATION") root.recycle() }
+            val focus = focusedControlWindow() ?: return
+            val name = focus.pkg ?: return
+            val windowId = focus.id
             controlExit?.observeForeground(name)
             if (SystemScreenGuard.isSystemSurface(name)) {
                 if (!inspectControlScreen(name, windowId)) scheduleControlScan(name, windowId)
@@ -152,6 +166,27 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private data class ControlLabels(val labels: Set<String>, val actions: Set<String>,
                                      val titles: Set<String>, val detailTitles: Set<String>, val checkedToggle: Boolean)
 
+    private data class ControlWindow(val id: Int, val pkg: String?, val title: String?)
+    private fun focusedControlWindow(): ControlWindow? {
+        if (!LocalTestSession.enabled) return null
+        val interactive = windows
+        return try {
+            val focus = interactive.take(12).firstOrNull { it.isFocused } ?: return null
+            var pkg = windowPackages.owner(focus.id)
+            if (pkg == null) {
+                val root = focus.root
+                try { pkg = root?.packageName?.toString(); windowPackages.observe(focus.id, pkg) }
+                finally { @Suppress("DEPRECATION") root?.recycle() }
+            }
+            // Read a title only on the selected, focused Settings application
+            // window; never underneath a system dialog or on other apps.
+            val title = if (focus.type == AccessibilityWindowInfo.TYPE_APPLICATION &&
+                pkg != null && SystemScreenGuard.isSystemSurface(pkg))
+                focus.title?.toString()?.takeIf { it.length <= 240 } else null
+            ControlWindow(focus.id, pkg, title)
+        } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
+    }
+
     /** Lab-only focus lookup. Active touch windows can outlive Back transitions. */
     private fun controlForegroundRoot(): AccessibilityNodeInfo? {
         if (!LocalTestSession.enabled) return rootInActiveWindow
@@ -178,7 +213,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         return try {
             activeState + "; windows=" + interactive.take(12).joinToString("|") { window ->
                 val root = window.root
-                try { "${window.id},type=${window.type},focus=${window.isFocused},active=${window.isActive},pkg=${root?.packageName}" }
+                try { "${window.id},type=${window.type},focus=${window.isFocused},active=${window.isActive},pkg=${root?.packageName},owner=${windowPackages.owner(window.id)}" }
                 finally { @Suppress("DEPRECATION") root?.recycle() }
             }
         } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
@@ -188,6 +223,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (!isConnected || !GuardPreferences.isEnabled(this)) return false
         val testControls = GuardPreferences.testControlsActive(this)
         if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return false
+        if (testControls) focusedControlWindow()?.let { focus ->
+            if (focus.pkg == name && (expectedWindowId < 0 || focus.id == expectedWindowId)) {
+                val reason = SystemScreenGuard.testFocusedWindowReason(name, focus.title)
+                if (reason.isNotEmpty()) {
+                    cancelControlScan()
+                    returnHome(SystemClock.elapsedRealtime(), reason,
+                        "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
+                    return true
+                }
+            }
+        }
         val root = controlForegroundRoot() ?: return false
         try {
             if (root.packageName?.toString() != name) return false
@@ -315,6 +361,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onInterrupt() = Unit
     override fun onUnbind(intent: Intent?): Boolean {
         isConnected = false
+        windowPackages.clear()
         if (connectedService === this) connectedService = null
         handler.removeCallbacks(expiryPoll)
         cancelControlScan()
@@ -323,5 +370,5 @@ class SafeNestAccessibilityService : AccessibilityService() {
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
+    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); windowPackages.clear(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
 }

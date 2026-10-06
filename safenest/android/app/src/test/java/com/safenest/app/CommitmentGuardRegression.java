@@ -57,6 +57,27 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksTestControl("com.google.android.packageinstaller", List.of("SafeNest"), List.of("SafeNest"), List.of("Cancel", "Uninstall")), "regular SafeNest uninstall confirmation during consented lab test");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest", "Chrome", "Uninstall", "Force stop"), List.of("Chrome"), List.of("Uninstall", "Force stop")), "other app uninstall page stays available");
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "Always-on VPN", "Forget VPN"), List.of(), List.of()), "known VPN management page without toolbar IDs");
+        check(SystemScreenGuard.testFocusedWindowReason("com.android.settings", "SafeNest Test").equals("test_settings_detail"), "focused own Settings title works without page nodes");
+        check(SystemScreenGuard.testFocusedWindowReason("com.android.settings", "SafeNest").equals("test_settings_detail"), "regular own Settings title works without page nodes");
+        check(SystemScreenGuard.testFocusedWindowReason("com.android.settings", "SafeNest Test app guard").equals("test_accessibility"), "focused own Accessibility title");
+        for (String title : List.of("Settings", "VPN", "Accessibility", "Chrome", "SafeNest Test and Chrome", "1.1.1.1"))
+            check(SystemScreenGuard.testFocusedWindowReason("com.android.settings", title).isEmpty(), "generic/unrelated focused title stays available: " + title);
+        check(SystemScreenGuard.testFocusedWindowReason("com.android.chrome", "SafeNest Test").isEmpty(), "same title in another app is ignored");
+        check(SystemScreenGuard.testFocusedWindowReason("com.safenest.app.lab", "SafeNest Test").isEmpty(), "own app and Stop test remain usable");
+        check(SystemScreenGuard.testFocusedWindowReason("com.google.android.packageinstaller", "SafeNest Test").isEmpty(), "installer name alone is insufficient");
+        WindowPackageCache windows = new WindowPackageCache();
+        windows.observe(24, "com.android.settings");
+        check("com.android.settings".equals(windows.owner(24)) && windows.owner(25) == null, "ownership never transfers to a different focused window ID");
+        windows.observe(-1, "com.android.settings"); windows.observe(24, null);
+        check(windows.owner(-1) == null && "com.android.settings".equals(windows.owner(24)), "missing event metadata cannot erase valid ownership or bind an unknown window");
+        windows.remove(24);
+        check(windows.owner(24) == null, "removed windows lose their ownership");
+        windows.observe(24, "com.android.chrome");
+        check(SystemScreenGuard.testFocusedWindowReason(windows.owner(24), "SafeNest Test").isEmpty(), "reused window in another app cannot trigger own Settings guard");
+        for (int id = 30; id < 43; id++) windows.observe(id, "com.android.settings");
+        check(windows.owner(24) == null && windows.owner(30) == null && "com.android.settings".equals(windows.owner(42)), "ownership cache is bounded to twelve windows");
+        windows.clear();
+        check(windows.owner(42) == null, "unbind clears ephemeral ownership");
         System.out.println("Paid-window and UI-guard regression: " + checks + " checks passed.");
     }
 }

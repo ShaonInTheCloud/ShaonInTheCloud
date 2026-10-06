@@ -64,7 +64,7 @@ class GuardDeviceFlowTest {
                 }
                 appInfo(pkg)
                 await("$pkg App info returns Home") {
-                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_app_control"
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("test_app_control", "test_settings_detail")
                 }
                 capture(if (pkg == context.packageName) "test-uninstall-guard-home" else "regular-uninstall-guard-home")
                 pass("$pkg uninstall/force-stop page returns Home")
@@ -83,7 +83,7 @@ class GuardDeviceFlowTest {
             pass("Own Accessibility detail returns Home")
             openVpnDetails()
             await("VPN gear returns Home") {
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_vpn_detail"
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("test_vpn_detail", "test_settings_detail")
             }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
             capture("vpn-guard-home")
@@ -121,7 +121,7 @@ class GuardDeviceFlowTest {
                 "last action: ${GuardPreferences.lastBlockReason()}; exit: ${GuardPreferences.lastControlExitOutcome()}"
             var windows = ""
             instrumentation.runOnMainSync { windows = SafeNestAccessibilityService.windowStatusForQa() }
-            val automationWindows = instrumentation.uiAutomation.windows
+            val automationWindows = instrumentation.getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES).windows
             try {
                 windows += "; automation=" + automationWindows.take(12).joinToString("|") { window ->
                     val root = window.root

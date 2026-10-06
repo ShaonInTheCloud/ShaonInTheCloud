@@ -58,6 +58,14 @@ public final class SystemScreenGuard {
                                            Collection<String> titles, Collection<String> actions) {
         return !testControlReason(pkg, labels, titles, actions).isEmpty();
     }
+    /** Only an exact selected SafeNest Settings title, paired with verified window ownership. */
+    public static String testFocusedWindowReason(String pkg, String title) {
+        if (!SETTINGS.contains(pkg) || title == null || title.length() > 240) return "";
+        String text = normalize(title);
+        if (text.equals("safenest test app guard")) return "test_accessibility";
+        if (text.equals("safenest") || text.equals("safenest test")) return "test_settings_detail";
+        return "";
+    }
     public static String testControlReason(String pkg, Collection<String> labels,
                                           Collection<String> titles, Collection<String> actions) {
         boolean settings = SETTINGS.contains(pkg);
