@@ -50,19 +50,39 @@ public final class SystemScreenGuard {
             s.equals("install") || s.equals("update") || s.equals("ইনস্টল") || s.equals("asenna"));
         return install && titles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
     }
-    /** Lab-only self controls; permission revocation and unrelated apps stay accessible. */
+    /** Lab-only detail pages. Never matches Settings home, Accessibility list or the VPN list. */
     public static boolean blocksTestControl(String pkg, Collection<String> labels,
                                            Collection<String> titles, Collection<String> actions) {
-        if (!SETTINGS.contains(pkg) && !INSTALLERS.contains(pkg)) return false;
-        boolean target = labels.stream().map(SystemScreenGuard::normalize).anyMatch(SystemScreenGuard::isTestIdentity);
-        if (!target) return false;
-        // A titled unrelated detail page must not match a background/list mention of SafeNest Test.
-        if (!titles.isEmpty() && titles.stream().map(SystemScreenGuard::normalize).noneMatch(SystemScreenGuard::isTestIdentity)) return false;
-        return actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+        return !testControlReason(pkg, labels, titles, actions).isEmpty();
+    }
+    public static String testControlReason(String pkg, Collection<String> labels,
+                                          Collection<String> titles, Collection<String> actions) {
+        boolean settings = SETTINGS.contains(pkg);
+        if (!settings && !INSTALLERS.contains(pkg)) return "";
+        Set<String> text = new HashSet<>();
+        labels.stream().map(SystemScreenGuard::normalize).forEach(text::add);
+        // The exact Use label occurs on our service detail page, not the services list.
+        if (settings && text.contains("use safenest test app guard") &&
+            text.contains("safenest test app guard")) return "test_accessibility";
+        boolean own = text.stream().anyMatch(SystemScreenGuard::isTestIdentity);
+        boolean ownTitle = titles.stream().map(SystemScreenGuard::normalize).anyMatch(SystemScreenGuard::isTestIdentity);
+        boolean knownVpnTitle = titles.stream().anyMatch(s -> s != null && s.length() <= 140 && VPN_NAME.matcher(s).find());
+        boolean vpnDetail = text.contains("always-on vpn") || text.contains("forget vpn") ||
+            text.contains("delete vpn") || text.contains("block connections without vpn");
+        boolean connectionDialog = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("connect") || s.equals("disconnect") || s.equals("katkaise yhteys") || s.equals("সংযোগ বিচ্ছিন্ন"));
+        // A name in the VPN list is insufficient. Require actual detail/connection controls.
+        if (settings && (vpnDetail || connectionDialog)) {
+            if (own && (ownTitle || titles.isEmpty())) return "test_vpn_detail";
+            if (knownVpnTitle) return "test_other_vpn_detail";
+        }
+        if (!own || (!titles.isEmpty() && !ownTitle)) return "";
+        boolean removal = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("disconnect") || s.equals("forget vpn") || s.equals("delete vpn") ||
             s.equals("forget") || s.equals("uninstall") || s.equals("force stop") ||
             s.equals("সংযোগ বিচ্ছিন্ন") || s.equals("আনইনস্টল") ||
             s.equals("katkaise yhteys") || s.equals("poista asennus"));
+        return removal ? "test_app_control" : "";
     }
     private static boolean isTestIdentity(String s) {
         return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter");

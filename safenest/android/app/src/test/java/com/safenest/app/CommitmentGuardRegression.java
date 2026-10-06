@@ -28,7 +28,7 @@ public final class CommitmentGuardRegression {
         check(!SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("NordVPN"), List.of("Uninstall")), "removing competing VPN remains allowed");
         check(!SystemScreenGuard.blocksVpnInstall("com.android.chrome", List.of("NordVPN"), List.of("Install")), "web page text not inspected");
         for (String action : List.of("Disconnect", "Forget VPN", "Uninstall", "Force stop")) {
-            check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "0.4.4-test"), List.of("SafeNest Test"), List.of(action)), "test Settings: " + action);
+            check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "0.4.5-test"), List.of("SafeNest Test"), List.of(action)), "test Settings: " + action);
         }
         check(SystemScreenGuard.blocksTestControl("com.google.android.packageinstaller", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test uninstall confirmation without title IDs");
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("com.safenest.app.lab"), List.of(), List.of("Disconnect")), "test package identity");
@@ -36,9 +36,19 @@ public final class CommitmentGuardRegression {
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest"), List.of("SafeNest"), List.of("Uninstall")), "lab guard leaves production app alone");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Another VPN"), List.of("Another VPN"), List.of("Disconnect")), "background test label cannot target another VPN detail");
         check(!SystemScreenGuard.blocksTestControl("com.android.chrome", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test phrase in browser is not a control");
-        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test"), List.of(), List.of("Use SafeNest Test", "Turn off")), "test Accessibility revocation remains accessible");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Accessibility", "SafeNest Test app guard", "TalkBack"), List.of("Accessibility"), List.of("SafeNest Test app guard")), "Accessibility list stays available");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test"), List.of(), List.of("Allow", "Always-on VPN")), "test permissions and network toggles remain accessible");
         check(!SystemScreenGuard.blocksTestControl("com.android.vending", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "lab inspection limited to Settings and installers");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test app guard", "Use SafeNest Test app guard", "App info"), List.of("SafeNest Test app guard"), List.of()), "exact own Accessibility detail from screenshot");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("TalkBack", "Use TalkBack"), List.of("TalkBack"), List.of()), "other Accessibility services unaffected");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("VPN", "1.1.1.1", "SafeNest Test"), List.of("VPN", "1.1.1.1", "SafeNest Test"), List.of("1.1.1.1", "SafeNest Test", "Settings")), "exact supplied VPN list stays accessible");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Settings", "SafeNest Test", "Apps", "Network & internet"), List.of("Settings"), List.of("Apps")), "Settings home stays accessible");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Always-on VPN", "Forget VPN"), List.of("SafeNest Test", "Always-on VPN"), List.of()), "own VPN detail guarded even before action is enabled");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "Always-on VPN", "Forget VPN"), List.of("1.1.1.1"), List.of()), "1.1.1.1 VPN detail guarded");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1"), List.of("1.1.1.1"), List.of("Connect", "Cancel")), "1.1.1.1 connect dialog guarded");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "Notifications"), List.of("1.1.1.1"), List.of("Allow notifications")), "another VPN ordinary app settings unaffected");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "SafeNest Test", "Forget VPN"), List.of("Unrelated VPN"), List.of("Forget VPN")), "background VPN mention cannot target unrelated profile");
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("SafeNest Test app guard", "Use SafeNest Test app guard"), List.of(), List.of()).equals("test_accessibility"), "diagnostic reason distinguishes own switch");
         System.out.println("Paid-window and UI-guard regression: " + checks + " checks passed.");
     }
 }

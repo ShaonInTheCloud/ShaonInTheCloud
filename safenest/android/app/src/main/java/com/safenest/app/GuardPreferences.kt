@@ -20,9 +20,9 @@ object GuardPreferences {
     fun isSelected(context: Context): Boolean = prefs(context).getBoolean("enabled", false)
     fun isEnabled(context: Context): Boolean = isSelected(context) && ProtectionCommitment.isActive(context)
     fun hasTestControlConsent(context: Context): Boolean = LocalTestSession.enabled &&
-        prefs(context).getBoolean("test_control_consent", false)
+        prefs(context).getBoolean("test_control_consent_v2", false)
     fun consentToTestControls(context: Context) {
-        if (LocalTestSession.enabled) prefs(context).edit().putBoolean("test_control_consent", true).apply()
+        if (LocalTestSession.enabled) prefs(context).edit().putBoolean("test_control_consent_v2", true).apply()
     }
     fun isTestSetupReady(context: Context): Boolean = hasTestControlConsent(context) &&
         isSelected(context) && isAccessibilityEnabled(context) && isServiceConnected()
@@ -46,7 +46,7 @@ object GuardPreferences {
     }
     internal fun clearForExpiry(context: Context) {
         prefs(context).edit().putBoolean("enabled", false).putBoolean("block_vpn_apps", false)
-            .putBoolean("test_control_consent", false).commit()
+            .putBoolean("test_control_consent", false).putBoolean("test_control_consent_v2", false).commit()
     }
 
     /** Foreground event path: no installed-app inventory scan per event. */

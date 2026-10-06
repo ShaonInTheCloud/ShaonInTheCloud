@@ -26,6 +26,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private var lastToast = 0L
     private var lastVpnRefresh = 0L
     private var vpnPackages: Set<String> = emptySet()
+    private var controlExit: ControlScreenExit? = null
     private val handler = Handler(Looper.getMainLooper())
     private val expiryPoll = object : Runnable {
         override fun run() {
@@ -37,6 +38,27 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         isConnected = true
+        controlExit?.cancel()
+        if (LocalTestSession.enabled) controlExit = ControlScreenExit(packageName, object : ControlScreenExit.Driver {
+            override fun active() = isConnected && GuardPreferences.testControlsActive(this@SafeNestAccessibilityService)
+            override fun back() = performGlobalAction(GLOBAL_ACTION_BACK)
+            override fun home() = performGlobalAction(GLOBAL_ACTION_HOME)
+            override fun foregroundPackage(): String? {
+                val root = rootInActiveWindow ?: return null
+                return try { root.packageName?.toString() } finally { @Suppress("DEPRECATION") root.recycle() }
+            }
+            override fun protectedDetail(): Boolean {
+                val root = rootInActiveWindow ?: return false
+                return try {
+                    val name = root.packageName?.toString().orEmpty()
+                    if (!SystemScreenGuard.isSystemSurface(name)) false else {
+                        val screen = readControlLabels(root)
+                        SystemScreenGuard.testControlReason(name, screen.labels, screen.titles, screen.actions).isNotEmpty()
+                    }
+                } finally { @Suppress("DEPRECATION") root.recycle() }
+            }
+            override fun post(action: Runnable, delayMs: Long) { handler.postDelayed(action, delayMs) }
+        })
         handler.post(expiryPoll)
     }
 
@@ -55,8 +77,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
             try {
                 if (root.packageName?.toString() != name) return
                 val screen = readControlLabels(root)
-                if (testControls && SystemScreenGuard.blocksTestControl(name, screen.labels, screen.titles, screen.actions)) {
-                    returnHome(now, "test_safenest_control", "SafeNest Test controls are guarded. Use Stop test in the app to end the test.")
+                val testReason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.titles, screen.actions) else ""
+                if (testReason.isNotEmpty()) {
+                    returnHome(now, testReason, "SafeNest Test controls are guarded. Use Stop test in the app to end the test.", controlPackage = name)
                 } else if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
                     returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
                 } else if (BuildConfig.ALLOW_SYSTEM_GUARD && GuardPreferences.blocksVpnApps(this) &&
@@ -113,7 +136,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         var checkedToggle = false; var visited = 0
         // Settings often puts the label inside a clickable row, rather than on the clickable node.
         val queue = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Boolean>>()
-        for (i in 0 until root.childCount) root.getChild(i)?.let { queue.add(it to (root.isEnabled && root.isClickable)) }
+        for (i in 0 until minOf(root.childCount, 180)) root.getChild(i)?.let { queue.add(it to (root.isEnabled && root.isClickable)) }
         try {
             while (queue.isNotEmpty() && visited++ < 180) {
                 val (node, parentActionable) = queue.removeFirst()
@@ -137,15 +160,27 @@ class SafeNestAccessibilityService : AccessibilityService() {
         return ControlLabels(labels, actions, titles, checkedToggle)
     }
 
-    private fun returnHome(now: Long, reason: String, message: String) {
-        if (!GuardPreferences.isEnabled(this) || now - lastHomeAction < 1000L) return
+    private fun returnHome(now: Long, reason: String, message: String, controlPackage: String? = null) {
+        val cooldown = if (controlPackage != null) 350L else 1000L
+        if (!GuardPreferences.isEnabled(this) || now - lastHomeAction < cooldown) return
         lastHomeAction = now
-        if (performGlobalAction(GLOBAL_ACTION_HOME)) {
-            lastBlockReason = reason
-            if (now - lastToast > 3000L) {
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                lastToast = now
-            }
+        if (controlPackage != null) {
+            // Pop the detail/dialog before Home so Settings restores its unguarded parent next time.
+            if (controlExit?.exit(controlPackage) { recordHome(reason, message) } == true) lastBlockReason = reason
+        } else finishHome(reason, message)
+    }
+
+    private fun finishHome(reason: String, message: String) {
+        if (!GuardPreferences.isEnabled(this)) return
+        if (performGlobalAction(GLOBAL_ACTION_HOME)) recordHome(reason, message)
+    }
+
+    private fun recordHome(reason: String, message: String) {
+        lastBlockReason = reason
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastToast > 3000L) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            lastToast = now
         }
     }
 
@@ -153,9 +188,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         isConnected = false
         handler.removeCallbacks(expiryPoll)
+        controlExit?.cancel()
         // Retain the intended guard selection. If Android revokes Accessibility,
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { handler.removeCallbacks(expiryPoll); isConnected = false; super.onDestroy() }
+    override fun onDestroy() { controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; super.onDestroy() }
 }
