@@ -52,9 +52,17 @@ class GuardDeviceFlowTest {
             capture("regular-app-info-before-guard")
             prepareAndStart()
 
-            for (pkg in listOf(context.packageName, "com.safenest.app")) {
+            for ((index, pkg) in listOf(context.packageName, "com.safenest.app").withIndex()) {
+                if (index > 0) {
+                    ownAccessibilityDetail()
+                    await("Own Accessibility guard before second removal test") {
+                        device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
+                    }
+                }
                 appInfo(pkg)
-                await("$pkg App info returns Home") { device.currentPackageName == launcher }
+                await("$pkg App info returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_app_control"
+                }
                 capture(if (pkg == context.packageName) "test-uninstall-guard-home" else "regular-uninstall-guard-home")
                 pass("$pkg uninstall/force-stop page returns Home")
             }
@@ -66,10 +74,14 @@ class GuardDeviceFlowTest {
             assertSettings("Accessibility list stays usable")
             pass("Accessibility services list remains available")
             ownAccessibilityDetail()
-            await("Own Accessibility detail returns Home") { device.currentPackageName == launcher }
+            await("Own Accessibility detail returns Home") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
+            }
             pass("Own Accessibility detail returns Home")
             openVpnDetails()
-            await("VPN gear returns Home") { device.currentPackageName == launcher }
+            await("VPN gear returns Home") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_vpn_detail"
+            }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
             capture("vpn-guard-home")
             pass("VPN gear/detail returns Home and Always-on stays enabled")
@@ -98,9 +110,14 @@ class GuardDeviceFlowTest {
             capture("vpn-detail-released")
             pass("Stop test releases Always-on toggle")
             File(evidence, "result.txt").writeText("PASS SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n")
+            preserveEvidence()
         } catch (failure: Throwable) {
             capture("failure")
             File(evidence, "result.txt").writeText("FAIL SafeNest Test ${BuildConfig.VERSION_NAME}\n" + outcomes.joinToString("\n") + "\n" + failure.stackTraceToString())
+            preserveEvidence()
+            val hierarchy = java.io.ByteArrayOutputStream()
+            try { device.dumpWindowHierarchy(hierarchy); println("SafeNest QA failure UI: " + hierarchy.toString("UTF-8")) }
+            catch (_: Exception) { }
             throw failure
         } finally {
             LocalTestSession.stop(context)
@@ -109,7 +126,8 @@ class GuardDeviceFlowTest {
 
     private fun prepareAndStart() {
         openApp()
-        tap("Start test")
+        assertTrue("App startup must finish before setup", device.wait(Until.hasObject(By.text("Start test")), 30_000))
+        tap("Start test", scroll = true)
         tap("Review and enable test guard", scroll = true)
         tap("I agree — open settings")
         if (!GuardPreferences.isAccessibilityEnabled(context)) {
@@ -164,7 +182,7 @@ class GuardDeviceFlowTest {
     }
 
     private fun tap(text: String, scroll: Boolean = false) {
-        var node = device.wait(Until.findObject(By.text(text)), 3000)
+        var node = device.wait(Until.findObject(By.text(text)), 15_000)
         if (node == null && scroll) {
             repeat(6) { device.findObject(By.scrollable(true))?.scroll(Direction.UP, 0.85f) }
             repeat(12) {
@@ -186,6 +204,7 @@ class GuardDeviceFlowTest {
     }
 
     private fun assertSettings(description: String) {
+        await(description) { device.currentPackageName == "com.android.settings" }
         SystemClock.sleep(1200)
         assertEquals(description, "com.android.settings", device.currentPackageName)
     }
@@ -197,5 +216,12 @@ class GuardDeviceFlowTest {
             device.takeScreenshot(File(evidence, "$name.png"))
             device.dumpWindowHierarchy(File(evidence, "$name.xml"))
         } catch (_: Exception) { /* Keep the original failure if evidence capture fails. */ }
+    }
+
+    private fun preserveEvidence() {
+        // Gradle uninstalls the test app after execution; keep disposable-device
+        // evidence outside its app directory before that teardown.
+        device.executeShellCommand("mkdir -p /sdcard/Download/safenest-guard-qa")
+        device.executeShellCommand("cp -R /sdcard/Android/data/com.safenest.app.lab/files/guard-qa/. /sdcard/Download/safenest-guard-qa/")
     }
 }
