@@ -17,7 +17,7 @@ function setLang(lang) {
     el.setAttribute('aria-pressed', String(el.dataset.lang === lang));
   });
   if (location.pathname.endsWith('/') || location.pathname.endsWith('/index.html')) {
-    document.title = lang === 'bn' ? 'SafeNest — বাংলাদেশের জন্য নিরাপদ ডিজিটাল স্পেস' : 'SafeNest — A safer digital space for Bangladesh';
+    document.title = lang === 'bn' ? 'SafeNest — Android-এ জুয়া ও প্রাপ্তবয়স্ক সাইট ব্লকিং' : 'SafeNest — Gambling and adult-site blocking for Android';
   }
   try { localStorage.setItem('safenest-language-v2', lang); } catch {}
 }
@@ -69,7 +69,7 @@ document.querySelector('[data-share]')?.addEventListener('click', async () => {
   const status = document.querySelector('[data-share-status]');
   const url = new URL('campaign.html', location.href).href;
   try {
-    if (navigator.share) await navigator.share({ title: 'SafeNest campaign', url });
+    if (navigator.share) await navigator.share({ title: 'SafeNest practical steps', url });
     else if (navigator.clipboard) { await navigator.clipboard.writeText(url); if (status) status.textContent = document.documentElement.lang === 'bn' ? 'লিংক কপি হয়েছে।' : 'Link copied.'; }
     else if (status) status.textContent = url;
   } catch (error) {
@@ -83,11 +83,12 @@ if (searchForm) {
   const searchInput = searchForm.querySelector('input[type="search"]');
   const searchResults = searchForm.querySelector('.site-search-results');
   const pages = [
-    { href: './', en: 'Home', bn: 'হোম', summaryEn: 'SafeNest and the SafeNest campaign', summaryBn: 'SafeNest ও SafeNest ক্যাম্পেইন', terms: 'home safenest protect safer digital space gambling porn adult family support campaign' },
-    { href: 'campaign.html', en: 'Campaign', bn: 'ক্যাম্পেইন', summaryEn: 'Small steps and mindful internet use', summaryBn: 'ছোট পদক্ষেপ ও সচেতন ইন্টারনেট ব্যবহার', terms: 'campaign challenge mindful online habits screen time recovery' },
-    { href: 'how-it-works.html', en: 'How it works', bn: 'যেভাবে কাজ করবে', summaryEn: 'Android filtering, app guard and current limits', summaryBn: 'অ্যান্ড্রয়েড ফিল্টার, অ্যাপ গার্ড ও সীমাবদ্ধতা', terms: 'how works android dns filter website app guard vpn limits private dns encrypted security' },
-    { href: 'pricing.html', en: 'Pricing', bn: 'মূল্য', summaryEn: 'Proposed plans, payment methods and roadmap', summaryBn: 'প্রস্তাবিত প্ল্যান, পেমেন্ট ও ভবিষ্যৎ পরিকল্পনা', terms: 'pricing plans price cost subscription payment visa mastercard bkash rocket upay dbbl wallet dutch bangla bank support progress' },
-    { href: 'our-story.html', en: 'Our story', bn: 'আমাদের কথা', summaryEn: 'Why SafeNest is being built', summaryBn: 'কেন SafeNest তৈরি হচ্ছে', terms: 'story about mission why safenest recovery family' }
+    { href: './', en: 'Home', bn: 'হোম', summaryEn: 'SafeNest and the SafeNest practical steps', summaryBn: 'Android-এ জুয়া ও প্রাপ্তবয়স্ক সাইট ব্লকিং', terms: 'home safenest protect safer digital space gambling porn adult family support campaign' },
+    { href: 'campaign.html', en: 'Practical steps', bn: 'করণীয়', summaryEn: 'Private checkmarks and practical steps', summaryBn: 'ব্যক্তিগত চিহ্ন ও করণীয়', terms: 'campaign challenge mindful online habits screen time recovery' },
+    { href: 'how-it-works.html', en: 'Features & setup', bn: 'ফিচার ও সেটআপ', summaryEn: 'Android filtering, app guard and current limits', summaryBn: 'অ্যান্ড্রয়েড ফিল্টার, অ্যাপ গার্ড ও সীমাবদ্ধতা', terms: 'how works android dns filter website app guard vpn limits private dns encrypted security' },
+    { href: 'pricing.html', en: 'Pricing', bn: 'মূল্য', summaryEn: 'Proposed prices and payment status', summaryBn: 'প্রস্তাবিত মূল্য ও পেমেন্টের অবস্থা', terms: 'pricing plans price cost subscription payment visa mastercard bkash rocket upay dbbl wallet dutch bangla bank support progress' },
+    { href: 'support.html', en: 'Help', bn: 'সহায়তা', summaryEn: 'Testing, DNS troubleshooting and account help', summaryBn: 'পরীক্ষা, DNS সমস্যা ও অ্যাকাউন্টের সহায়তা', terms: 'help support contact release testing dns troubleshooting account delete privacy' },
+    { href: 'our-story.html', en: 'About', bn: 'আমাদের সম্পর্কে', summaryEn: 'Why SafeNest is being built', summaryBn: 'কেন SafeNest তৈরি হচ্ছে', terms: 'story about mission why safenest recovery family' }
   ];
   const language = () => document.documentElement.lang === 'bn' ? 'bn' : 'en';
   const closeResults = () => { searchResults.hidden = true; searchInput.setAttribute('aria-expanded', 'false'); };
