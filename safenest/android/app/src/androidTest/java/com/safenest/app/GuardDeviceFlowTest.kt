@@ -138,9 +138,9 @@ class GuardDeviceFlowTest {
         await("Test stopped") { !LocalTestSession.isActive(context) && !GuardPreferences.testControlGuardReady(context) }
     }
 
-    private fun ownAccessibilityDetail() = start(Intent(Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS)
-        .putExtra(Settings.EXTRA_ACCESSIBILITY_SERVICE_COMPONENT_NAME,
-            ComponentName(context.packageName, SafeNestAccessibilityService::class.java.name)))
+    private fun ownAccessibilityDetail() = start(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
+        .putExtra("android.intent.extra.COMPONENT_NAME",
+            ComponentName(context.packageName, SafeNestAccessibilityService::class.java.name).flattenToString()))
 
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
     private fun openApp() = start(Intent().setComponent(ComponentName(context.packageName, MainActivity::class.java.name)))
