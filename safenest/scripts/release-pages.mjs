@@ -1,7 +1,7 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises';
 
 const source = await readFile('website/index.html', 'utf8');
-const header = source.match(/<header[\s\S]*?<\/header>/)[0];
+const header = source.match(/<header[\s\S]*?<\/header>/)[0].replace(/ aria-current=(?:"page"|page)/g, '');
 const footer = source.match(/<footer[\s\S]*?<\/footer>/)[0];
 const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
 const pair = (en, bn) => `<span data-en="${escape(en)}" data-bn="${escape(bn)}"><span class="translation-en" lang="en">${escape(en)}</span><span class="translation-bn" lang="bn">${escape(bn)}</span></span>`;
@@ -38,7 +38,7 @@ const pages = [
     '<p><a href="account.html">' + pair('Open my account', 'আমার অ্যাকাউন্ট খুলুন') + '</a> · <a href="delete-account.html">' + pair('Delete my account', 'আমার অ্যাকাউন্ট মুছুন') + '</a></p>']
 ];
 for (const [slug, title, bn, body] of pages) {
-  await writeFile(`dist/${slug}.html`, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>${escape(title)}</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="liquid-pink.css"></head><body>${header}<main class="page-body" id="main"><section class="page-intro"><h1>${pair(title,bn)}</h1></section>${body}</main>${footer}<script src="app.js" defer></script><script src="liquid-pink.js" defer></script></body></html>`);
+  await writeFile(`dist/${slug}.html`, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>${escape(title)}</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="liquid-pink.css"><link rel="stylesheet" href="editorial.css"></head><body>${header}<main class="page-body" id="main"><section class="page-intro"><h1>${pair(title,bn)}</h1></section>${body}</main>${footer}<script src="app.js" defer></script><script src="liquid-pink.js" defer></script></body></html>`);
 }
 const legal = `<nav aria-label="Service information"><a href="privacy.html">${pair('Privacy','গোপনীয়তা')}</a><a href="terms.html">${pair('Terms','শর্তাবলি')}</a><a href="delete-account.html">${pair('Delete account','অ্যাকাউন্ট মুছুন')}</a><a href="support.html">${pair('Help','সহায়তা')}</a></nav>`;
 for (const file of await readdir('dist')) {
