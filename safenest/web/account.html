@@ -73,6 +73,20 @@
           <p class="note" data-en="This shows your account’s subscription. Check the SafeNest app on your phone to see whether device protection is running. Saving your profile does not activate protection." data-bn="এখানে আপনার অ্যাকাউন্টের সাবস্ক্রিপশন দেখায়। ফোনে সুরক্ষা চলছে কি না SafeNest অ্যাপে দেখুন। প্রোফাইল সংরক্ষণ করলে সুরক্ষা চালু হয় না।">This shows your account’s subscription. Check the SafeNest app on your phone to see whether device protection is running. Saving your profile does not activate protection.</p>
           <button type="button" class="text-button" id="refresh-access" data-en="Refresh subscription status" data-bn="সাবস্ক্রিপশনের অবস্থা আবার দেখুন">Refresh subscription status</button>
         </section>
+        <section class="portal-panel" id="billing" aria-labelledby="billing-title">
+          <h2 id="billing-title" data-en="Payments" data-bn="পেমেন্ট">Payments</h2>
+          <p id="billing-status" role="status" aria-live="polite">Checkout is not open yet. / চেকআউট এখনো চালু হয়নি।</p>
+          <form id="billing-form" hidden>
+            <label>Plan / প্ল্যান<select name="product_code" required></select></label>
+            <label>Billing name / বিলিং নাম<input name="name" autocomplete="name" maxlength="100" required></label>
+            <label>Phone / ফোন<input name="phone" autocomplete="tel" type="tel" maxlength="30" required></label>
+            <label>Billing address / বিলিং ঠিকানা<input name="address" autocomplete="street-address" maxlength="200" required></label>
+            <label>City / শহর<input name="city" autocomplete="address-level2" maxlength="100" required></label>
+            <p class="note">Your billing details and confirmed email are sent to SSLCOMMERZ. Enter payment details only on its hosted checkout. / বিলিং তথ্য ও যাচাইকৃত ইমেইল SSLCOMMERZ-এ পাঠানো হবে।</p>
+            <button class="primary" type="submit" data-en="Continue to secure payment" data-bn="নিরাপদ পেমেন্টে যান">Continue to secure payment</button>
+          </form>
+          <button class="text-button" type="button" id="refresh-payment" data-en="Refresh payment status" data-bn="পেমেন্টের অবস্থা আবার দেখুন">Refresh payment status</button>
+        </section>
         <section class="portal-panel" id="profile" aria-labelledby="profile-title">
         <h2 id="profile-title" data-en="My profile" data-bn="আমার প্রোফাইল">My profile</h2>
         <form id="profile-form">
