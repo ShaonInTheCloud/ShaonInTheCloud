@@ -38,7 +38,7 @@ if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: re
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
-const challengeKey = 'safenest-campaign-moments-v1';
+const challengeKey = 'safenest-practical-steps-v2';
 let moments = [];
 try {
   const saved = JSON.parse(localStorage.getItem(challengeKey) || '[]');
@@ -49,8 +49,8 @@ function updateChallenge() {
   if (!label) return;
   const count = new Set(moments).size;
   label.textContent = document.documentElement.lang === 'bn'
-    ? `${count} / ৩টি মুহূর্ত চিহ্নিত করেছেন`
-    : `${count} of 3 moments marked`;
+    ? `${count} / ৩টি কাজ চিহ্নিত করেছেন`
+    : `${count} of 3 steps marked`;
   const fill = document.querySelector('[data-progress-fill]');
   if (fill) fill.style.width = `${count / 3 * 100}%`;
   document.querySelectorAll('[data-challenge]').forEach(button => {
