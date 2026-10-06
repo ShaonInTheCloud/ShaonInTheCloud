@@ -33,7 +33,7 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksTestControl("com.google.android.packageinstaller", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test uninstall confirmation without title IDs");
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("com.safenest.app.lab"), List.of(), List.of("Disconnect")), "test package identity");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Another VPN"), List.of("Another VPN"), List.of("Forget VPN")), "another VPN remains accessible");
-        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest"), List.of("SafeNest"), List.of("Uninstall")), "lab guard leaves production app alone");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest", "Archive", "Uninstall", "Force stop", "Notifications"), List.of("App info"), List.of("Uninstall", "Force stop")), "regular SafeNest App info from supplied first screenshot");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Another VPN"), List.of("Another VPN"), List.of("Disconnect")), "background test label cannot target another VPN detail");
         check(!SystemScreenGuard.blocksTestControl("com.android.chrome", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test phrase in browser is not a control");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Accessibility", "SafeNest Test app guard", "TalkBack"), List.of("Accessibility"), List.of("SafeNest Test app guard")), "Accessibility list stays available");
@@ -49,6 +49,13 @@ public final class CommitmentGuardRegression {
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "Notifications"), List.of("1.1.1.1"), List.of("Allow notifications")), "another VPN ordinary app settings unaffected");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "SafeNest Test", "Forget VPN"), List.of("Unrelated VPN"), List.of("Forget VPN")), "background VPN mention cannot target unrelated profile");
         check(SystemScreenGuard.testControlReason("com.android.settings", List.of("SafeNest Test app guard", "Use SafeNest Test app guard"), List.of(), List.of()).equals("test_accessibility"), "diagnostic reason distinguishes own switch");
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("SafeNest Test", "Version", "0.4.4-test", "Always-on VPN", "Block connections without VPN", "Forget VPN"), List.of(), List.of("Always-on VPN", "Forget VPN")).equals("test_vpn_detail"), "supplied VPN detail with unlabeled toolbar");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Always-on VPN", "Forget VPN"), List.of("Always-on VPN", "Forget VPN"), List.of()), "preference titles cannot conceal own VPN detail");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("VPN", "SafeNest Test", "Always-on VPN", "1.1.1.1"), List.of("VPN"), List.of("SafeNest Test", "Settings")), "Always-on status in VPN list must not guard the list");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Unrelated VPN", "Always-on VPN", "Block connections without VPN", "Forget VPN"), List.of("Unrelated VPN"), List.of("Forget VPN")), "strong unrelated profile heading beats a background app label");
+        check(SystemScreenGuard.blocksTestControl("com.google.android.packageinstaller", List.of("SafeNest"), List.of("SafeNest"), List.of("Cancel", "Uninstall")), "regular SafeNest uninstall confirmation during consented lab test");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest", "Chrome", "Uninstall", "Force stop"), List.of("Chrome"), List.of("Uninstall", "Force stop")), "other app uninstall page stays available");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("1.1.1.1", "Always-on VPN", "Forget VPN"), List.of(), List.of()), "known VPN management page without toolbar IDs");
         System.out.println("Paid-window and UI-guard regression: " + checks + " checks passed.");
     }
 }

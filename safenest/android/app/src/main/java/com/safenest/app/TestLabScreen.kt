@@ -46,7 +46,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     var blocked by remember { mutableStateOf(SafeNestVpnService.lastBlockedHost.get()) }
     var accessEnabled by remember { mutableStateOf(GuardPreferences.isAccessibilityEnabled(context)) }
     var guardConnected by remember { mutableStateOf(GuardPreferences.isServiceConnected()) }
-    var controlsActive by remember { mutableStateOf(GuardPreferences.testControlsActive(context)) }
+    var controlsActive by remember { mutableStateOf(GuardPreferences.testControlGuardReady(context)) }
     var lastGuardAction by remember { mutableStateOf(GuardPreferences.lastBlockReason().orEmpty()) }
     var sessionActive by remember { mutableStateOf(LocalTestSession.isActive(context)) }
     LaunchedEffect(context) {
@@ -58,7 +58,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
             sessionActive = LocalTestSession.isActive(context)
             accessEnabled = GuardPreferences.isAccessibilityEnabled(context)
             guardConnected = GuardPreferences.isServiceConnected()
-            controlsActive = GuardPreferences.testControlsActive(context)
+            controlsActive = GuardPreferences.testControlGuardReady(context)
             lastGuardAction = GuardPreferences.lastBlockReason().orEmpty()
             delay(750)
         }
@@ -68,8 +68,8 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
         catch (_: Exception) { message = t("No browser is available.", "ব্রাউজার পাওয়া যায়নি।") }
     }
     Text(t("Try it. Shape what comes next.", "পরীক্ষা করুন। পরের পরিবর্তন বেছে নিন।"), style = MaterialTheme.typography.headlineSmall)
-    Text(t("No account or payment is required in this test app. It has separate settings from SafeNest. Use Setup to consent to the test guard and enable Accessibility first. Then start the test and approve VPN permission. SafeNest Test control screens return Home while the test is active.",
-        "এই পরীক্ষার অ্যাপে অ্যাকাউন্ট বা পেমেন্ট লাগবে না। SafeNest থেকে সেটিংস আলাদা। আগে সেটআপে টেস্ট গার্ডে সম্মতি ও Accessibility চালু করুন। তারপর পরীক্ষা চালু ও VPN অনুমতি দিন। সক্রিয় পরীক্ষায় SafeNest Test-এর নিয়ন্ত্রণ স্ক্রিন হোমে ফেরাবে।"))
+    Text(t("No account or payment is required in this test app. It has separate settings from SafeNest. Use Setup to consent to the test guard and enable Accessibility first. Then start the test and approve VPN permission. SafeNest and SafeNest Test VPN/removal screens return Home while the test is active.",
+        "এই পরীক্ষার অ্যাপে অ্যাকাউন্ট বা পেমেন্ট লাগবে না। SafeNest থেকে সেটিংস আলাদা। আগে সেটআপে টেস্ট গার্ডে সম্মতি ও Accessibility চালু করুন। তারপর পরীক্ষা চালু ও VPN অনুমতি দিন। সক্রিয় পরীক্ষায় SafeNest ও SafeNest Test-এর VPN ও আনইনস্টল স্ক্রিন হোমে ফেরাবে।"))
     Text("SafeNest Test ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleSmall)
     Text(t("Accessibility enabled: ", "Accessibility চালু: ") + accessEnabled)
     Text(t("Guard connected: ", "গার্ড সংযুক্ত: ") + guardConnected)

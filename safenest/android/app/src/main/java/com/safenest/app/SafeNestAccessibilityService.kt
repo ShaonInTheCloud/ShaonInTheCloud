@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.SystemClock
 import android.os.Handler
 import android.os.Looper
+import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
@@ -28,6 +29,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
     private var vpnPackages: Set<String> = emptySet()
     private var controlExit: ControlScreenExit? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var pendingControlScan: Runnable? = null
+    private var pendingControlPackage: String? = null
     private val expiryPoll = object : Runnable {
         override fun run() {
             ProtectionCommitment.checkpoint(this@SafeNestAccessibilityService)
@@ -53,7 +56,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
                     val name = root.packageName?.toString().orEmpty()
                     if (!SystemScreenGuard.isSystemSurface(name)) false else {
                         val screen = readControlLabels(root)
-                        SystemScreenGuard.testControlReason(name, screen.labels, screen.titles, screen.actions).isNotEmpty()
+                        SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions).isNotEmpty()
                     }
                 } finally { @Suppress("DEPRECATION") root.recycle() }
             }
@@ -67,26 +70,14 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
         val name = event.packageName?.toString() ?: return
+        if (!SystemScreenGuard.isSystemSurface(name)) cancelControlScan()
         if (name == packageName) return
         val now = SystemClock.elapsedRealtime()
         if (SystemScreenGuard.isSystemSurface(name)) {
             // The consumer Play build must leave uninstall, permissions and Settings usable.
             val testControls = GuardPreferences.testControlsActive(this)
             if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return
-            val root = rootInActiveWindow ?: return
-            try {
-                if (root.packageName?.toString() != name) return
-                val screen = readControlLabels(root)
-                val testReason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.titles, screen.actions) else ""
-                if (testReason.isNotEmpty()) {
-                    returnHome(now, testReason, "SafeNest Test controls are guarded. Use Stop test in the app to end the test.", controlPackage = name)
-                } else if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
-                    returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
-                } else if (BuildConfig.ALLOW_SYSTEM_GUARD && GuardPreferences.blocksVpnApps(this) &&
-                    SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
-                    returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
-                }
-            } finally { @Suppress("DEPRECATION") root.recycle() }
+            if (!inspectControlScreen(name)) scheduleControlScan(name)
             return
         }
         if (GuardRules.isBrowserExempt(name)) {
@@ -128,18 +119,77 @@ class SafeNestAccessibilityService : AccessibilityService() {
     }
 
     private data class ControlLabels(val labels: Set<String>, val actions: Set<String>,
-                                     val titles: Set<String>, val checkedToggle: Boolean)
+                                     val titles: Set<String>, val detailTitles: Set<String>, val checkedToggle: Boolean)
+
+    private fun inspectControlScreen(name: String): Boolean {
+        if (!isConnected || !GuardPreferences.isEnabled(this)) return false
+        val testControls = GuardPreferences.testControlsActive(this)
+        if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return false
+        val root = rootInActiveWindow ?: return false
+        try {
+            if (root.packageName?.toString() != name) return false
+            val screen = readControlLabels(root)
+            val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions) else ""
+            val now = SystemClock.elapsedRealtime()
+            if (reason.isNotEmpty()) {
+                cancelControlScan()
+                returnHome(now, reason, "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
+                return true
+            }
+            if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
+                returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
+                return true
+            }
+            if (BuildConfig.ALLOW_SYSTEM_GUARD && GuardPreferences.blocksVpnApps(this) &&
+                SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
+                returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
+                return true
+            }
+            return false
+        } finally { @Suppress("DEPRECATION") root.recycle() }
+    }
+
+    /** A Settings window event can arrive before its Compose/toolbar content is ready. */
+    private fun scheduleControlScan(name: String) {
+        if (pendingControlPackage == name) return
+        cancelControlScan()
+        pendingControlPackage = name
+        var attempt = 0
+        val scan = object : Runnable {
+            override fun run() {
+                if (pendingControlScan !== this) return
+                if (!isConnected || !GuardPreferences.isEnabled(this@SafeNestAccessibilityService) ||
+                    (!BuildConfig.ALLOW_SYSTEM_GUARD && !GuardPreferences.testControlsActive(this@SafeNestAccessibilityService))) {
+                    cancelControlScan(); return
+                }
+                if (inspectControlScreen(name)) return
+                if (++attempt < 3) handler.postDelayed(this, 100) else cancelControlScan()
+            }
+        }
+        pendingControlScan = scan
+        handler.postDelayed(scan, 60)
+    }
+
+    private fun cancelControlScan() {
+        pendingControlScan?.let { handler.removeCallbacks(it) }
+        pendingControlScan = null
+        pendingControlPackage = null
+    }
 
     /** Bounded traversal on system/installer surfaces only; values are never logged or uploaded. */
     private fun readControlLabels(root: AccessibilityNodeInfo): ControlLabels {
         val labels = mutableSetOf<String>(); val actions = mutableSetOf<String>(); val titles = mutableSetOf<String>()
+        val detailTitles = mutableSetOf<String>()
         var checkedToggle = false; var visited = 0
         // Settings often puts the label inside a clickable row, rather than on the clickable node.
-        val queue = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Boolean>>()
-        for (i in 0 until minOf(root.childCount, 180)) root.getChild(i)?.let { queue.add(it to (root.isEnabled && root.isClickable)) }
+        data class Entry(val node: AccessibilityNodeInfo, val parentActionable: Boolean, val inToolbar: Boolean)
+        fun toolbar(node: AccessibilityNodeInfo) = node.className?.toString()?.endsWith("Toolbar") == true
+        val queue = java.util.ArrayDeque<Entry>()
+        if (!root.isPassword && !root.isEditable) labels.addAll(listOfNotNull(root.text?.toString(), root.contentDescription?.toString()).filter { it.length in 1..240 })
+        for (i in 0 until minOf(root.childCount, 180)) root.getChild(i)?.let { queue.add(Entry(it, root.isEnabled && root.isClickable, toolbar(root))) }
         try {
             while (queue.isNotEmpty() && visited++ < 180) {
-                val (node, parentActionable) = queue.removeFirst()
+                val (node, parentActionable, inToolbar) = queue.removeFirst()
                 try {
                     if (!node.isVisibleToUser || node.isPassword || node.isEditable) continue
                     val values = listOfNotNull(node.text?.toString(), node.contentDescription?.toString())
@@ -149,15 +199,20 @@ class SafeNestAccessibilityService : AccessibilityService() {
                     if (actionable) actions.addAll(values)
                     val id = node.viewIdResourceName.orEmpty().lowercase()
                     if (id.contains("title") || id.contains("app_name") || id.contains("headline")) titles.addAll(values)
+                    val localId = id.substringAfterLast('/')
+                    if (inToolbar || toolbar(node) || (Build.VERSION.SDK_INT >= 28 && node.isHeading) ||
+                        localId in setOf("entity_header_title", "app_name", "app_label", "app_title", "action_bar_title", "alerttitle", "header_title")) {
+                        detailTitles.addAll(if (inToolbar || toolbar(node)) listOfNotNull(node.text?.toString()).filter { it.length in 1..240 } else values)
+                    }
                     if (node.isEnabled && node.isCheckable && node.isChecked) checkedToggle = true
                     for (i in 0 until node.childCount) {
                         if (queue.size >= 180) break
-                        node.getChild(i)?.let { queue.add(it to actionable) }
+                        node.getChild(i)?.let { queue.add(Entry(it, actionable, inToolbar || toolbar(node))) }
                     }
                 } finally { @Suppress("DEPRECATION") node.recycle() }
             }
-        } finally { queue.forEach { @Suppress("DEPRECATION") it.first.recycle() } }
-        return ControlLabels(labels, actions, titles, checkedToggle)
+        } finally { queue.forEach { @Suppress("DEPRECATION") it.node.recycle() } }
+        return ControlLabels(labels, actions, titles, detailTitles, checkedToggle)
     }
 
     private fun returnHome(now: Long, reason: String, message: String, controlPackage: String? = null) {
@@ -188,10 +243,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         isConnected = false
         handler.removeCallbacks(expiryPoll)
+        cancelControlScan()
         controlExit?.cancel()
         // Retain the intended guard selection. If Android revokes Accessibility,
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; super.onDestroy() }
+    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); handler.removeCallbacksAndMessages(null); isConnected = false; super.onDestroy() }
 }

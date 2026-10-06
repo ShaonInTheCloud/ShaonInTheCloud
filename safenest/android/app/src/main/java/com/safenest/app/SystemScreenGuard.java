@@ -18,6 +18,9 @@ public final class SystemScreenGuard {
         "com.android.packageinstaller", "com.google.android.packageinstaller",
         "com.samsung.android.packageinstaller", "com.miui.packageinstaller",
         "com.huawei.appmarket", "com.hihonor.appmarket");
+    private static final Set<String> PAGE_CHROME = set(
+        "settings", "app info", "vpn", "accessibility", "version", "always-on vpn",
+        "block connections without vpn", "forget vpn");
     private static final Set<String> PROTECTED_ACTIONS = set(
         "disconnect", "uninstall", "deactivate", "deactivate and uninstall", "disable",
         "force stop", "clear storage", "clear data", "delete vpn", "forget vpn", "forget",
@@ -61,22 +64,30 @@ public final class SystemScreenGuard {
         if (!settings && !INSTALLERS.contains(pkg)) return "";
         Set<String> text = new HashSet<>();
         labels.stream().map(SystemScreenGuard::normalize).forEach(text::add);
+        Set<String> pageTitles = new HashSet<>();
+        titles.stream().map(SystemScreenGuard::normalize).filter(s -> !PAGE_CHROME.contains(s)).forEach(pageTitles::add);
         // The exact Use label occurs on our service detail page, not the services list.
         if (settings && text.contains("use safenest test app guard") &&
             text.contains("safenest test app guard")) return "test_accessibility";
-        boolean own = text.stream().anyMatch(SystemScreenGuard::isTestIdentity);
-        boolean ownTitle = titles.stream().map(SystemScreenGuard::normalize).anyMatch(SystemScreenGuard::isTestIdentity);
-        boolean knownVpnTitle = titles.stream().anyMatch(s -> s != null && s.length() <= 140 && VPN_NAME.matcher(s).find());
-        boolean vpnDetail = text.contains("always-on vpn") || text.contains("forget vpn") ||
-            text.contains("delete vpn") || text.contains("block connections without vpn");
+        boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
+        boolean ownTitle = pageTitles.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
+        boolean knownVpnTitle = pageTitles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
+        boolean knownVpnLabel = text.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
+        // Toolbar text has no resource ID on some Settings versions. Two distinct
+        // management controls identify a detail page without treating list summaries
+        // or preference-row titles as the selected application's heading.
+        boolean vpnDetail = (text.contains("always-on vpn") &&
+            (text.contains("forget vpn") || text.contains("delete vpn") ||
+             text.contains("block connections without vpn") || text.contains("version"))) ||
+            (text.contains("block connections without vpn") && text.contains("forget vpn"));
         boolean connectionDialog = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("connect") || s.equals("disconnect") || s.equals("katkaise yhteys") || s.equals("সংযোগ বিচ্ছিন্ন"));
         // A name in the VPN list is insufficient. Require actual detail/connection controls.
         if (settings && (vpnDetail || connectionDialog)) {
-            if (own && (ownTitle || titles.isEmpty())) return "test_vpn_detail";
-            if (knownVpnTitle) return "test_other_vpn_detail";
+            if (own && (ownTitle || pageTitles.isEmpty())) return "test_vpn_detail";
+            if (knownVpnTitle || (pageTitles.isEmpty() && knownVpnLabel && vpnDetail)) return "test_other_vpn_detail";
         }
-        if (!own || (!titles.isEmpty() && !ownTitle)) return "";
+        if (!own || (!pageTitles.isEmpty() && !ownTitle)) return "";
         boolean removal = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("disconnect") || s.equals("forget vpn") || s.equals("delete vpn") ||
             s.equals("forget") || s.equals("uninstall") || s.equals("force stop") ||
@@ -84,8 +95,9 @@ public final class SystemScreenGuard {
             s.equals("katkaise yhteys") || s.equals("poista asennus"));
         return removal ? "test_app_control" : "";
     }
-    private static boolean isTestIdentity(String s) {
-        return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter");
+    private static boolean isSafeNestIdentity(String s) {
+        return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter") ||
+            s.equals("safenest") || s.equals("com.safenest.app") || s.equals("safenest local dns filter");
     }
     private static String normalize(String s) { return s == null ? "" : s.trim().toLowerCase(Locale.ROOT); }
 }

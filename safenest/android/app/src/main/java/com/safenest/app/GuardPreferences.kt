@@ -20,14 +20,16 @@ object GuardPreferences {
     fun isSelected(context: Context): Boolean = prefs(context).getBoolean("enabled", false)
     fun isEnabled(context: Context): Boolean = isSelected(context) && ProtectionCommitment.isActive(context)
     fun hasTestControlConsent(context: Context): Boolean = LocalTestSession.enabled &&
-        prefs(context).getBoolean("test_control_consent_v2", false)
+        prefs(context).getBoolean("test_control_consent_v3", false)
     fun consentToTestControls(context: Context) {
-        if (LocalTestSession.enabled) prefs(context).edit().putBoolean("test_control_consent_v2", true).apply()
+        if (LocalTestSession.enabled) prefs(context).edit().putBoolean("test_control_consent_v3", true).apply()
     }
     fun isTestSetupReady(context: Context): Boolean = hasTestControlConsent(context) &&
         isSelected(context) && isAccessibilityEnabled(context) && isServiceConnected()
     fun testControlsActive(context: Context): Boolean = hasTestControlConsent(context) &&
         isEnabled(context) && LocalTestSession.isActive(context)
+    fun testControlGuardReady(context: Context): Boolean = testControlsActive(context) &&
+        isAccessibilityEnabled(context) && isServiceConnected()
     fun setEnabled(context: Context, value: Boolean) {
         if (value && !ProtectionCommitment.hasVerifiedAccess(context)) return
         if (!value && (ProtectionCommitment.isActive(context) || ManagedProtection.isConfigured(context))) return
@@ -46,7 +48,8 @@ object GuardPreferences {
     }
     internal fun clearForExpiry(context: Context) {
         prefs(context).edit().putBoolean("enabled", false).putBoolean("block_vpn_apps", false)
-            .putBoolean("test_control_consent", false).putBoolean("test_control_consent_v2", false).commit()
+            .putBoolean("test_control_consent", false).putBoolean("test_control_consent_v2", false)
+            .putBoolean("test_control_consent_v3", false).commit()
     }
 
     /** Foreground event path: no installed-app inventory scan per event. */

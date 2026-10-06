@@ -66,3 +66,43 @@ jobs:
           name: safenest-test-apk
           path: safenest/android/app/build/outputs/apk/lab/debug/app-lab-debug.apk
           retention-days: 14
+      - name: Prepare disposable Android 16 emulator
+        timeout-minutes: 12
+        run: |
+          sdkmanager 'system-images;android-36;google_apis;x86_64' 'emulator' 'platform-tools'
+          echo no | avdmanager create avd --force --name safenest-qa --package 'system-images;android-36;google_apis;x86_64' --device pixel_6
+          test -e /dev/kvm
+          sudo chmod a+rw /dev/kvm
+          mkdir -p android/app/build/guard-device-evidence
+          "$ANDROID_HOME/emulator/emulator" -avd safenest-qa -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -memory 2048 -cores 2 > android/app/build/guard-device-evidence/emulator.log 2>&1 &
+          timeout 420 adb wait-for-device
+          for attempt in $(seq 1 180); do
+            if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; then break; fi
+            sleep 2
+          done
+          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1
+          adb shell input keyevent 82
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+          adb install android/app/build/outputs/apk/play/debug/app-play-debug.apk
+      - name: Exercise consented Settings guard on emulator
+        timeout-minutes: 12
+        run: ./gradlew :app:connectedLabDebugAndroidTest --console=plain
+        working-directory: safenest/android
+      - name: Capture emulator evidence
+        if: always()
+        run: |
+          mkdir -p android/app/build/guard-device-evidence
+          adb pull /sdcard/Android/data/com.safenest.app.lab/files/guard-qa android/app/build/guard-device-evidence || true
+          adb logcat -d -b crash > android/app/build/guard-device-evidence/crash-log.txt || true
+          adb shell dumpsys accessibility > android/app/build/guard-device-evidence/accessibility-state.txt || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: safenest-guard-device-QA
+          path: |
+            safenest/android/app/build/guard-device-evidence
+            safenest/android/app/build/reports/androidTests/connected
+            safenest/android/app/build/outputs/androidTest-results/connected
+          retention-days: 14
