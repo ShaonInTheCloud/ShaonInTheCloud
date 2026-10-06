@@ -71,17 +71,31 @@ jobs:
         timeout-minutes: 12
         run: |
           sdkmanager 'system-images;android-36;google_apis;x86_64' 'emulator' 'platform-tools'
-          echo no | avdmanager create avd --force --name safenest-qa --package 'system-images;android-36;google_apis;x86_64' --device pixel_6
+          safenest_avd_dir="$RUNNER_TEMP/safenest-avd"
+          mkdir -p "$safenest_avd_dir"
+          export ANDROID_AVD_HOME="$safenest_avd_dir"
+          echo "ANDROID_AVD_HOME=$safenest_avd_dir" >> "$GITHUB_ENV"
+          echo no | avdmanager create avd --force --name safenest-qa --package 'system-images;android-36;google_apis;x86_64' || true
+          # API 36 image metadata may reference an absent devices.xml. Supply a
+          # generic phone AVD when avdmanager returns without creating one.
+          if [ ! -f "$safenest_avd_dir/safenest-qa.ini" ]; then
+            mkdir -p "$safenest_avd_dir/safenest-qa.avd"
+            printf '%s\n' 'avd.ini.encoding=UTF-8' "path=$safenest_avd_dir/safenest-qa.avd" 'target=android-36' > "$safenest_avd_dir/safenest-qa.ini"
+            printf '%s\n' 'AvdId=safenest-qa' 'avd.ini.encoding=UTF-8' 'abi.type=x86_64' 'hw.cpu.arch=x86_64' 'hw.cpu.ncore=2' 'hw.ramSize=2048' 'hw.lcd.width=1080' 'hw.lcd.height=2400' 'hw.lcd.density=420' 'hw.gpu.enabled=yes' 'hw.gpu.mode=software' 'disk.dataPartition.size=2G' 'tag.id=google_apis' 'tag.display=Google APIs' 'PlayStore.enabled=false' "image.sysdir.1=$ANDROID_HOME/system-images/android-36/google_apis/x86_64/" > "$safenest_avd_dir/safenest-qa.avd/config.ini"
+          fi
+          "$ANDROID_HOME/emulator/emulator" -list-avds
           test -e /dev/kvm
           sudo chmod a+rw /dev/kvm
           mkdir -p android/app/build/guard-device-evidence
-          "$ANDROID_HOME/emulator/emulator" -avd safenest-qa -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -memory 2048 -cores 2 > android/app/build/guard-device-evidence/emulator.log 2>&1 &
-          timeout 420 adb wait-for-device
-          for attempt in $(seq 1 180); do
-            if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; then break; fi
+          "$ANDROID_HOME/emulator/emulator" -avd safenest-qa -port 5554 -no-window -no-snapshot -gpu software -noaudio -no-boot-anim -camera-back none -camera-front none -memory 2048 -cores 2 > android/app/build/guard-device-evidence/emulator.log 2>&1 &
+          safenest_emulator_pid=$!
+          for attempt in $(seq 1 120); do
+            if ! kill -0 "$safenest_emulator_pid" 2>/dev/null; then cat android/app/build/guard-device-evidence/emulator.log; exit 1; fi
+            safenest_boot=$(timeout 5 adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+            if [ "$safenest_boot" = 1 ]; then break; fi
             sleep 2
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1
+          if [ "$safenest_boot" != 1 ]; then cat android/app/build/guard-device-evidence/emulator.log; exit 1; fi
           adb shell input keyevent 82
           adb shell settings put global window_animation_scale 0
           adb shell settings put global transition_animation_scale 0
