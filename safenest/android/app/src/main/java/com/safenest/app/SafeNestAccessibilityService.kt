@@ -93,9 +93,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (LocalTestSession.enabled) {
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
                 windowPackages.observe(event.windowId, event.packageName?.toString())
-            if (Build.VERSION.SDK_INT >= 28 && event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
-                (event.windowChanges and AccessibilityEvent.WINDOWS_CHANGE_REMOVED) != 0)
-                windowPackages.remove(event.windowId)
+            // A window disappears from the interactive list when its task is
+            // hidden, then can return with the same unique ID and no new state
+            // event. Keep bounded ownership until eviction or service unbind.
         }
         if (!GuardPreferences.isEnabled(this)) return
         if (LocalTestSession.enabled && event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
@@ -172,12 +172,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
         val interactive = windows
         return try {
             val focus = interactive.take(12).firstOrNull { it.isFocused } ?: return null
-            var pkg = windowPackages.owner(focus.id)
-            if (pkg == null) {
-                val root = focus.root
-                try { pkg = root?.packageName?.toString(); windowPackages.observe(focus.id, pkg) }
-                finally { @Suppress("DEPRECATION") root?.recycle() }
-            }
+            val root = focus.root
+            val pkg = try {
+                root?.packageName?.toString()?.also { windowPackages.observe(focus.id, it) }
+                    ?: windowPackages.owner(focus.id)
+            } finally { @Suppress("DEPRECATION") root?.recycle() }
             // Read a title only on the selected, focused Settings application
             // window; never underneath a system dialog or on other apps.
             val title = if (focus.type == AccessibilityWindowInfo.TYPE_APPLICATION &&

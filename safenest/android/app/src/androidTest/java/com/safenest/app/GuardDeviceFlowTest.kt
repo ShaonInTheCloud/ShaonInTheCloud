@@ -205,7 +205,10 @@ class GuardDeviceFlowTest {
         // shell to launch only these public activities, as an owner would from
         // the launcher; a blocked background start must not masquerade as Home.
         val command = buildString {
-            append("am start -W -f 0x").append(Integer.toHexString(intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK))
+            // Reach the requested public page, not a detail page sitting above
+            // a previously opened Settings activity in its existing task.
+            append("am start -W -f 0x").append(Integer.toHexString(
+                intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
             intent.component?.let { append(" -n ").append(commandToken(it.flattenToString())) }
             intent.action?.let { append(" -a ").append(commandToken(it)) }
             intent.data?.let { append(" -d ").append(commandToken(it.toString())) }

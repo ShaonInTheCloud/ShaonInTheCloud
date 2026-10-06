@@ -12,6 +12,5 @@ public final class WindowPackageCache {
         while (packages.size() > 12) packages.remove(packages.keySet().iterator().next());
     }
     public String owner(int windowId) { return packages.get(windowId); }
-    public void remove(int windowId) { packages.remove(windowId); }
     public void clear() { packages.clear(); }
 }

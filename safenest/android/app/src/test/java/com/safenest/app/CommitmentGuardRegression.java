@@ -70,8 +70,8 @@ public final class CommitmentGuardRegression {
         check("com.android.settings".equals(windows.owner(24)) && windows.owner(25) == null, "ownership never transfers to a different focused window ID");
         windows.observe(-1, "com.android.settings"); windows.observe(24, null);
         check(windows.owner(-1) == null && "com.android.settings".equals(windows.owner(24)), "missing event metadata cannot erase valid ownership or bind an unknown window");
-        windows.remove(24);
-        check(windows.owner(24) == null, "removed windows lose their ownership");
+        windows.observe(25, "com.safenest.app.lab");
+        check("com.android.settings".equals(windows.owner(24)), "hidden Settings window retains ownership when another task becomes visible");
         windows.observe(24, "com.android.chrome");
         check(SystemScreenGuard.testFocusedWindowReason(windows.owner(24), "SafeNest Test").isEmpty(), "reused window in another app cannot trigger own Settings guard");
         for (int id = 30; id < 43; id++) windows.observe(id, "com.android.settings");
