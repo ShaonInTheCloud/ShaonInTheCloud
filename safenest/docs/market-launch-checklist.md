@@ -26,8 +26,9 @@ Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/materi
 - [x] Test account-state isolation and profile ownership restrictions with the existing automated tests.
 - [x] Implement password-confirmed account deletion: verify the live account, derive identity server-side, revoke sessions, then delete the account-linked profile and entitlement.
 - [x] Check deletion scope: current live storage has zero buckets/user-owned objects; profiles and entitlements cascade on account deletion.
-- [ ] Validate signup, confirmation, password login, completed recovery, signout, deletion and repeat-login denial end to end with disposable owned test accounts.
-- [ ] Enable leaked-password protection if available on the Supabase plan. The latest advisor still reports this warning; this is not resolved.
+- [x] Validate production signup, delivered email confirmation, password login, completed email recovery, signout/session revocation, password-confirmed deletion and repeat-login denial via live Auth/deletion APIs with two disposable owner-controlled accounts. See the 6 October verification record below.
+- [ ] Complete a browser-form regression of these flows, including recovery-page rendering and local signout UI; API results do not establish browser UI behavior.
+- [ ] Enable leaked-password protection — BLOCKED BY PLAN. On 6 October, the connected organization and live dashboard show Free; the email-provider settings explicitly limit this feature to Pro and above. The switch remains off and the fresh security advisor still reports `auth_leaked_password_protection`. This is not fixed; an authorized plan upgrade is required before enabling and verifying it.
 - [ ] Review email/rate limits and abuse controls before opening public signup traffic; add CAPTCHA if the traffic threat model requires it.
 - [ ] Define exact operational-log/backup retention and deletion dates, and update the privacy notice accordingly.
 - [ ] Review all production write routes for live authorization; a client flag, decoded JWT or payment success redirect is never proof of entitlement.
@@ -118,11 +119,31 @@ Without upload signing configuration, the release AAB is a build-check artifact,
 
 Verified locally in this work: 12 account/deletion/RLS tests; 8 protection-access tests; standalone core regressions with 20,075 DNS codec, 57 domain, 10,082 alias, 22 upstream transport, 59 signature and 19 commitment/guard checks; website build; npm production-dependency audit reports zero known vulnerabilities. This does not certify the entire product.
 
-Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. A disposable-account end-to-end test is still required.
+Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. The live email/API disposable-account flow passed on 6 October; browser-form regression remains pending.
 
 Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. New source is 0.4.2/code 19 with Play/direct flavors. Do not describe the new Play source as already installed or published on Play.
 
 The latest Supabase security advisor still reports leaked-password protection disabled. No merchant credentials, release upload key, Play Console access or verified customer-support/legal identity has been supplied. These dependencies prevent paid/store release today even if the public website deployment succeeds.
+
+### Live Auth security verification — 6 October 2026
+
+Verified against production project `kflenmeizngmafwnwhgv`, the deployed `delete-account` function and owner-controlled disposable email aliases. Test run: `20261006-b5b2f73e`. Completed and checked at 2026-10-06T11:32:54+00:00. No admin-generated confirmation/recovery link or direct Auth-table mutation was used.
+
+| Flow | Verified result |
+| --- | --- |
+| Signup | Two accounts created (HTTP 200), with no authenticated session before confirmation. Unconfirmed password login rejected with `email_not_confirmed`. |
+| Confirmation and custom delivery | Both real confirmation emails arrived from `no-reply@auth.mysafenestbd.com`; fresh links established verified account sessions and redirected to `/account.html` on `mysafenestbd.com`. |
+| Password login | Both confirmed accounts authenticated with their passwords (HTTP 200). |
+| Completed recovery | The real reset email redirected to `/account.html?mode=recovery`; its recovery session accepted a replacement password without the old password (HTTP 200). The old password then failed with `invalid_credentials`, and the replacement succeeded. |
+| Signout | Both local signout requests returned HTTP 204; the corresponding refresh tokens were rejected with `refresh_token_not_found`. Fresh password login still worked before deletion. |
+| Deletion | Both incorrect-password deletion attempts were rejected with HTTP 401 / `reauthentication_failed`. Correct current passwords returned HTTP 200 / `account_deleted`. |
+| Repeat login and deleted sessions | Password login after deletion failed with HTTP 400 / `invalid_credentials`; deleted refresh tokens failed, and live user lookup rejected the deleted accounts with HTTP 403 / `user_not_found`. |
+| Private profiles | Each account created/read its own profile. Cross-account reads returned no rows; a cross-account update left the owner's profile unchanged. Anonymous profile access returned HTTP 401. |
+| Cleanup | Read-only SQL confirmed zero remaining rows for both test identities in `auth.users`, `auth.identities`, `auth.sessions`, `public.profiles` and `public.protection_entitlements`. No paid entitlements were created, so this run does not verify deletion of an existing paid entitlement or billing cancellation. |
+| Expired link | An original, expired confirmation link was denied with `otp_expired`; fresh resend links passed. The live email-provider setting is 60 seconds. |
+| Leaked-password protection | Still disabled. Organization is Free; dashboard and current Supabase documentation state Pro or above is required. Fresh advisor has zero errors and one warning: `auth_leaked_password_protection`. |
+
+Scope: real production email/API integration, not mocks or administrator confirmation shortcuts. Browser-form interaction/rendering, Android authentication, load/abuse testing and paid billing were not exercised. Existing production redirects, custom email delivery, private RLS and account-deletion implementation remain recorded complete; the plan restriction is a separate open security item. Passwords, email tokens, sessions and SMTP/admin keys are excluded from this record.
 
 ## Primary references checked for this release
 
@@ -136,5 +157,6 @@ The latest Supabase security advisor still reports leaked-password protection di
 - Server-side purchase security: https://developer.android.com/google/play/billing/security
 - SSLCOMMERZ hosted checkout/IPN/validation: https://developer.sslcommerz.com/doc/v4/
 - Supabase admin deletion: https://supabase.com/docs/reference/javascript/auth-admin-deleteuser
+- Supabase leaked-password plan requirement: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 This checklist is a release tracker, not a promise of Play approval or a claim that payment/blocking/device QA is complete.
