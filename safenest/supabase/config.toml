@@ -42,3 +42,13 @@ verify_jwt = true
 # independently verified provider adapter is implemented and approved.
 [functions.payment-notification]
 verify_jwt = false
+
+[functions.payment-catalogue]
+verify_jwt = false
+[functions.payment-status]
+verify_jwt = true
+[functions.payment-return]
+verify_jwt = false
+# Backend scheduler authenticates with its own secret, never a customer token.
+[functions.payment-reconcile]
+verify_jwt = false

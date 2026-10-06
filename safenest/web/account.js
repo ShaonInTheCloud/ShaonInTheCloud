@@ -1,3 +1,4 @@
+import {installBilling} from './billing.js';
 import { createClient } from '@supabase/supabase-js';
 import { nextAccountState, mayShowProfile } from './account-state.js';
 import { entitlementState } from './entitlement-state.js';
@@ -75,6 +76,8 @@ async function start() {
   let revision = 0;
   let observedAuthEvent = false;
   let entitlementRequest = 0;
+  const billing=installBilling(client,{identity:()=>state.view==='account'?state.user?.id:null,
+    onPaid:()=>{if(state.user)void loadAccess(state.user.id,revision);}});
   const linkHasError = new URLSearchParams(location.hash.slice(1)).has('error');
 
   function chooseMode(mode) {
@@ -139,7 +142,7 @@ async function start() {
         node.dataset.bn = `${plans[result.plan][1]} · শেষ ${format('bn-BD')} (আপনার স্থানীয় সময়)`;
         translate(node); node.hidden = false;
       } else if (result.kind === 'inactive') {
-        accessMessage('No active subscription. Checkout is not open yet.', 'সক্রিয় সাবস্ক্রিপশন নেই। চেকআউট এখনো চালু হয়নি।');
+        accessMessage('No active subscription.', 'সক্রিয় সাবস্ক্রিপশন নেই।');
       } else {
         accessMessage('Subscription status is unavailable. Please try again.', 'সাবস্ক্রিপশনের অবস্থা জানা যাচ্ছে না। আবার চেষ্টা করুন।');
       }
@@ -159,6 +162,7 @@ async function start() {
     const previousId = state.user?.id;
     state = nextAccountState(state, event, session);
     const identityChanged = previousId !== state.user?.id;
+    setTimeout(()=>billing.refresh(),0);
     if (identityChanged) revision++;
     $('guest').hidden = state.view !== 'login';
     $('account').hidden = state.view !== 'account';

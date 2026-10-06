@@ -1,5 +1,7 @@
 # SafeNest payment foundation
 
+**Current update:** the disabled-by-default concrete SSLCOMMERZ adapter and website controls are now prepared. See [SSLCOMMERZ readiness](sslcommerz-readiness.md) for current configuration, deployment evidence and remaining merchant acceptance. The implementation/deployment notes below record the earlier foundation stage.
+
 Prepared 7 October 2026 against GitHub main `829b9b95cbdee1aec0dd3b62942b908e9296da76` and live Supabase project `kflenmeizngmafwnwhgv`.
 
 Checkout remains inactive. No merchant credentials, products, commercial prices or paid accounts are invented. This foundation implements the trusted processing boundary; it does not claim a working gateway integration.

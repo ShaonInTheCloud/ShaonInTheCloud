@@ -1,7 +1,7 @@
 import {PaymentError, configuredAdapter, processNotification, readLimitedBody, serviceRpc} from '../_shared/payments.mjs';
 
-export async function handleNotification(req, env, {adapterFor = configuredAdapter,
-  rpc = serviceRpc(env)} = {}) {
+export async function handleNotification(req, env, {fetcher=fetch,rpc=serviceRpc(env,fetcher),
+  adapterFor=()=>configuredAdapter(env,rpc,fetcher)} = {}) {
   const json = (body, status) => new Response(JSON.stringify(body), {status,
     headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   if (req.method !== 'POST') return json({error:'method_not_allowed'},405);

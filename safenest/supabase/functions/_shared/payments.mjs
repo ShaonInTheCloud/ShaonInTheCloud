@@ -1,5 +1,6 @@
+import {sslcommerzAdapter} from './sslcommerz.mjs';
 /**
- * Credential-independent payment orchestration. No production adapter exists yet.
+ * Payment orchestration with a disabled-by-default SSLCOMMERZ adapter.
  * A concrete adapter MUST validate notifications independently with the provider,
  * verify merchant/account and environment, and normalize the provider response.
  * Browser redirects and client fields are never validation evidence.
@@ -16,10 +17,9 @@ const boundedText = value => typeof value === 'string' && value.length > 0 && va
  * validateNotification:(raw:string, headers:Headers)=>Promise<object>,
  * reconcile:(order:object)=>Promise<object>, checkoutOrigins:ReadonlyArray<string>}} ProviderAdapter
  */
-// Deliberately fail closed even if someone adds merchant secrets or an enable flag.
-// Neither an environment variable nor request JSON can install an adapter.
-export function configuredAdapter() {
-  throw new PaymentError('payment_provider_not_configured');
+// Merchant credentials, environment and explicit approval gates are server-only.
+export function configuredAdapter(env = {}, rpc, fetcher = fetch) {
+  return sslcommerzAdapter(env,rpc,fetcher);
 }
 
 export function checkoutUrl(adapter, value) {
@@ -95,10 +95,12 @@ export async function readLimitedBody(req, limit = 16_384) {
 
 export function serviceRpc(env, fetcher = fetch) {
   return async (name, args) => {
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) throw new PaymentError('payment_backend_unavailable');
+    let key=env.SUPABASE_SERVICE_ROLE_KEY;
+    try {key=JSON.parse(env.SUPABASE_SECRET_KEYS || '{}').default || key;} catch {}
+    if (!env.SUPABASE_URL || !key) throw new PaymentError('payment_backend_unavailable');
     const response = await fetcher(`${env.SUPABASE_URL}/rest/v1/rpc/${name}`, {
-      method: 'POST', headers: {apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json'},
+      method: 'POST', headers: {apikey:key,...(key.startsWith('sb_secret_')?{}:{Authorization:`Bearer ${key}`}),
+        'Content-Type': 'application/json'},
       body: JSON.stringify(args), signal: AbortSignal.timeout(10_000), redirect: 'error',
     });
     if (!response.ok) throw new PaymentError('payment_processing_unavailable');
