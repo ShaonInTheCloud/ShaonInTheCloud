@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -212,16 +213,38 @@ class GuardDeviceFlowTest {
     }
 
     private fun tap(text: String, scroll: Boolean = false) {
-        var node = device.wait(Until.findObject(By.text(text)), 15_000)
-        if (node == null && scroll) {
-            repeat(6) { device.findObject(By.scrollable(true))?.scroll(Direction.UP, 0.85f) }
+        val deadline = SystemClock.elapsedRealtime() + 15_000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            if (tapVisibleText(text)) return
+            SystemClock.sleep(200)
+        }
+        if (scroll) {
+            repeat(6) {
+                device.findObject(By.scrollable(true))?.scroll(Direction.UP, 0.85f)
+                SystemClock.sleep(300)
+            }
             repeat(12) {
-                node = device.findObject(By.text(text))
-                if (node != null) { node!!.click(); return }
+                if (tapVisibleText(text)) return
                 device.findObject(By.scrollable(true))?.scroll(Direction.DOWN, 0.65f)
+                SystemClock.sleep(300)
             }
         }
-        (node ?: error("Missing visible button: $text")).click()
+        error("Missing visible button: $text")
+    }
+
+    private fun tapVisibleText(text: String): Boolean {
+        repeat(3) {
+            val node = device.findObject(By.text(text)) ?: return false
+            try {
+                // Read fresh visible bounds after scrolling. UiObject2.click
+                // may retain a Compose node that is replaced during layout.
+                val bounds = node.visibleBounds
+                if (bounds.width() >= 8 && bounds.height() >= 12)
+                    return device.click(bounds.centerX(), bounds.centerY())
+            } catch (_: StaleObjectException) { }
+            SystemClock.sleep(150)
+        }
+        return false
     }
 
     private fun await(description: String, condition: () -> Boolean) {

@@ -97,6 +97,10 @@ jobs:
             printf '%s\n' 'avd.ini.encoding=UTF-8' "path=$safenest_avd_dir/safenest-qa.avd" 'target=android-36' > "$safenest_avd_dir/safenest-qa.ini"
             printf '%s\n' 'AvdId=safenest-qa' 'avd.ini.encoding=UTF-8' 'abi.type=x86_64' 'hw.cpu.arch=x86_64' 'hw.cpu.ncore=2' 'hw.ramSize=2048' 'hw.lcd.width=1080' 'hw.lcd.height=2400' 'hw.lcd.density=420' 'hw.gpu.enabled=yes' 'hw.gpu.mode=software' 'disk.dataPartition.size=2G' 'tag.id=google_apis' 'tag.display=Google APIs' 'PlayStore.enabled=false' "image.sysdir.1=$ANDROID_HOME/system-images/android-36/google_apis/x86_64/" > "$safenest_avd_dir/safenest-qa.avd/config.ini"
           fi
+          # avdmanager's generic default is a tiny legacy display. Use the
+          # same phone dimensions whether creation or fallback supplied it.
+          sed -i '/^hw.lcd.width=/d; /^hw.lcd.height=/d; /^hw.lcd.density=/d' "$safenest_avd_dir/safenest-qa.avd/config.ini"
+          printf '%s\n' 'hw.lcd.width=1080' 'hw.lcd.height=2400' 'hw.lcd.density=420' >> "$safenest_avd_dir/safenest-qa.avd/config.ini"
           "$ANDROID_HOME/emulator/emulator" -list-avds
           test -e /dev/kvm
           sudo chmod a+rw /dev/kvm
