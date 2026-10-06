@@ -8,3 +8,7 @@ h1,h2,h3{font-family:Manrope,'Hind Siliguri',sans-serif;letter-spacing:-.04em}
 @media(max-width:1000px){.product-hero{gap:30px;grid-template-columns:1.2fr 1fr}.nav nav{order:3}.footer-main{grid-template-columns:1fr 1fr}.footer-links{grid-column:1/-1}}
 @media(max-width:760px){.product-intro{padding:45px 22px}.product-hero{grid-template-columns:1fr;min-height:0;gap:36px}.product-intro h1{font-size:46px}.product-grid,.challenge-grid{grid-template-columns:1fr}.content-section{padding:40px 22px}.product-overview{padding:26px}.plans{grid-template-columns:1fr}.announcement{justify-content:space-between;padding:12px 20px;gap:12px}.announcement>a{flex-shrink:0}.announcement>span{max-width:65%}.nav{padding:14px 20px}.nav nav{gap:4px}.nav .brand-logo{width:140px}.footer-main{grid-template-columns:1fr}.info-card{margin:20px 16px;padding:22px}.page-body{padding-inline:0}.page-body>.page-intro{padding-inline:22px}.product-card{padding:24px}}
 @media(prefers-reduced-motion:reduce){.progress-track>div{transition:none}}
+/* Explicit contrast and icon strokes avoid inherited styles from the old theme. */
+.announcement a,.announcement .translation-en,.announcement .translation-bn{color:#572a40}
+.site-search-submit svg{width:19px;height:19px;fill:none;stroke:#321827;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:1150px){.nav{flex-wrap:nowrap;padding:16px 3vw}.nav nav{gap:2px;flex:1 1 auto}.nav nav a{padding:8px 7px}.site-search{flex:0 1 170px;min-width:150px}.nav .actions{flex:0 0 auto}.nav .lang{padding:8px}}
