@@ -175,19 +175,27 @@ class GuardDeviceFlowTest {
     }
 
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
-    private fun openApp() = start(Intent().setComponent(ComponentName(context.packageName, MainActivity::class.java.name)))
+    private fun openApp() {
+        // Permission Settings can sit above MainActivity in the app's task.
+        // Clear those activities so bringing the task forward really opens
+        // SafeNest, rather than restoring its last external Settings page.
+        start(Intent().setComponent(ComponentName(context.packageName, MainActivity::class.java.name))
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+        await("SafeNest Test foreground after reopening") { device.currentPackageName == context.packageName }
+    }
     private fun start(intent: Intent) {
         // The app is in the background while Settings is open. Use the QA
         // shell to launch only these public activities, as an owner would from
         // the launcher; a blocked background start must not masquerade as Home.
         val command = buildString {
-            append("am start -W -f 0x10000000")
+            append("am start -W -f 0x").append(Integer.toHexString(intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK))
             intent.component?.let { append(" -n ").append(commandToken(it.flattenToString())) }
             intent.action?.let { append(" -a ").append(commandToken(it)) }
             intent.data?.let { append(" -d ").append(commandToken(it.toString())) }
         }
         val output = device.executeShellCommand(command)
         check(!output.contains("Error:") && !output.contains("Exception")) { "Public activity launch failed: $output" }
+        println("SafeNest device QA launch: $output")
         SystemClock.sleep(500)
     }
 
