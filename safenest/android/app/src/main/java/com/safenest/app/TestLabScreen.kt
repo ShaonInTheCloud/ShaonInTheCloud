@@ -41,6 +41,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     var notes by remember { mutableStateOf(prefs.getString("notes", "") ?: "") }
     var message by remember { mutableStateOf("") }
     var dns by remember { mutableStateOf(SafeNestVpnService.dnsHealth.get()) }
+    var transport by remember { mutableStateOf(SafeNestVpnService.dnsTransport.get()) }
     var running by remember { mutableStateOf(SafeNestVpnService.isRunning.get()) }
     var error by remember { mutableStateOf(SafeNestVpnService.lastError.get()) }
     var blocked by remember { mutableStateOf(SafeNestVpnService.lastBlockedHost.get()) }
@@ -53,6 +54,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     LaunchedEffect(context) {
         while (true) {
             dns = SafeNestVpnService.dnsHealth.get()
+            transport = SafeNestVpnService.dnsTransport.get()
             running = SafeNestVpnService.isRunning.get()
             error = SafeNestVpnService.lastError.get()
             blocked = SafeNestVpnService.lastBlockedHost.get()
@@ -73,6 +75,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     Text(t("No account or payment is required in this test app. It has separate settings from SafeNest. Use Setup to consent to the test guard and enable Accessibility first. Then start the test and approve VPN permission. SafeNest and SafeNest Test VPN/removal screens return Home while the test is active.",
         "এই পরীক্ষার অ্যাপে অ্যাকাউন্ট বা পেমেন্ট লাগবে না। SafeNest থেকে সেটিংস আলাদা। আগে সেটআপে টেস্ট গার্ডে সম্মতি ও Accessibility চালু করুন। তারপর পরীক্ষা চালু ও VPN অনুমতি দিন। সক্রিয় পরীক্ষায় SafeNest ও SafeNest Test-এর VPN ও আনইনস্টল স্ক্রিন হোমে ফেরাবে।"))
     Text("SafeNest Test ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleSmall)
+    Text(t("DNS connection: ", "DNS সংযোগ: ") + transport)
     Text(t("Accessibility enabled: ", "Accessibility চালু: ") + accessEnabled)
     Text(t("Guard connected: ", "গার্ড সংযুক্ত: ") + guardConnected)
     Text(t("Control guard active: ", "নিয়ন্ত্রণ গার্ড সক্রিয়: ") + controlsActive)
@@ -108,7 +111,7 @@ fun TestLabScreen(language: String, onStart: () -> Unit, onSetup: () -> Unit, on
     }) { Text(t("Save notes", "নোট সংরক্ষণ করুন")) }
     OutlinedButton(onClick = {
         prefs.edit().putString("notes", notes).apply()
-        val report = "SafeNest Test ${BuildConfig.VERSION_NAME}\nDNS running: $running\nDNS status: $dns\nAccessibility enabled: $accessEnabled\nGuard connected: $guardConnected\nControl guard active: $controlsActive\nLast guard action: $lastGuardAction\nLast guard exit: $lastGuardExit\nError: $error\nNotes: $notes"
+        val report = "SafeNest Test ${BuildConfig.VERSION_NAME}\nDNS running: $running\nDNS status: $dns\nDNS connection: $transport\nAccessibility enabled: $accessEnabled\nGuard connected: $guardConnected\nControl guard active: $controlsActive\nLast guard action: $lastGuardAction\nLast guard exit: $lastGuardExit\nError: $error\nNotes: $notes"
         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("SafeNest test feedback", report))
         message = t("Copied. Paste the report into this ChatGPT conversation.", "কপি হয়েছে। এই ChatGPT কথোপকথনে রিপোর্ট পেস্ট করুন।")
     }) { Text(t("Copy feedback for ChatGPT", "ChatGPT-র জন্য মতামত কপি করুন")) }

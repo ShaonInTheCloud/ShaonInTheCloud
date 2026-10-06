@@ -59,6 +59,7 @@ fun ProtectionSetupScreen(
     var lockdown by remember { mutableStateOf(SafeNestVpnService.lockdownEnabled.get()) }
     var alwaysOn by remember { mutableStateOf(SafeNestVpnService.alwaysOnEnabled.get()) }
     var privateDns by remember { mutableStateOf(SafeNestVpnService.privateDnsState.get()) }
+    var transport by remember { mutableStateOf(SafeNestVpnService.dnsTransport.get()) }
     var chromePolicy by remember { mutableStateOf(ManagedProtection.chromePolicyStatus(context)) }
     var managedPolicy by remember { mutableStateOf<ManagedPolicyStatus?>(null) }
     var recoveryConfigured by remember { mutableStateOf(false) }
@@ -89,6 +90,7 @@ fun ProtectionSetupScreen(
             lockdown = SafeNestVpnService.lockdownEnabled.get()
             alwaysOn = SafeNestVpnService.alwaysOnEnabled.get()
             privateDns = SafeNestVpnService.privateDnsState.get()
+            transport = SafeNestVpnService.dnsTransport.get()
             chromePolicy = ManagedProtection.chromePolicyStatus(context)
             error = SafeNestVpnService.lastError.get()
             guardEnabled = GuardPreferences.isSelected(context)
@@ -128,6 +130,11 @@ fun ProtectionSetupScreen(
 
         SetupCard(t("Live protection status", "সুরক্ষার বর্তমান অবস্থা")) {
             StatusLine(t("DNS service", "DNS সেবা"), if (running) t("Running", "চালু") else t("Stopped", "বন্ধ"))
+            StatusLine(t("DNS connection", "DNS সংযোগ"), when (transport) {
+                "cloudflare-https" -> t("Cloudflare · HTTPS", "Cloudflare · HTTPS")
+                "strict-private-dns" -> t("Your strict Private DNS", "আপনার নির্দিষ্ট Private DNS")
+                else -> t("Not connected", "সংযুক্ত নয়")
+            })
             if (vpnTakenOver) Text(t("Another VPN has taken over. SafeNest cannot filter its traffic on this personal phone. Restore SafeNest VPN permission and test again.", "অন্য VPN চালু হয়েছে। ব্যক্তিগত ফোনে SafeNest তার ট্রাফিক ফিল্টার করতে পারে না। SafeNest VPN অনুমতি ফিরিয়ে আবার পরীক্ষা করুন।"), fontSize = 12.sp, color = Color(0xFFB53A3A))
             StatusLine(t("Allowed-site DNS", "স্বাভাবিক সাইটের DNS"), when {
                 lockdown -> t("Lockdown conflicts with this build", "Lockdown এই সংস্করণের সাথে সামঞ্জস্যপূর্ণ নয়")
@@ -177,7 +184,7 @@ fun ProtectionSetupScreen(
                 "strict-unvalidated" -> t("Custom provider is not validated", "নিজের DNS সেবাদাতা যাচাই হয়নি")
                 else -> t("Unknown — start the filter and check settings", "অজানা — ফিল্টার চালু করে সেটিংস দেখুন")
             })
-            Text(t("System Private DNS and a browser's Secure DNS are different. Browser settings can bypass DNS lists. Check both using normal and blocked test sites. On Android 9 this version cannot forward active Private DNS safely; review the diagnostic before continuing.", "সিস্টেমের Private DNS এবং ব্রাউজারের Secure DNS আলাদা। ব্রাউজারের সেটিংস DNS তালিকা এড়াতে পারে। সাধারণ ও ব্লক করা সাইট দিয়ে দুটিই পরীক্ষা করুন। Android 9-এ এই সংস্করণ সক্রিয় Private DNS নিরাপদে ফরওয়ার্ড করতে পারে না; ত্রুটির তথ্য দেখুন।"), fontSize = 12.sp)
+            Text(t("System Private DNS and a browser's Secure DNS are different. Browser settings can bypass DNS lists. Check both using normal and blocked test sites. On Android 9 this version cannot forward a strict Private DNS provider safely; review the diagnostic before continuing.", "সিস্টেমের Private DNS এবং ব্রাউজারের Secure DNS আলাদা। ব্রাউজারের সেটিংস DNS তালিকা এড়াতে পারে। সাধারণ ও ব্লক করা সাইট দিয়ে দুটিই পরীক্ষা করুন। Android 9-এ এই সংস্করণ নির্দিষ্ট Private DNS সেবা নিরাপদে ফরওয়ার্ড করতে পারে না; ত্রুটির তথ্য দেখুন।"), fontSize = 12.sp)
             OutlinedButton(onClick = { openSettings(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }) { Text(t("Open network settings", "নেটওয়ার্ক সেটিংস খুলুন")) }
         }
 

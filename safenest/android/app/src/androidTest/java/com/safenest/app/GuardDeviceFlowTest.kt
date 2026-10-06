@@ -25,6 +25,7 @@ class GuardDeviceFlowTest {
     private lateinit var device: UiDevice
     private lateinit var evidence: File
     private val outcomes = mutableListOf<String>()
+    private var networkTestDomain: String? = null
 
     @Test fun consentedSettingsGuardAndRelease() {
         assertTrue("Device flow must target labDebug", LocalTestSession.enabled)
@@ -38,6 +39,7 @@ class GuardDeviceFlowTest {
             val launcher = device.currentPackageName ?: error("No launcher")
             prepareAndStart()
             pass("Permission-first setup and active connected guard")
+            verifyFilteredInternet()
             stopTest()
             openVpnDetails()
             capture("vpn-detail-before-guard")
@@ -143,6 +145,7 @@ class GuardDeviceFlowTest {
             throw failure
         } finally {
             LocalTestSession.stop(context)
+            networkTestDomain?.let { RulesStore.remove(context, RuleCategory.PERSONAL, it) }
         }
     }
 
@@ -171,6 +174,33 @@ class GuardDeviceFlowTest {
             GuardPreferences.testControlGuardReady(context) && SafeNestVpnService.isRunning.get()
         }
         capture("guard-active-${outcomes.size}")
+    }
+
+    private fun verifyFilteredInternet() {
+        val blocked = "qa-${SystemClock.elapsedRealtime()}.example.com"
+        networkTestDomain = blocked
+        RulesStore.addAll(context, RuleCategory.PERSONAL, listOf(blocked))
+        try {
+            java.net.InetAddress.getAllByName(blocked)
+            fail("Listed harmless name must fail DNS")
+        } catch (_: java.net.UnknownHostException) { }
+        await("Listed name reached the local filter") { SafeNestVpnService.lastBlockedHost.get() == blocked }
+        pass("Listed harmless domain failed through the active DNS filter")
+        assertTrue("Allowed name must resolve", java.net.InetAddress.getAllByName("example.com").isNotEmpty())
+        await("Allowed lookup used encrypted DNS") {
+            SafeNestVpnService.dnsHealth.get() == "ok" && SafeNestVpnService.dnsTransport.get() == "cloudflare-https"
+        }
+        pass("Allowed DNS resolved over certificate-verified HTTPS")
+        val connection = java.net.URL("https://example.com/").openConnection() as javax.net.ssl.HttpsURLConnection
+        try {
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 15_000
+            connection.instanceFollowRedirects = false
+            assertEquals("Ordinary HTTPS must remain usable", 200, connection.responseCode)
+            connection.inputStream.use { assertTrue("Actual page body received", it.read() >= 0) }
+        } finally { connection.disconnect() }
+        pass("Ordinary HTTPS browsing stayed available with protection on")
+
     }
 
     private fun stopTest() {

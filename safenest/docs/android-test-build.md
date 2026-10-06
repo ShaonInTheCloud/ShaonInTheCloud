@@ -1,4 +1,4 @@
-# SafeNest Test 0.4.6
+# SafeNest Test 0.4.7
 
 Local QA app: `com.safenest.app.lab`, launcher label **SafeNest Test**. It installs beside production SafeNest. No login, payment or server entitlement is needed in `labDebug`. The domain catalog and search stay hidden; custom additions and imports remain available.
 
@@ -18,7 +18,7 @@ The guard sends Back from the protected detail/dialog before a delayed Home acti
 ## Focused regression on a device
 
 1. Before starting, enable Accessibility yourself; the permission page must remain usable during setup.
-2. Start the test. In **Test tools**, verify version **0.4.6-test**, Accessibility enabled, Guard connected, and Control guard active are all correct.
+2. Start the test. In **Test tools**, verify version **0.4.7-test**, Accessibility enabled, Guard connected, and Control guard active are all correct.
 3. Open ordinary Settings, Network & internet, Accessibility list and the VPN list shown in the screenshot: these must stay open.
 4. Enter **SafeNest Test app guard** Accessibility detail: the guard should leave it and return Home while the test is active.
 5. Tap either the SafeNest Test VPN row or its gear, then do the same for 1.1.1.1: recognized detail/connection screens should leave and return Home. Check that Settings/VPN list can be opened again after each redirect.
@@ -37,10 +37,14 @@ In **Test tools**, add the harmless example.org rule and open it; confirm exampl
 Build: `./gradlew :app:testLabDebugUnitTest :app:lintLabDebug :app:assembleLabDebug`.
 CI also checks Play/direct tests and lint, assembles debug APKs and builds the unsigned Play release bundle. The `safenest-test-apk` artifact contains only the lab APK. The matcher regressions cover the supplied Accessibility/VPN list screenshots, protected details and unrelated-screen negatives. Navigation regressions cover Back-before-Home, timing transitions, cancellation and unrelated app safety. Automated builds are not physical-device verification, Play acceptance, payment validation or signing continuity. No public website/store release is implied.
 
-## Screenshot fixes in 0.4.6
+## Screenshot fixes in 0.4.7
 
 The supplied uninstall screenshot names the regular SafeNest app; the VPN screenshot shows 0.4.4-test. The finite test guard now covers both installed SafeNest identities after fresh consent. It distinguishes page headers from preference-row titles, handles toolbar titles without resource IDs, and checks VPN management-page controls before redirecting. Short bounded rescans handle window events that arrive before content is ready. Test tools report the control guard active only when Accessibility is enabled and the service is connected.
 
 Events with a window ID must match the active root's ID, so an older page in the same Settings package cannot trigger the new page's navigation. Blank section headings are ignored. Repeated content events share one Back/Home transaction, with bounded focus-transition retries. Home completion is recorded after sending Home or observing that Back already reached the launcher. The pending transaction releases when Home appears, allowing a newly opened protected page to be guarded immediately. Stop, expiry, unbind and movement to an unrelated app still cancel navigation.
 
 The lab configuration also receives window-focus changes and retrieves interactive-window metadata. It checks at most 12 windows for the focused window. A bounded, memory-only window ID/package cache records ownership from window-state events and clears on unbind. Hidden windows retain their entry until eviction, because their unique ID can return when a task resumes without a new state event. A current root's package replaces cached ownership when available. No titles, page content or browsing history are saved. A root-less Settings window can still be recognized from its exact SafeNest/SafeNest Test or own app-guard title, paired with that window's verified package. Generic Settings, VPN and Accessibility titles and the same title in other apps do not trigger this check. This also lets Back finish with Home when Android exposes window metadata but no page root. If a different app or system dialog owns focus, the guard does not inspect Settings behind it or force a delayed Home action. Other label checks remain bounded to the supported system/installer surfaces.
+
+## Encrypted DNS and internet checks in 0.4.7
+
+The separate VPN consent explains Cloudflare HTTPS and strict Private DNS. Test tools/feedback show the DNS connection. During the active test, add the harmless example.org rule, verify its new DNS query is filtered, and confirm example.com still loads. The connected emulator flow also exercises a fresh local blocked name, a successful allowed lookup over certificate-verified HTTPS, and an actual HTTPS page alongside the previous Settings-guard/release checks. Check that exact run before treating this build as verified. Phone, mobile-data/handover, battery and third-party VPN profile tests remain pending.

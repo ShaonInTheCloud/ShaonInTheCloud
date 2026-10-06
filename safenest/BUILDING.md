@@ -3,7 +3,7 @@
 ## Android Studio (recommended)
 
 1. Extract the **entire ZIP**. In Android Studio choose **File > Open**, then select the inner **`SafeNest/android`** directory containing `settings.gradle.kts`.
-2. Under **Tools > SDK Manager**, install **Android API 36** and **Android SDK Build-Tools 35.0.0**. Android Studio can prompt to install missing packages.
+2. Under **Tools > SDK Manager**, install **Android API 36** and **Android SDK Build-Tools 36.0.0**. Android Studio can prompt to install missing packages.
 3. In **Settings > Build, Execution, Deployment > Build Tools > Gradle**, use a full **JDK 17 or JDK 21**, such as Android Studio's bundled JBR. Do not use a standalone Java runtime.
 4. Let Gradle sync. Select the **app** run configuration and your emulator/phone, then click **Run**. **Sync alone does not install the updated app.**
 
@@ -46,7 +46,7 @@ bash '/path/to/SafeNest/build.sh'
 The script discovers Android Studio's JDK and usual SDK locations. For custom installations, export `JAVA_HOME` and `ANDROID_HOME` first. To run only unit tests:
 
 ```bash
-bash '/path/to/SafeNest/build.sh' :app:testDebugUnitTest
+bash '/path/to/SafeNest/build.sh' :app:testDirectDebugUnitTest
 ```
 
 ## Managed-device setup
@@ -55,8 +55,8 @@ After installing, follow **docs/device-owner-setup.md**. VPN consent is separate
 
 ## Build outputs
 
-- Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
-- JVM unit-test report: `android/app/build/reports/tests/testDebugUnitTest/index.html`
+- Debug APK: `android/app/build/outputs/apk/direct/debug/app-direct-debug.apk`
+- JVM unit-test report: `android/app/build/reports/tests/testDirectDebugUnitTest/index.html`
 
 A debug APK uses a development signing key and is for testing. Build success and passing JVM tests do not verify VPN connectivity, Android Accessibility behavior, device-admin behavior, or resistance to removal. Test those on the target Android device before distribution. This project does not include release-signing credentials.
 
@@ -67,3 +67,9 @@ A debug APK uses a development signing key and is for testing. Build success and
 - [Gradle wrapper documentation](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
 - [AGP 8.13 compatibility requirements](https://developer.android.com/build/releases/agp-8-13-0-release-notes)
 - [Android SDK tools](https://developer.android.com/studio)
+
+## Distribution builds and release signing
+
+Use `:app:assembleLabDebug` for login-free SafeNest Test, `:app:assemblePlayDebug` for the consumer Play behavior and `:app:assembleDirectDebug` for the separately consented direct/managed development behavior. Lab release variants are disabled. APKs appear under `outputs/apk/lab/debug`, `play/debug` and `direct/debug`. The guarded test flow is in `docs/android-test-build.md`.
+
+The normal CI Play bundle is unsigned. Configure the owner-supplied protected upload key and certificate fingerprint using `docs/release-signing.md`, then run the separate manual signed-bundle workflow. Debug certificates are not production upgrade certificates; neither a debug APK nor an unsigned AAB is a store release.

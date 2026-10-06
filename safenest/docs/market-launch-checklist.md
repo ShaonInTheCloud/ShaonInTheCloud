@@ -1,6 +1,8 @@
 # SafeNest market launch checklist
 
-Updated: 5 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+Updated: 6 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+
+Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
 
 **Release decision: development website live; paid sales and Play production release are blocked.** A working website, source tests or a debug APK do not establish reliable protection on customer phones.
 
@@ -10,7 +12,7 @@ Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/materi
 
 - [x] Recover the full Android source and published website; keep the approved pink/white design, slogans and English above smaller Bangla.
 - [x] Restore exact applied Supabase migration history, rather than replaying archive migrations under invented timestamps.
-- [ ] Synchronize complete application, website, backend, catalogues and release documents to GitHub; verify the resulting branch head.
+- [x] Synchronize complete application, website, backend, catalogues and release documents to GitHub; verify the resulting branch head. Latest previously verified head: `7ef13f8448032f332c70e79e2684a08e7d34fa07`.
 - [ ] Publish account deletion, privacy, terms, help and checkout-status pages on the existing domain; inspect the deployment result.
 - [ ] Establish one release owner, a verified customer-support/privacy address and final business/legal identity.
 - [ ] Protect `main` with passing checks and reviewed pull requests; require MFA for GitHub, Supabase, email, domain and Play Console accounts.
@@ -37,10 +39,10 @@ Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/materi
 - [x] In `play`, disable Settings/installer interception, browser address-bar Home redirects and the Device Administrator receiver/setup entry points. Keep the direct development behavior separately.
 - [x] Add matching consent/disclosure text and account-deletion/privacy links. Play app guard returns Home only for selected blocked apps and detected VPN apps; Chrome/Firefox stay open.
 - [x] Keep no in-app pause during a finite verified protection period and automatic expiry; accurately disclose that Android uninstall and permission controls remain available in the consumer Play build.
-- [ ] Compile and test both flavors; compare merged manifests and ensure the Play artifact has no Device Administrator receiver or own-uninstall interception.
+- [x] Compile and test Play/direct/lab 0.4.6 debug flavors and the unsigned Play release bundle. Prior CI passed; 0.4.7 must pass its own checks. The signed-release validator checks the Play merged manifest, including absence of Device Administrator.
 - [ ] Verify the Play permission disclosures against the shipped artifact, including app visibility, Accessibility, VpnService and foreground-service declarations.
 - [ ] Record declaration videos showing consent, permission grant, normal browsing and the blocking feature; describe local DNS rather than an encrypted privacy VPN.
-- [ ] Review DNS transport against the VpnService policy with the final design. Current ordinary upstream UDP/TCP is not encrypted and this prototype is not a full traffic tunnel.
+- [ ] Review DNS transport against the VpnService policy with the final design. 0.4.7 prepares certificate-verified HTTPS/strict Private DNS without a plain fallback; this prototype remains a DNS-only interface rather than a full traffic tunnel. Encryption is not proof of eligibility.
 - [ ] Confirm ownership/authorization requirements before offering managed-device protection. Device Owner is a separate enrollment process, usually during device setup; payment is not an OS management permission.
 - [ ] Do not market permanent uninstall prevention, all-VPN blocking or 100% gambling/adult coverage.
 

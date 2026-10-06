@@ -1,5 +1,10 @@
 package com.safenest.app
 
+fun dnsFilterDisclosure(language: String): String = if (language == "bn")
+    "SafeNest ফোনে DNS অনুরোধ পরীক্ষা করতে Android VpnService ব্যবহার করে। ব্লক করা অনুরোধ ফোনেই বন্ধ হয়। অনুমোদিত অনুরোধ যাচাইকৃত HTTPS সংযোগে Cloudflare 1.1.1.1-এ যায়; তারা ডোমেইনের নাম ও আপনার নেটওয়ার্কের IP পায়। Android 10 বা পরের সংস্করণে নিজের নির্দিষ্ট Private DNS সেবা চালু থাকলে সেটি ব্যবহার হয়। এনক্রিপ্টেড সংযোগ ব্যর্থ হলে সাধারণ DNS ব্যবহার হয় না। SafeNest DNS ইতিহাস সংরক্ষণ বা আপলোড করে না। সাধারণ ইন্টারনেট ট্রাফিক আপনার নেটওয়ার্কেই থাকে; এটি পুরো ইন্টারনেট এনক্রিপ্ট করা VPN নয়। Block connections without VPN বন্ধ রাখুন।"
+else
+    "SafeNest uses Android VpnService to check DNS requests on your phone. Blocked requests stop locally. Allowed requests go over certificate-verified HTTPS to Cloudflare 1.1.1.1, which receives the domain name and your network IP. On Android 10 or newer, an active strict Private DNS provider you selected is used instead. If encrypted resolution fails, SafeNest does not fall back to plain DNS. SafeNest does not retain or upload DNS history. Ordinary internet traffic stays on your network; this does not encrypt all traffic. Keep Block connections without VPN off."
+
 fun appGuardDisclosure(language: String): String {
     if (LocalTestSession.enabled) return if (language == "bn")
         "আপনার সম্মতিতে সক্রিয় ৬০ মিনিটের পরীক্ষায় নির্বাচিত ব্লক অ্যাপ, SafeNest Test-এর Accessibility বন্ধ করার পৃষ্ঠা এবং SafeNest ও SafeNest Test নামে নির্দিষ্ট সিস্টেম সেটিংস পৃষ্ঠা (যেমন VPN নিয়ন্ত্রণ ও আনইনস্টল) থেকে হোমে ফেরাবে। 1.1.1.1-এর মতো পরিচিত VPN-এর সেটিংস ও সংযোগ ডায়ালগও শনাক্ত হলে হোমে ফেরাবে। মূল Settings, Accessibility তালিকা ও VPN তালিকা ব্যবহার করা যায়। গার্ড আগে নির্দিষ্ট পৃষ্ঠা থেকে পিছিয়ে তারপর হোমে ফেরায়, যাতে Settings আবার খুলতে পারেন। Stop test সব গার্ড বন্ধ করে; মেয়াদ শেষ বা ফোন চালু করলেও পরীক্ষা শেষ হয়। সীমিত লেবেল ফোনেই পরীক্ষা হয়; লেবেল বা পৃষ্ঠার বিষয়বস্তু সংরক্ষণ বা আপলোড হয় না। Accessibility সংযুক্ত থাকলে অল্প কয়েকটি উইন্ডোর ID ও অ্যাপের ID শুধু মেমরিতে থাকে। ব্রাউজারের বিষয়বস্তু, বার্তা বা পাসওয়ার্ড পড়ে না। এটি Device Owner অনুমতি নয়; শনাক্তকরণ ফোনভেদে ভিন্ন।"

@@ -24,8 +24,9 @@ import android.util.Log
 import java.io.IOException
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.net.DatagramSocket
-import java.net.Socket
+import java.net.Inet4Address
+import java.net.Proxy
+import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
@@ -51,6 +52,7 @@ class SafeNestVpnService : VpnService() {
         val isRunning = AtomicBoolean(false)
         val dnsHealth = AtomicReference("waiting")
         val privateDnsState = AtomicReference("unknown")
+        val dnsTransport = AtomicReference("none")
         val lockdownEnabled = AtomicBoolean(false)
         val alwaysOnEnabled = AtomicBoolean(false)
         val lastError = AtomicReference("")
@@ -145,6 +147,7 @@ class SafeNestVpnService : VpnService() {
         if (session != null) disposeSession()
         isRunning.set(false)
         dnsHealth.set("waiting")
+        dnsTransport.set("none")
         lastError.set("")
         failedQueries.set(0)
         lastBlockedHost.set("")
@@ -154,7 +157,7 @@ class SafeNestVpnService : VpnService() {
             val initialNetwork = physicalNetwork()
             val initialProperties = linkProperties(initialNetwork)
             updatePrivateDnsState(initialProperties)
-            if (Build.VERSION.SDK_INT == 28 && requiresEncryptedDns(initialProperties)) {
+            if (Build.VERSION.SDK_INT == 28 && requiresStrictPrivateDns(initialProperties)) {
                 stopProtection("Android 9 encrypted Private DNS is not supported by this filter. Use Android 10 or newer, or review Private DNS in Android Settings. Internet access has been restored.")
                 return
             }
@@ -294,7 +297,7 @@ class SafeNestVpnService : VpnService() {
         val selected = physicalNetwork()
         val properties = linkProperties(selected)
         updatePrivateDnsState(properties)
-        if (session != null && Build.VERSION.SDK_INT == 28 && requiresEncryptedDns(properties)) {
+        if (session != null && Build.VERSION.SDK_INT == 28 && requiresStrictPrivateDns(properties)) {
             stopProtection("Android 9 encrypted Private DNS needs Android 10 or newer for this filter. Review Private DNS in Android Settings. Internet access has been restored.")
             return selected
         }
@@ -331,9 +334,9 @@ class SafeNestVpnService : VpnService() {
         getSystemService(ConnectivityManager::class.java)?.getLinkProperties(it)
     }
 
-    private fun requiresEncryptedDns(properties: LinkProperties?): Boolean =
+    private fun requiresStrictPrivateDns(properties: LinkProperties?): Boolean =
         Build.VERSION.SDK_INT >= 28 && properties != null &&
-            (properties.isPrivateDnsActive || !properties.privateDnsServerName.isNullOrEmpty())
+            !properties.privateDnsServerName.isNullOrEmpty()
 
     private fun updatePrivateDnsState(properties: LinkProperties?) {
         val value = when {
@@ -354,48 +357,45 @@ class SafeNestVpnService : VpnService() {
             recordFailure(current, "No Wi-Fi or mobile network is available.")
             return DnsPacketCodec.error(query, 2)
         }
-        // One budget covers queue time, Android's resolver and every fallback.
-        if (Build.VERSION.SDK_INT >= 29) {
-            val answer = platformResolve(current, query, network, deadline)
-            if (answer != null) return checkedReply(current, query, answer)
-        }
-        if (!isCurrent(current)) return DnsPacketCodec.error(query, 2)
         val properties = linkProperties(network)
         updatePrivateDnsState(properties)
-        // Never silently downgrade selected/active Private DNS, including strict validation failure.
-        if (requiresEncryptedDns(properties)) {
-            recordFailure(current, "Android's encrypted DNS resolver did not respond. Check Private DNS and the network; SafeNest did not send an unencrypted fallback.")
+        // Honor an explicitly selected strict provider. Android's strict mode cannot
+        // downgrade to plain DNS; opportunistic/automatic mode does not give that guarantee.
+        if (requiresStrictPrivateDns(properties)) {
+            dnsTransport.set("strict-private-dns")
+            if (Build.VERSION.SDK_INT >= 29 && properties?.isPrivateDnsActive == true) {
+                val answer = platformResolve(current, query, network, deadline)
+                if (answer != null && requiresStrictPrivateDns(linkProperties(network))) {
+                    return checkedReply(current, query, answer)
+                }
+            }
+            recordFailure(current, "Your strict Private DNS provider did not respond. No plain DNS or alternate provider was used.")
             return DnsPacketCodec.error(query, 2)
         }
-        val hooks = object : DnsUpstreamTransport.SocketHooks {
-            override fun prepare(socket: DatagramSocket) {
-                current.track(socket)
-                check(protect(socket)) { "Could not protect DNS socket" }
-                network.bindSocket(socket)
-            }
-            override fun prepare(socket: Socket) {
-                current.track(socket)
-                check(protect(socket)) { "Could not protect DNS socket" }
-                network.bindSocket(socket)
-            }
-            override fun release(socket: AutoCloseable) { current.untrack(socket) }
+        dnsTransport.set("cloudflare-https")
+        val hooks = object : DnsHttpsTransport.ConnectionHooks {
+            override fun open(endpoint: URL) = network.openConnection(endpoint, Proxy.NO_PROXY)
+            override fun prepare(cancellation: AutoCloseable) { current.track(cancellation) }
+            override fun release(cancellation: AutoCloseable) { current.untrack(cancellation) }
         }
-        for (resolver in properties?.dnsServers.orEmpty().distinct().take(3)) {
+        val ipv6First = properties != null && properties.linkAddresses.none { it.address is Inet4Address }
+        // A shared monotonic budget bounds queued work, connection, reading and all HTTPS attempts.
+        for (endpoint in DnsHttpsTransport.endpoints(ipv6First)) {
             if (!isCurrent(current)) return DnsPacketCodec.error(query, 2)
-            // Recheck privacy state before every plain DNS attempt after network/settings changes.
-            if (requiresEncryptedDns(linkProperties(network))) break
+            // A newly selected strict provider must not silently send its lookups elsewhere.
+            if (requiresStrictPrivateDns(linkProperties(network))) break
             try {
-                val answer = DnsUpstreamTransport.exchange(query, resolver, 53, deadline, hooks)
+                val answer = DnsHttpsTransport.exchange(query, URL(endpoint), deadline, hooks)
                 return checkedReply(current, query, answer)
             } catch (_: InterruptedException) {
                 Thread.currentThread().interrupt()
                 return DnsPacketCodec.error(query, 2)
             } catch (error: Exception) {
                 if (!isCurrent(current)) return DnsPacketCodec.error(query, 2)
-                Log.w(TAG, "Configured DNS resolver failed: ${error.javaClass.simpleName}")
+                Log.w(TAG, "Encrypted DNS resolver failed: ${error.javaClass.simpleName}")
             }
         }
-        recordFailure(current, "DNS failed on the selected network. Check Private DNS or use Restore internet if normal browsing fails.")
+        recordFailure(current, "Encrypted DNS failed on the selected network. Check connection and Private DNS; no plain DNS fallback was sent.")
         return DnsPacketCodec.error(query, 2)
     }
 
@@ -496,6 +496,8 @@ class SafeNestVpnService : VpnService() {
         session = null
         old?.close()
         isRunning.set(false)
+        dnsTransport.set("none")
+        dnsTransport.set("none")
         reportedUnderlying = null
         main.removeCallbacks(statusPoll)
         networkCallback?.let { callback ->

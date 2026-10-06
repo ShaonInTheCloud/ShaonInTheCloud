@@ -48,7 +48,7 @@ Foreground service: state why the ongoing local filter needs background operatio
 | Optional display name and language | Private profile stored on Supabase | Personal info and app preference disclosures |
 | Paid period and entitlement ID | Read from server; finite state cached locally | Purchase history/account data classification once real payments start |
 | Foreground blocked-app observations | Play matches app ID locally; no observation history upload | Ephemeral processing and installed-app visibility declaration |
-| DNS queries | Local rule check; allowed queries sent to network/fallback resolver, sometimes configured DNS-over-TLS | Resolver processing/retention and browser-history/ephemeral classification |
+| DNS queries | Local rule check; allowed requests use Cloudflare HTTPS, or an active user-selected strict Private DNS provider on Android 10+ | Resolver receives allowed names/network IP; review processing/retention and browser-history/ephemeral classification |
 | Check-ins and custom rules | Local device storage | Verify no export/backup/telemetry uploads in the shipped build |
 | Infrastructure logs | Hosting, Auth/email and resolver providers may keep operational data | Retention periods and provider contracts |
 | Card and wallet data | Not collected now; planned hosted provider checkout | Update disclosures before live payments |
