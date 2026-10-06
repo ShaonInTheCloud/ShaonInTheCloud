@@ -9,7 +9,6 @@ import android.provider.Settings
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
-import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
@@ -146,6 +145,7 @@ class GuardDeviceFlowTest {
         openApp()
         assertTrue("App startup must finish before setup", device.wait(Until.hasObject(By.text("Start test")), 30_000))
         tap("Start test", scroll = true)
+        device.findObject(By.text("OK"))?.let { tapVisibleText("OK") }
         tap("Review and enable test guard", scroll = true)
         tap("I agree — open settings")
         if (!GuardPreferences.isAccessibilityEnabled(context)) {
@@ -241,23 +241,35 @@ class GuardDeviceFlowTest {
     }
 
     private fun tap(text: String, scroll: Boolean = false) {
-        val deadline = SystemClock.elapsedRealtime() + 15_000
+        val deadline = SystemClock.elapsedRealtime() + if (scroll) 5_000 else 15_000
         while (SystemClock.elapsedRealtime() < deadline) {
             if (tapVisibleText(text)) return
             SystemClock.sleep(200)
         }
         if (scroll) {
-            repeat(6) {
-                device.findObject(By.scrollable(true))?.scroll(Direction.UP, 0.85f)
-                SystemClock.sleep(300)
-            }
-            repeat(12) {
+            repeat(16) {
                 if (tapVisibleText(text)) return
-                device.findObject(By.scrollable(true))?.scroll(Direction.DOWN, 0.65f)
-                SystemClock.sleep(300)
+                swipePage(towardStart = true)
+            }
+            repeat(24) {
+                if (tapVisibleText(text)) return
+                swipePage(towardStart = false)
             }
         }
         error("Missing visible button: $text")
+    }
+
+    private fun swipePage(towardStart: Boolean) {
+        // Compose can omit the scroll event UiObject2.scroll waits for. Use
+        // fresh tree-derived visible bounds for a normal owner swipe instead.
+        val panel = device.findObject(By.scrollable(true)) ?: return
+        val bounds = try { panel.visibleBounds } catch (_: StaleObjectException) { return }
+        if (bounds.width() < 16 || bounds.height() < 80) return
+        val upper = bounds.top + bounds.height() / 4
+        val lower = bounds.bottom - bounds.height() / 4
+        device.swipe(bounds.centerX(), if (towardStart) upper else lower,
+            bounds.centerX(), if (towardStart) lower else upper, 35)
+        SystemClock.sleep(450)
     }
 
     private fun tapVisibleText(text: String): Boolean {
