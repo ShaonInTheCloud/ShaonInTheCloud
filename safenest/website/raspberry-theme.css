@@ -20,14 +20,32 @@ body {
 }
 .liquid-background { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
 .liquid-background.ready { opacity: 1; }
+.liquid-art-fallback {
+  position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1;
+}
+.liquid-art-fallback::before {
+  content: ''; position: absolute; inset: -10%;
+  background: #bf668f url('assets/liquid-pink/floating-reference.webp') center/100% 100%;
+  background-blend-mode: lighten;
+  animation: liquid-art-float 16s ease-in-out infinite alternate;
+}
+.liquid-art-fallback.paused::before { animation-play-state: paused; }
+body[data-liquid-ready] .liquid-art-fallback { display: none; }
+@keyframes liquid-art-float {
+  0% { transform: translate(-3%, 2%) scale(1.02) rotate(-1deg); }
+  50% { transform: translate(2%, -2%) scale(1.06) rotate(.7deg); }
+  100% { transform: translate(3%, 3%) scale(1.02) rotate(1deg); }
+}
 ::selection { background: #7b2248; color: #ffe3ef; }
 /* No page-wide frames, color bands, or covering panels. */
-.nav, body > header, .announcement, .product-intro, .hero, .page-intro,
+.nav, body > header, body > header:not(.nav), .announcement, .product-intro, .hero, .page-intro,
 .content-section, .content-section:nth-of-type(2n+1), .page-body,
 .product-overview, .card, .portal-open .card, main > .intro,
 .statement, .statement-band, .human-story, .section, .family, .panel,
 .steps, .pricing, .payment-section, .campaign-teaser, .character-story,
-.page-character, body > footer, body > footer:has(.payment-catalog) {
+.page-character, body > footer, body > footer:has(.payment-catalog),
+body > footer:has(.payment-catalog):not(:has(.footer-main)),
+.portal-heading, .portal-nav {
   background: transparent; border: 0; box-shadow: none; backdrop-filter: none;
 }
 h1, h2, h3, p, .note, .email, .app-meta { color: var(--ink); }
@@ -166,4 +184,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid #6a1b40; outl
   .card form:not(.site-search) { padding: 20px; }
 }
 @media (max-width: 380px) { .product-overview dl { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .liquid-background { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .liquid-background { transition: none; }
+  .liquid-art-fallback::before { animation: none; }
+}

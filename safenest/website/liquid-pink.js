@@ -1,9 +1,17 @@
 /* Animate the owner's actual liquid artwork; every route shares this layer. */
 (() => {
+  const fallback = document.createElement('div');
+  fallback.className = 'liquid-art-fallback';
+  fallback.setAttribute('aria-hidden', 'true');
   const canvas = document.createElement('canvas');
   canvas.className = 'liquid-background';
   canvas.setAttribute('aria-hidden', 'true');
-  document.body.prepend(canvas);
+  document.body.prepend(fallback, canvas);
+  function visibility() {
+    fallback.classList.toggle('paused', document.hidden);
+  }
+  document.addEventListener('visibilitychange', visibility);
+  visibility();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const gl = canvas.getContext('webgl', {alpha: false, antialias: false, powerPreference: 'low-power'});
   if (!gl) return;
@@ -15,16 +23,19 @@
     uniform vec2 u_artSize;
     void main(){
       vec2 st=gl_FragCoord.xy/u_resolution;
-      float t=u_time*.22;
+      float t=u_time*.60;
       float screenAspect=u_resolution.x/u_resolution.y;
       float artAspect=u_artSize.x/u_artSize.y;
       vec2 cover=vec2(min(1.,screenAspect/artAspect),min(1.,artAspect/screenAspect));
       // Show the full abstract artwork on portrait screens instead of a flat crop.
       cover=mix(vec2(1.),cover,smoothstep(1.,1.6,screenAspect));
-      vec2 uv=(vec2(st.x,1.-st.y)-.5)*cover*.90+.5;
+      float breathing=.82+sin(t*.55)*.018;
+      vec2 uv=(vec2(st.x,1.-st.y)-.5)*cover*breathing+.5;
       // Flow and breathing deform the supplied folds rather than replace them.
-      uv+=vec2(sin(st.y*4.+t)+sin(st.x*3.-t*.6),cos(st.x*4.-t*.8))*cover*.022;
-      uv+=vec2(sin(t*.45),cos(t*.35))*cover*.028;
+      // Taper displacement at the edges so the artwork never stretches there.
+      vec2 flowRoom=vec2(1.)-abs(st-.5)*1.1;
+      uv+=vec2(sin(st.y*4.+t)+sin(st.x*3.-t*.6),cos(st.x*4.-t*.8))*cover*flowRoom*.038;
+      uv+=vec2(sin(t*.65),cos(t*.55))*cover*flowRoom*.050;
       vec3 art=texture2D(u_art,clamp(uv,0.,1.)).rgb;
       vec3 shadowPink=vec3(.75,.40,.56);
       // Preserve the reference's continuous gloss and fine highlight detail.
@@ -70,6 +81,8 @@
       last=now;
       gl.uniform1f(time,reduced.matches ? 0 : elapsed/1000);
       gl.drawArrays(gl.TRIANGLES,0,6);
+      canvas.classList.add('ready');
+      document.body.setAttribute('data-liquid-ready', '');
     }
     if (!reduced.matches) frame=requestAnimationFrame(draw);
   }
@@ -88,11 +101,14 @@
     gl.bindTexture(gl.TEXTURE_2D,texture);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,artwork);
     gl.uniform2f(gl.getUniformLocation(program,'u_artSize'),artwork.width,artwork.height);
-    ready=true; resize(); canvas.classList.add('ready');
+    ready=true; resize();
   };
   artwork.src='assets/liquid-pink/floating-reference.webp';
   addEventListener('resize',resize,{passive:true});
   document.addEventListener('visibilitychange',resume);
   reduced.addEventListener('change',resume);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;cancelAnimationFrame(frame);canvas.classList.remove('ready');});
+  canvas.addEventListener('webglcontextlost',event=>{
+    event.preventDefault(); lost=true; cancelAnimationFrame(frame);
+    canvas.classList.remove('ready'); document.body.removeAttribute('data-liquid-ready');
+  });
 })();
