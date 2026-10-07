@@ -23,6 +23,14 @@ test('reset consumes a token locally and cannot reuse it for a retry', async () 
   assert.equal(await gate.take('login'), 'fresh-token'); gate.reset('login');
   await assert.rejects(gate.take('login'), { code: 'captcha_required' });
 });
+test('taking a token consumes it before a request and rejects a stale provider replay', async () => {
+  const { gate, tokens } = setup(); await gate.activate('login'); tokens.set('login', 'fresh-token');
+  assert.equal(await gate.take('login'), 'fresh-token');
+  await assert.rejects(gate.take('login'), { code: 'captcha_required' });
+  tokens.set('login', 'fresh-token');
+  await assert.rejects(gate.take('login'), { code: 'captcha_required' });
+  tokens.set('login', 'new-token'); assert.equal(await gate.take('login'), 'new-token');
+});
 test('signup, login, recovery and deletion never borrow another form’s token', async () => {
   const { gate, tokens } = setup(); await gate.activate('login'); tokens.set('login', 'login-token');
   for (const form of ['signup','reset','delete']) await assert.rejects(gate.take(form), { code: 'captcha_required' });

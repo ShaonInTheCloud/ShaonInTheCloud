@@ -18,13 +18,18 @@ if (key && !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) {
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await cp('website', 'dist', { recursive: true });
-for (const file of ['account.html', 'account.css']) {
+for (const file of ['account.html', 'account.css', 'android-captcha.html', 'android-captcha.css']) {
   await copyFile(`web/${file}`, `dist/${file}`);
 }
 await build({
   entryPoints: ['web/account.js'], outfile: 'dist/account.js',
   bundle: true, minify: true, format: 'esm', target: ['es2022'],
   define: { __SUPABASE_URL__: JSON.stringify(url.origin), __SUPABASE_KEY__: JSON.stringify(key), __AUTH_CAPTCHA_ENABLED__: JSON.stringify(captchaEnabled), __TURNSTILE_SITEKEY__: JSON.stringify(captchaSitekey) }
+});
+await build({
+  entryPoints: ['web/android-captcha.js'], outfile: 'dist/android-captcha.js',
+  bundle: true, minify: true, format: 'esm', target: ['es2022'],
+  define: { __TURNSTILE_SITEKEY__: JSON.stringify(captchaSitekey) }
 });
 // Apply these headers through the website host. The HTML also carries its CSP.
 await writeFile('dist/_headers', securityHeaders(url.origin));
@@ -37,6 +42,12 @@ for (const file of await readdir('dist')) {
   if (!file.endsWith('.html')) continue;
   const path = `dist/${file}`;
   let html = await readFile(path, 'utf8');
+  // The app challenge uses its own quiet layout; do not add marketing motion.
+  if (file === 'android-captcha.html') {
+    html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(url.origin, { meta: true })}">`);
+    await writeFile(path, html);
+    continue;
+  }
   // One final brand layer covers marketing, generated service pages and Auth.
   // Keep the original page layouts and load the shared motion on every route.
   if (!html.includes('href="liquid-pink.css"')) {

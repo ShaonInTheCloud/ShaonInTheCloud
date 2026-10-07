@@ -27,6 +27,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node --test supabase/functions/protection-access/test/*.test.mjs
+      - name: Build CAPTCHA-enabled clients without changing rollout
+        run: npm run build
+        env:
+          SAFENEST_AUTH_CAPTCHA_ENABLED: 'true'
       - run: npm run build
         env:
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl
@@ -123,6 +127,10 @@ jobs:
       - name: Exercise consented Settings guard on emulator
         timeout-minutes: 12
         run: ./gradlew :app:connectedLabDebugAndroidTest --console=plain
+        working-directory: safenest/android
+      - name: Check compatible-build trial UI gates and cached expiry cleanup
+        timeout-minutes: 8
+        run: ./gradlew :app:connectedPlayDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.safenest.app.TrialDeviceAcceptanceTest --console=plain
         working-directory: safenest/android
       - name: Capture emulator evidence
         if: always()

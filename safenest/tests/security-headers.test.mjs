@@ -6,7 +6,7 @@ test('canonical account URLs and deletion pages disable caching and referrer dis
   for (const route of ['/account', '/account/', '/account.html', '/delete-account', '/delete-account.html']) {
     assert.ok(headers.includes(`${route}\n  Cache-Control: no-store\n  Referrer-Policy: no-referrer\n`));
   }
-  assert.ok(headers.includes("connect-src 'self' https://example.supabase.co;"));
+  assert.ok(headers.includes("connect-src 'self' https://example.supabase.co https://challenges.cloudflare.com;"));
   assert.ok(headers.includes("frame-ancestors 'none'"));
   assert.ok(headers.includes("object-src 'none'"));
 });
@@ -20,7 +20,7 @@ test('HTML fallback restricts scripts, frames and backend connections without in
   const policy=contentSecurityPolicy('https://example.supabase.co', {meta:true});
   assert.ok(policy.includes("script-src 'self' https://challenges.cloudflare.com;"));
   assert.ok(policy.includes("frame-src https://challenges.cloudflare.com;"));
-  assert.ok(policy.includes("connect-src 'self' https://example.supabase.co;"));
+  assert.ok(policy.includes("connect-src 'self' https://example.supabase.co https://challenges.cloudflare.com;"));
   assert.ok(!policy.includes('frame-ancestors'));
   assert.ok(!policy.includes('unsafe-eval'));
 });
