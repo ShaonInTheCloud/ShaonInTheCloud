@@ -72,3 +72,5 @@ summary:focus-visible { outline:3px solid var(--rose); outline-offset:4px; }
 .deletion-consent { display: flex; align-items: flex-start; gap: .75rem; }
 .deletion-consent input { width: auto; margin-top: .25rem; }
 .legal-links { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; }
+
+.auth-captcha{margin:12px 0;min-width:0}

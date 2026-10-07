@@ -7,7 +7,7 @@ export function entitlementState(data, userId) {
   if (!data.active) return data.entitlement === null ? { kind: 'inactive' } : { kind: 'unavailable' };
   const period = data.entitlement;
   const starts = Date.parse(period?.starts_at), ends = Date.parse(period?.ends_at);
-  if (!period?.id || !['weekly', 'monthly', 'annual'].includes(period.plan_code) ||
+  if (!period?.id || !['weekly', 'monthly', 'quarterly', 'annual', 'trial'].includes(period.plan_code) ||
       !Number.isFinite(starts) || !Number.isFinite(ends) || starts > now || ends <= now) {
     return { kind: 'unavailable' };
   }

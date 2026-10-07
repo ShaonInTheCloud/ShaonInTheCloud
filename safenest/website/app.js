@@ -129,3 +129,11 @@ if (searchForm) {
   document.addEventListener('click', event => { if (!searchForm.contains(event.target)) closeResults(); });
   document.querySelectorAll('[data-lang]').forEach(button => button.addEventListener('click', () => { if (searchInput.value.trim()) showResults(); }));
 }
+
+// A compact mobile footer, with the full menu visible on wider screens.
+const footerViewport = matchMedia('(max-width: 760px)');
+function resizeFooterMenu() {
+  document.querySelectorAll('.footer-navigation').forEach(menu => { menu.open = !footerViewport.matches; });
+}
+resizeFooterMenu();
+footerViewport.addEventListener('change', resizeFooterMenu);

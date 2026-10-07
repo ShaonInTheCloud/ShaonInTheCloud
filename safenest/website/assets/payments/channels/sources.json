@@ -1,0 +1,117 @@
+{
+  "source": "https://sslcommerz.com/",
+  "section": "Payment Channels",
+  "checked": "2026-10-06",
+  "assets": [
+    {
+      "file": "visa.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/visa.svg",
+      "bytes": 940
+    },
+    {
+      "file": "mastercard.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/mastercard.svg",
+      "bytes": 4197
+    },
+    {
+      "file": "amex-2.png",
+      "url": "https://sslcommerz.com/wp-content/uploads/2025/11/amex-2.png",
+      "bytes": 2424
+    },
+    {
+      "file": "unionpay.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/unionpay.svg",
+      "bytes": 7280
+    },
+    {
+      "file": "nexus.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/nexus.svg",
+      "bytes": 3417
+    },
+    {
+      "file": "dinersclub.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/dinersclub.svg",
+      "bytes": 1501
+    },
+    {
+      "file": "qcash.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/qcash.svg",
+      "bytes": 13643
+    },
+    {
+      "file": "mtb.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/mtb.svg",
+      "bytes": 2046
+    },
+    {
+      "file": "bkash.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/bkash.svg",
+      "bytes": 2690
+    },
+    {
+      "file": "nagad.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/nagad.svg",
+      "bytes": 10501
+    },
+    {
+      "file": "rocket.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/rocket.svg",
+      "bytes": 11778
+    },
+    {
+      "file": "upay.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/upay.svg",
+      "bytes": 4007
+    },
+    {
+      "file": "st-pay.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2025/11/st-pay.svg",
+      "bytes": 4623
+    },
+    {
+      "file": "surecash.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/surecash.svg",
+      "bytes": 5279
+    },
+    {
+      "file": "mycash.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/mycash.svg",
+      "bytes": 15620
+    },
+    {
+      "file": "mcash.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/mcash.svg",
+      "bytes": 30555
+    },
+    {
+      "file": "tapnpay.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/tapnpay.svg",
+      "bytes": 5843
+    },
+    {
+      "file": "pathao-pay-1.png",
+      "url": "https://sslcommerz.com/wp-content/uploads/2026/01/pathao-pay-1.png",
+      "bytes": 3362
+    },
+    {
+      "file": "okwallet.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/okwallet.svg",
+      "bytes": 10170
+    },
+    {
+      "file": "ipay.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/ipay.svg",
+      "bytes": 3582
+    },
+    {
+      "file": "islamicwallet.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/islamicwallet.svg",
+      "bytes": 6432
+    },
+    {
+      "file": "dmoney.svg",
+      "url": "https://sslcommerz.com/wp-content/uploads/2024/04/dmoney.svg",
+      "bytes": 5468
+    }
+  ]
+}

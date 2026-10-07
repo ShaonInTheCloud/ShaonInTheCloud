@@ -22,15 +22,17 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
     val t = { en: String, bn: String -> if (language == "bn") bn else en }
     var email by remember { mutableStateOf("") }; var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }; var message by remember { mutableStateOf("") }
+    var trialPlan by remember { mutableStateOf("monthly") }
+    var trialConsent by remember { mutableStateOf(false) }
     val committed = ProtectionCommitment.isActive(context)
-    Text(t("Your paid protection period", "আপনার পেইড সুরক্ষার মেয়াদ"), style = MaterialTheme.typography.headlineSmall)
+    Text(t("Your trial or subscription", "আপনার ট্রায়াল বা সাবস্ক্রিপশন"), style = MaterialTheme.typography.headlineSmall)
     if (committed) {
         Text(t("Protection is committed until ", "সুরক্ষা সক্রিয় থাকবে ") + Instant.ofEpochMilli(ProtectionCommitment.endsAt(context)).toString())
         Text(t("There is no in-app pause or stop during this period. Protection ends automatically at expiry. App blocking depends on your phone and enabled Accessibility permission.",
             "এই মেয়াদে অ্যাপে বিরতি বা বন্ধের বোতাম নেই। মেয়াদ শেষে সুরক্ষা স্বয়ংক্রিয়ভাবে শেষ হবে। সেটিংস শনাক্তকরণ আপনার ফোন ও Accessibility অনুমতির ওপর নির্ভর করে।"))
     } else {
-        Text(t("Sign in to verify a subscription confirmed by SafeNest. Protection cannot start without active paid access. No password or session token is saved on this device.",
-            "SafeNest-এ নিশ্চিত হওয়া সাবস্ক্রিপশন যাচাই করতে লগইন করুন। পেইড মেয়াদ ছাড়া সুরক্ষা চালু হবে না। পাসওয়ার্ড বা সেশন টোকেন এই ডিভাইসে সংরক্ষিত হয় না।"))
+        Text(t("Sign in with your confirmed SafeNest account to verify a trial or subscription. Protection needs an active server-verified period. No password or session token is saved on this device.",
+            "নিশ্চিত SafeNest অ্যাকাউন্টে লগইন করে ট্রায়াল বা সাবস্ক্রিপশন যাচাই করুন। সুরক্ষার জন্য সার্ভারে যাচাইকৃত সক্রিয় মেয়াদ দরকার। পাসওয়ার্ড বা সেশন টোকেন ফোনে সংরক্ষিত হয় না।"))
     }
     if (committed) Text(t("For technical support, you can check the server status of this period. Checking does not pause protection. Only a period ended or revoked by the server is released.",
         "প্রযুক্তিগত সহায়তার জন্য এই মেয়াদের সার্ভার অবস্থা যাচাই করতে পারেন। যাচাই করলে সুরক্ষা বন্ধ হয় না। সার্ভারে মেয়াদ শেষ বা অনুমতি প্রত্যাহার হলেই সুরক্ষা শেষ হয়।"))
@@ -56,7 +58,31 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
             catch (error: Exception) { message = error.message ?: t("Verification failed.", "যাচাই হয়নি।") }
             finally { busy = false; password = "" }
         }
-    }) { Text(if (busy) t("Verifying…", "যাচাই হচ্ছে…") else if (committed) t("Check account status", "অ্যাকাউন্টের অবস্থা যাচাই করুন") else t("Verify paid access", "পেইড মেয়াদ যাচাই করুন")) }
+    }) { Text(if (busy) t("Verifying…", "যাচাই হচ্ছে…") else if (committed) t("Check account status", "অ্যাকাউন্টের অবস্থা যাচাই করুন") else t("Verify access", "মেয়াদ যাচাই করুন")) }
+    if (!committed && !BuildConfig.LOCAL_TEST_BUILD) {
+        Text(t("Three-day trial · one per confirmed account. Choose your intended plan. No charge or payment authorization is created by starting a trial.",
+            "তিন দিনের ট্রায়াল · নিশ্চিত অ্যাকাউন্টে একবার। পরিকল্পিত প্ল্যান বেছে নিন। ট্রায়াল শুরু করলে চার্জ বা পেমেন্টের অনুমতি তৈরি হয় না।"))
+        listOf(Triple("monthly", "Monthly · ৳379 / 30 days", "মাসিক · ৳৩৭৯ / ৩০ দিন"),
+            Triple("quarterly", "Three months · ৳999 / 90 days", "তিন মাস · ৳৯৯৯ / ৯০ দিন"),
+            Triple("annual", "Yearly · ৳3,799 / 365 days", "বার্ষিক · ৳৩,৭৯৯ / ৩৬৫ দিন")).forEach { (code, en, bn) ->
+            Row { RadioButton(selected = trialPlan == code, enabled = !busy, onClick = { trialPlan = code }); Text(t(en, bn)) }
+        }
+        Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it });
+            Text(t("Start my 72-hour trial now. It ends automatically; payment setup and automatic charging are not yet available.",
+                "এখন আমার ৭২ ঘণ্টার ট্রায়াল শুরু করুন। মেয়াদ শেষে স্বয়ংক্রিয়ভাবে বন্ধ হবে; পেমেন্ট সেটআপ ও স্বয়ংক্রিয় চার্জ এখনো চালু নয়।")) }
+        Button(enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
+            busy = true; message = ""
+            scope.launch {
+                try {
+                    val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan) }
+                    withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
+                    onVerified()
+                } catch (cancel: CancellationException) { throw cancel }
+                catch (error: Exception) { message = error.message ?: t("Trial unavailable.", "ট্রায়াল পাওয়া যাচ্ছে না।") }
+                finally { busy = false; password = "" }
+            }
+        }) { Text(t("Start three-day trial", "তিন দিনের ট্রায়াল শুরু করুন")) }
+    }
     if (!committed) Text(t(if (BuildConfig.ALLOW_SYSTEM_GUARD) "Purchasing and payment confirmation still require the website's billing integration. This app cannot create a paid entitlement." else "This Play build is for existing SafeNest accounts. In-app purchases are not available. A server-verified active entitlement is required.",
         if (BuildConfig.ALLOW_SYSTEM_GUARD) "কেনা ও পেমেন্ট নিশ্চিত করার জন্য ওয়েবসাইটের বিলিং সংযোগ প্রয়োজন। অ্যাপ নিজে পেইড অনুমতি তৈরি করতে পারে না।" else "এই Play সংস্করণ বিদ্যমান SafeNest অ্যাকাউন্টের জন্য। অ্যাপে কেনা যায় না। সার্ভারে যাচাইকৃত সক্রিয় অনুমতি দরকার।"))
     if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.error)

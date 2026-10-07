@@ -1,3 +1,6 @@
+import { installAuthCaptcha } from './auth-captcha.js';
+import {installBilling} from './billing.js';
+import {installTrial} from './trial.js';
 import { createClient } from '@supabase/supabase-js';
 import { nextAccountState, mayShowProfile } from './account-state.js';
 import { entitlementState } from './entitlement-state.js';
@@ -35,6 +38,8 @@ function setBusy(form, busy) {
 }
 function errorMessage(error) {
   const errors = {
+    captcha_required: ['Complete the security check, then try again.', 'নিরাপত্তা যাচাই শেষ করে আবার চেষ্টা করুন।'],
+    captcha_failed: ['Security verification failed. Complete a new check and try again.', 'নিরাপত্তা যাচাই হয়নি। নতুন করে যাচাই করুন।'],
     invalid_credentials: ['The email or password is incorrect.', 'ইমেইল বা পাসওয়ার্ড সঠিক নয়।'],
     invalid_login_credentials: ['The email or password is incorrect.', 'ইমেইল বা পাসওয়ার্ড সঠিক নয়।'],
     email_not_confirmed: ['Confirm your email before logging in.', 'লগইনের আগে আপনার ইমেইল নিশ্চিত করুন।'],
@@ -67,6 +72,12 @@ async function start() {
       flowType: 'implicit'
     }
   });
+  const captcha = installAuthCaptcha({ enabled: __AUTH_CAPTCHA_ENABLED__, sitekey: __TURNSTILE_SITEKEY__ });
+  const activateCaptcha = form => { void captcha.activate(form).catch(errorMessage); };
+  activateCaptcha($('login-form'));
+  $('delete-form').closest('details')?.addEventListener('toggle', event => {
+    if (event.currentTarget.open) activateCaptcha($('delete-form'));
+  });
   const accountUrl = new URL('account.html', location.href);
   let state = {
     user: null, view: 'login',
@@ -75,6 +86,10 @@ async function start() {
   let revision = 0;
   let observedAuthEvent = false;
   let entitlementRequest = 0;
+  const billing=installBilling(client,{identity:()=>state.view==='account'?state.user?.id:null,
+    onPaid:()=>{if(state.user)void loadAccess(state.user.id,revision);}});
+  installTrial(client,{identity:()=>state.view==='account'?state.user?.id:null,
+    onStarted:()=>{if(state.user)void loadAccess(state.user.id,revision);},releaseReady:false});
   const linkHasError = new URLSearchParams(location.hash.slice(1)).has('error');
 
   function chooseMode(mode) {
@@ -83,6 +98,7 @@ async function start() {
       button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
     });
     message('', '');
+    activateCaptcha($(mode + '-form'));
   }
   document.querySelectorAll('[data-mode]').forEach(button => {
     button.addEventListener('click', () => chooseMode(button.dataset.mode));
@@ -131,7 +147,7 @@ async function start() {
       const result = error ? { kind: 'unavailable' } : entitlementState(data, userId);
       if (result.kind === 'active') {
         accessMessage('Your subscription period is verified.', 'আপনার সাবস্ক্রিপশনের মেয়াদ যাচাই হয়েছে।');
-        const plans = { weekly: ['Weekly', 'সাপ্তাহিক'], monthly: ['Monthly', 'মাসিক'], annual: ['Annual', 'বার্ষিক'] };
+        const plans = { weekly: ['Weekly', 'সাপ্তাহিক'], monthly: ['Monthly', 'মাসিক'], quarterly: ['Three months', 'তিন মাস'], annual: ['Annual', 'বার্ষিক'], trial: ['Three-day trial', 'তিন দিনের ট্রায়াল'] };
         const end = new Date(result.endsAt);
         const format = locale => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(end);
         const node = $('access-period');
@@ -139,7 +155,7 @@ async function start() {
         node.dataset.bn = `${plans[result.plan][1]} · শেষ ${format('bn-BD')} (আপনার স্থানীয় সময়)`;
         translate(node); node.hidden = false;
       } else if (result.kind === 'inactive') {
-        accessMessage('No active subscription. Checkout is not open yet.', 'সক্রিয় সাবস্ক্রিপশন নেই। চেকআউট এখনো চালু হয়নি।');
+        accessMessage('No active subscription.', 'সক্রিয় সাবস্ক্রিপশন নেই।');
       } else {
         accessMessage('Subscription status is unavailable. Please try again.', 'সাবস্ক্রিপশনের অবস্থা জানা যাচ্ছে না। আবার চেষ্টা করুন।');
       }
@@ -159,6 +175,7 @@ async function start() {
     const previousId = state.user?.id;
     state = nextAccountState(state, event, session);
     const identityChanged = previousId !== state.user?.id;
+    setTimeout(()=>billing.refresh(),0);
     if (identityChanged) revision++;
     $('guest').hidden = state.view !== 'login';
     $('account').hidden = state.view !== 'account';
@@ -218,11 +235,17 @@ async function start() {
         message('The passwords do not match.', 'পাসওয়ার্ড দুটি এক নয়।', true);
         return;
       }
+      let captchaToken;
+      if (guest || id === 'delete-form') {
+        try { captchaToken = await captcha.take(form); } catch (error) { errorMessage(error); return; }
+      }
+      if (form.getAttribute('aria-busy') === 'true') return;
       setBusy(form, true);
       if (guest) document.querySelectorAll('[data-mode]').forEach(button => { button.disabled = true; });
       message('Please wait…', 'একটু অপেক্ষা করুন…');
-      try { await action(values, form); } catch (error) { errorMessage(error); }
+      try { await action(values, form, captchaToken); } catch (error) { errorMessage(error); }
       finally {
+        if (guest || id === 'delete-form') captcha.reset(form);
         form.querySelectorAll('input[type="password"]').forEach(input => { input.value = ''; });
         setBusy(form, false);
         if (guest) document.querySelectorAll('[data-mode]').forEach(button => { button.disabled = false; });
@@ -230,16 +253,16 @@ async function start() {
     });
   }
 
-  bindForm('login-form', async ({ email, password }) => {
-    const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
+  bindForm('login-form', async ({ email, password }, form, captchaToken) => {
+    const { error } = await client.auth.signInWithPassword({ email: email.trim(), password, options: { captchaToken } });
     if (error) throw error;
     message('You are logged in.', 'আপনি লগইন করেছেন।');
   }, true);
 
-  bindForm('signup-form', async ({ email, password }, form) => {
+  bindForm('signup-form', async ({ email, password }, form, captchaToken) => {
     const { data, error } = await client.auth.signUp({
       email: email.trim(), password,
-      options: { emailRedirectTo: accountUrl.href }
+      options: { emailRedirectTo: accountUrl.href, captchaToken }
     });
     if (error) throw error;
     form.reset();
@@ -247,9 +270,9 @@ async function start() {
     else message('Check your inbox for a confirmation link. If you already have an account, log in or reset your password.', 'নিশ্চিতকরণ লিংকের জন্য ইমেইল দেখুন। আগে অ্যাকাউন্ট থাকলে লগইন বা পাসওয়ার্ড রিসেট করুন।');
   }, true);
 
-  bindForm('reset-form', async ({ email }, form) => {
+  bindForm('reset-form', async ({ email }, form, captchaToken) => {
     const recoveryUrl = new URL(accountUrl); recoveryUrl.searchParams.set('mode', 'recovery');
-    const { error } = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: recoveryUrl.href });
+    const { error } = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: recoveryUrl.href, captchaToken });
     if (error) throw error;
     form.reset();
     message('If this email has an account, a password reset link will arrive shortly.', 'এই ইমেইলে অ্যাকাউন্ট থাকলে শীঘ্রই পাসওয়ার্ড রিসেট লিংক পাবেন।');
@@ -293,7 +316,7 @@ async function start() {
     } catch (error) { errorMessage(error); }
     finally { button.disabled = false; }
   }
-  bindForm('delete-form', async ({ password, consent }) => {
+  bindForm('delete-form', async ({ password, consent }, form, captchaToken) => {
     const currentId = state.user?.id;
     if (!currentId || consent !== 'on') throw new Error('Confirmation required');
     const { data: sessionData, error: sessionError } = await client.auth.getSession();
@@ -301,7 +324,7 @@ async function start() {
     const response = await fetch(new URL('/functions/v1/delete-account', __SUPABASE_URL__), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: __SUPABASE_KEY__, Authorization: `Bearer ${sessionData.session.access_token}` },
-      body: JSON.stringify({ password, confirm: true })
+      body: JSON.stringify({ password, confirm: true, captchaToken })
     });
     const result = await response.json();
     if (!response.ok) {

@@ -31,6 +31,9 @@ verify_jwt = true
 [functions.protection-access]
 verify_jwt = true
 
+[functions.start-trial]
+verify_jwt = true
+
 # Preserve the live function's own authorization model.
 [functions.intelligence]
 verify_jwt = false

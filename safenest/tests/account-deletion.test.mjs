@@ -60,3 +60,13 @@ test('failed session revocation prevents deletion and hides upstream secrets', a
   assert.equal((await response.text()).includes('private token'), false);
   assert.equal(calls.some(x => x[0] === 'delete'), false);
 });
+test('CAPTCHA rejection during password reauthentication prevents deletion', async () => {
+  let credentials;
+  const { run, calls } = fixture({ passwordAuth: { signInWithPassword: async value => {
+    credentials=value; return {data:null,error:{code:'captcha_failed'}};
+  } } });
+  const response=await run(request({password:'correct',confirm:true,captchaToken:'replayed-token'}));
+  assert.equal(response.status,401);
+  assert.equal(credentials.options.captchaToken,'replayed-token');
+  assert.deepEqual(calls,[]);
+});

@@ -1,0 +1,44 @@
+/* Compact informational footer. Payment marks are not checkout controls. */
+.footer-trust-strip{grid-template-columns:minmax(0,3fr) minmax(220px,1fr);gap:28px;align-items:start}
+.payment-catalog{min-width:0;padding:0;text-align:left;color:#321827}
+.payment-catalog h2{font-family:inherit;font-size:1rem;line-height:1.5;letter-spacing:0;color:#321827;margin:0 0 12px}
+.payment-catalog h2 .translation-bn{font-size:.875rem;margin-top:2px;color:#6b3e55}
+.payment-catalog .payment-catalog-note{color:#634353;font-size:.8125rem;line-height:1.6;margin:12px 0 0;max-width:680px}
+.payment-catalog-note .translation-bn{font-size:.8125rem;margin-top:2px}
+.payment-brand-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:8px}
+.payment-brand{min-width:0;height:48px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ecd8e1;border-radius:5px;box-shadow:none;overflow:hidden;cursor:default}
+.payment-brand img{display:block;width:64px;height:64px;max-width:100%;max-height:100%;object-fit:contain;flex-shrink:0}
+.footer-verified{padding:0;font-size:.875rem;line-height:1.6}
+.footer-navigation{min-width:0}.footer-navigation>summary{display:none}
+body>footer:has(.payment-catalog):not(:has(.footer-main)){max-width:1136px;margin:auto;padding:24px 32px 40px}
+body>footer:not(:has(.footer-main))>.payment-catalog{margin-top:24px}
+@media(max-width:1000px){.footer-trust-strip{grid-template-columns:1fr;gap:18px}.footer-navigation{grid-column:1/-1}.footer-verified{max-width:650px}}
+@media(max-width:760px){
+ body>footer:has(.payment-catalog){padding:24px 20px;background:#fbd4e3;border-top:1px solid #e4adc4}
+ footer .footer-main{display:block;padding:0 0 14px}
+ footer .footer-main>.brand{display:inline-block}
+ footer .footer-main .brand-logo{width:132px;padding:0;background:transparent;border:0;border-radius:0}
+ footer .footer-main>p{display:none}
+ .footer-navigation{margin-top:14px;border-top:1px solid #dfafc3}
+ .footer-navigation>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 0;cursor:pointer;list-style:none;font-size:.875rem;font-weight:600;line-height:1.5}
+ .footer-navigation>summary::-webkit-details-marker{display:none}
+ .footer-navigation>summary::after{content:'+';font-size:1.25rem;font-weight:400;flex-shrink:0}
+ .footer-navigation[open]>summary::after{content:'−'}
+ .footer-navigation summary .translation-bn{font-size:.8125rem;margin:0}
+ footer .footer-navigation .footer-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:none;gap:0 16px;padding:0 0 10px}
+ footer .footer-links a{display:flex;align-items:center;min-height:48px;padding:6px 0;font-size:.875rem;line-height:1.5}
+ footer .footer-links .translation-bn{font-size:.8125rem;margin-top:1px}
+ .footer-trust-strip{padding-top:16px;gap:16px;border-color:#dfafc3}
+ .payment-catalog h2{font-size:.875rem;margin-bottom:10px}
+ .payment-catalog h2>span{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+ .payment-catalog h2 .translation-bn{font-size:.8125rem;margin:0}
+ .payment-brand-grid{grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:6px}
+ .payment-brand{height:40px;border-radius:4px}
+ .payment-brand img{width:56px;height:56px}
+ .payment-catalog .payment-catalog-note{margin-top:10px;font-size:.8125rem}
+ .footer-help{font-size:.8125rem;line-height:1.6}.footer-help .translation-bn{font-size:.8125rem;margin-top:1px}
+ footer nav[aria-label="Service information"]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;margin-top:16px;padding-top:10px;border-top:1px solid #dfafc3}
+ footer nav[aria-label="Service information"] a{display:flex;align-items:center;min-height:48px;padding:6px 0;font-size:.875rem;line-height:1.5;text-decoration:none}
+ footer nav[aria-label="Service information"] .translation-bn{font-size:.8125rem;margin-top:1px}
+ body>footer:has(.payment-catalog):not(:has(.footer-main)){padding:24px 20px 32px}
+}

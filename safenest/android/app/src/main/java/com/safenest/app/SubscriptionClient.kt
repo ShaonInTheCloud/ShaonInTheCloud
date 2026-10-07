@@ -11,9 +11,14 @@ data class AccessCheck(val userId: String, val checkedId: String?, val serverNow
 object SubscriptionClient {
     fun verify(email: String, password: String): PaidWindow {
         return checkAccess(email, password).window
-            ?: error("No active paid subscription. Payment activation must be confirmed on the server.")
+            ?: error("No active trial or subscription. Access must be confirmed on the server.")
     }
-    fun checkAccess(email: String, password: String, entitlementId: String? = null): AccessCheck {
+    fun startTrial(email: String, password: String, plan: String): PaidWindow {
+        require(plan in setOf("monthly", "quarterly", "annual"))
+        return checkAccess(email, password, startTrialPlan = plan).window
+            ?: error("Your trial has already ended. A verified subscription is required.")
+    }
+    fun checkAccess(email: String, password: String, entitlementId: String? = null, startTrialPlan: String? = null): AccessCheck {
         val base = BuildConfig.SUPABASE_URL
         val key = BuildConfig.SUPABASE_PUBLISHABLE_KEY
         check(base.startsWith("https://") && key.isNotBlank()) { "Paid access is not configured in this build." }
@@ -21,6 +26,9 @@ object SubscriptionClient {
             JSONObject().put("email", email.trim()).put("password", password))
         val token = auth.optString("access_token")
         check(token.isNotBlank()) { "Sign in to your SafeNest account first." }
+        if (startTrialPlan != null) {
+            post("$base/functions/v1/start-trial", key, token, JSONObject().put("plan_code", startTrialPlan))
+        }
         val body = JSONObject().apply { if (entitlementId != null) put("entitlement_id", entitlementId) }
         val reply = post("$base/functions/v1/protection-access", key, token, body)
         val user = reply.getString("user_id")
@@ -32,6 +40,7 @@ object SubscriptionClient {
             PaidWindow(item.getString("id"), user, item.getString("plan_code"),
                 Instant.parse(item.getString("starts_at")).toEpochMilli(),
                 Instant.parse(item.getString("ends_at")).toEpochMilli(), serverNow).also {
+                check(it.plan in setOf("weekly", "monthly", "quarterly", "annual", "trial")) { "Unknown access plan." }
                 check(CommitmentRules.validWindow(it.starts, it.ends, serverNow) &&
                     (entitlementId == null || it.id == entitlementId)) { "The paid period could not be verified." }
             }

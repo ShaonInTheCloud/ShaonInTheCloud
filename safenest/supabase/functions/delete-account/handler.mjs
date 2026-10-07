@@ -36,7 +36,8 @@ export function deletionHandler({ userAuth, passwordAuth, adminAuth }) {
           !body.password.length || body.password.length > 1024) return reply(400, 'confirmation_required');
       // Never accept an email or user ID from the caller as the deletion target.
       const { data: fresh, error: passwordError } = await passwordAuth.signInWithPassword({
-        email: identity.user.email, password: body.password
+        email: identity.user.email, password: body.password,
+        options: { captchaToken: typeof body.captchaToken === 'string' ? body.captchaToken : undefined }
       });
       if (passwordError || fresh?.user?.id !== identity.user.id || !fresh?.session?.access_token) {
         return reply(401, 'reauthentication_failed');

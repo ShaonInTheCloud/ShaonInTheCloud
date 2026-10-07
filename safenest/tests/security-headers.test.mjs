@@ -15,3 +15,12 @@ test('backend configuration cannot inject arbitrary headers or downgrade to HTTP
     assert.throws(() => securityHeaders(value));
   }
 });
+test('HTML fallback restricts scripts, frames and backend connections without ineffective frame-ancestors', async () => {
+  const { contentSecurityPolicy } = await import('../scripts/security-headers.mjs');
+  const policy=contentSecurityPolicy('https://example.supabase.co', {meta:true});
+  assert.ok(policy.includes("script-src 'self' https://challenges.cloudflare.com;"));
+  assert.ok(policy.includes("frame-src https://challenges.cloudflare.com;"));
+  assert.ok(policy.includes("connect-src 'self' https://example.supabase.co;"));
+  assert.ok(!policy.includes('frame-ancestors'));
+  assert.ok(!policy.includes('unsafe-eval'));
+});

@@ -12,3 +12,5 @@ h1,h2,h3{font-family:Manrope,'Hind Siliguri',sans-serif;letter-spacing:-.04em}
 .announcement a,.announcement .translation-en,.announcement .translation-bn{color:#572a40}
 .site-search-submit svg{width:19px;height:19px;fill:none;stroke:#321827;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(min-width:1150px){.nav{flex-wrap:nowrap;padding:16px 3vw}.nav nav{gap:2px;flex:1 1 auto}.nav nav a{padding:8px 7px}.site-search{flex:0 1 170px;min-width:150px}.nav .actions{flex:0 0 auto}.nav .lang{padding:8px}}
+
+@media(min-width:900px){.plans{grid-template-columns:repeat(3,minmax(0,1fr));}}
