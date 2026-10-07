@@ -50,6 +50,7 @@ Foreground service: state why the ongoing local filter needs background operatio
 | Foreground blocked-app observations | Play matches app ID locally; no observation history upload | Ephemeral processing and installed-app visibility declaration |
 | DNS queries | Local rule check; allowed requests use Cloudflare HTTPS, or an active user-selected strict Private DNS provider on Android 10+ | Resolver receives allowed names/network IP; review processing/retention and browser-history/ephemeral classification |
 | Check-ins and custom rules | Local device storage | Verify no export/backup/telemetry uploads in the shipped build |
+| Cloudflare security challenge | Android obtains a fresh WebView challenge; password stays outside the challenge page | Review Cloudflare processing, supported WebView/device acceptance and final server CAPTCHA rollout |
 | Infrastructure logs | Hosting, Auth/email and resolver providers may keep operational data | Retention periods and provider contracts |
 | Card and wallet data | Not collected now; planned hosted provider checkout | Update disclosures before live payments |
 
