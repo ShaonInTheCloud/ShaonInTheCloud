@@ -124,6 +124,10 @@ jobs:
         timeout-minutes: 12
         run: ./gradlew :app:connectedLabDebugAndroidTest --console=plain
         working-directory: safenest/android
+      - name: Check compatible-build trial UI gates and cached expiry cleanup
+        timeout-minutes: 8
+        run: ./gradlew :app:connectedPlayDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.safenest.app.TrialDeviceAcceptanceTest --console=plain
+        working-directory: safenest/android
       - name: Capture emulator evidence
         if: always()
         timeout-minutes: 1
