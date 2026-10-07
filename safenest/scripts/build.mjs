@@ -36,8 +36,22 @@ await import('./release-pages.mjs');
 for (const file of await readdir('dist')) {
   if (!file.endsWith('.html')) continue;
   const path = `dist/${file}`;
-  const html = await readFile(path, 'utf8');
-  if (html.includes('http-equiv="Content-Security-Policy"')) continue;
+  let html = await readFile(path, 'utf8');
+  // One final brand layer covers marketing, generated service pages and Auth.
+  // Keep the original page layouts and load the shared motion on every route.
+  if (!html.includes('href="liquid-pink.css"')) {
+    html = html.replace('</head>', '<link rel="stylesheet" href="liquid-pink.css"></head>');
+  }
+  html = html.replace(/<link[^>]*href="raspberry-theme\.css"[^>]*>/g, '');
+  html = html.replace('</head>', '<link rel="stylesheet" href="raspberry-theme.css"></head>');
+  if (!html.includes('src="liquid-pink.js"')) {
+    html = html.replace('</body>', '<script src="liquid-pink.js" defer></script></body>');
+  }
+  html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
+  html = html.replace('</head>', '<meta name="theme-color" content="#631332"></head>');
   const policy = contentSecurityPolicy(url.origin, { meta: true });
-  await writeFile(path, html.replace(/<head>/, `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`));
+  if (!html.includes('http-equiv="Content-Security-Policy"')) {
+    html = html.replace(/<head>/, `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  }
+  await writeFile(path, html);
 }

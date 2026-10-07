@@ -1,0 +1,151 @@
+/* Shared final color layer. Palette and chrome texture match the approved logo. */
+:root {
+  color-scheme: dark;
+  --bg: #631332;
+  --panel: #51132d;
+  --text: #ffe0ed;
+  --ink: #ffe0ed;
+  --muted: #edb7cc;
+  --mint: #f7a4c5;
+  --rose: #f7a4c5;
+  --pink: #8c2850;
+  --line: #bc577d;
+  --chrome-panel: linear-gradient(135deg, #8a2d50f5 0%, #57122ff5 28%, #411025f5 62%, #752242f5 100%);
+  --chrome-edge: #da769e;
+  --chrome-shadow: 0 18px 45px #25041345, inset 0 1px 0 #f8b0cc55;
+}
+body {
+  background: #631332 url('assets/liquid-pink/raspberry-foil.webp') center/100% 100% fixed;
+  color: var(--text);
+  isolation: isolate;
+}
+.liquid-background.ready { opacity: 1; }
+::selection { background: #f7a4c5; color: #3b0a20; }
+h1, h2, h3 { color: var(--text); }
+p, .note, .email, .app-meta { color: var(--muted); }
+a { color: inherit; }
+.nav, body > header {
+  background: linear-gradient(115deg, #802444f7, #450e25f5 45%, #76213ff7);
+  border-color: var(--chrome-edge);
+  box-shadow: 0 8px 28px #29031155, inset 0 1px 0 #f5a7c450;
+  backdrop-filter: blur(18px);
+}
+.nav nav a, .nav .translation-bn, .nav nav a[aria-current=page] .translation-bn { color: var(--text); }
+.nav nav a:hover, .nav nav a:focus-visible { background: #a3456855; border-color: #dc7b9f; }
+.nav nav a[aria-current=page] { background: #99375a; border-color: #e78bab; box-shadow: inset 0 1px 0 #ffc1d955; }
+.nav .lang, body > header button, .tabs button {
+  color: var(--text); background: linear-gradient(135deg, #8b3153, #5c1835); border: 1px solid #d37499;
+}
+.nav .lang.active, .lang[aria-pressed=true], .tabs button[aria-selected=true] {
+  color: #3b0a20; background: linear-gradient(135deg, #f8bad2, #e48aac 65%, #f3b2cc); border-color: #f8bfd6;
+}
+.announcement, .announcement a, .announcement .translation-en, .announcement .translation-bn {
+  background-color: #4f102b; color: #f7cadd; border-color: #9f4567;
+}
+.announcement a, .announcement span { background-color: transparent; }
+.product-intro {
+  background: linear-gradient(115deg, #4e102be8, #631332e0 60%, #4e102bea);
+  border-bottom: 1px solid #d3749955;
+}
+.product-intro .lead, .page-intro p, .hero-copy > p:not(.slogan) { color: #f5c6da; }
+main > .intro { background: #51132dec; padding: 24px; border: 1px solid #bc577d; border-radius: 24px; }
+.eyebrow, .cards article > .eyebrow { color: #f7adc9; background: transparent; border-color: #b65c7e; }
+.hero h1 .translation-en, .hero h1 .translation-bn, .page-intro h1,
+.character-story h2, .page-character h2 { color: var(--text); background: none; }
+.product-overview, .product-card, .plans .price-card, .price-card, .challenge,
+.info-card, .card, .portal-open .card, .cards article, .tile {
+  color: var(--text);
+  background: var(--chrome-panel);
+  border-color: var(--chrome-edge);
+  box-shadow: var(--chrome-shadow);
+}
+.product-overview dl > div, .question, .faq-list article { border-color: #b65c7e; }
+.product-overview dt, .product-overview .note, .product-card p,
+.content-section > p, .challenge p, .card p, .card .note,
+.price-card .price-note, .installation-steps p, .download-details p { color: var(--muted); }
+.product-overview dd { color: var(--text); }
+.content-section, .content-section:nth-of-type(2n+1), .human-story, .section {
+  background: linear-gradient(115deg, #601731e8, #4b0f28ec 55%, #742240e5);
+  border-color: #cf71924d;
+}
+.page-body { background: #54132edb; }
+.page-body > p { color: var(--text); }
+.page-body > p a, .info-card a, .question a { color: #fbb5d0; text-decoration: underline; text-underline-offset: 4px; }
+.plans .price-amount, .plans .price-card .price-amount, .price-card .price-amount { color: #ffcade; }
+.price-card li::before { color: #f7a4c5; }
+.price-card.featured, .challenge[aria-pressed=true] { background: linear-gradient(135deg, #a34064, #691b3c 55%, #8c3054); border-color: #f5abc8; }
+.price-badge, .badge { color: #ffd4e6; background: #8a2850; border: 1px solid #dc81a4; }
+.progress-track { background: #3b0b21; border: 1px solid #aa5276; }
+.progress-track > div { background: linear-gradient(90deg, #d95d91, #fac2da); }
+.btn, .primary, .nav .account-login {
+  background: linear-gradient(125deg, #f4aecb, #d976a0 38%, #ed9fbe 65%, #f9c2d8);
+  color: #3b0a20;
+  border: 1px solid #f9c2d8;
+  box-shadow: 0 8px 24px #2c071940, inset 0 1px 0 #ffdae8;
+}
+.btn .translation-bn, .nav .account-login .translation-bn { color: #3b0a20; }
+.btn:hover, .primary:hover:not(:disabled), .nav .account-login:hover {
+  background: linear-gradient(125deg, #fac3d9, #ea96b6 40%, #f7bdd5);
+  color: #3b0a20; border-color: #ffd4e5; box-shadow: 0 10px 28px #2c071966;
+}
+.textBtn, button, .portal-nav a, .support-ticket {
+  color: var(--text); background: linear-gradient(135deg, #8c3155, #54122f); border-color: #d37499;
+}
+.text-button, .portal-link, .download-details summary { color: #fbb5d0; background: transparent; }
+.textBtn:hover, .portal-nav a:hover, .support-ticket:hover { background: #943858; }
+.site-search input, input, select, textarea {
+  background: #3e0d24; color: var(--text); border-color: #d27a9b;
+}
+input::placeholder, textarea::placeholder { color: #dba2b9; opacity: 1; }
+.site-search input::placeholder { color: #edb7cc; opacity: 1; }
+input[type=checkbox], input[type=radio] { accent-color: #eca0c0; }
+.site-search-submit, .nav .site-search-submit { background: #e897b8; color: #3b0a20; border: 0; }
+.site-search-submit svg { stroke: #3b0a20; }
+.site-search-results { background: #420e26fa; border-color: #d37499; }
+.site-search-results a, .site-search-empty { color: var(--text); }
+.site-search-results small { color: var(--muted); }
+.site-search-results a:hover { background: #8c315555; }
+.site-search input:focus { box-shadow: 0 0 0 3px #f4aecb66; }
+.portal-panel, .app-panel, .activation-note, #status, .intro .bubble,
+.support-message, .verification-placeholder, .hero .slogan, .launch-strip {
+  background: linear-gradient(135deg, #7e2847f5, #4b102af5);
+  color: var(--text); border-color: #cc7195; box-shadow: inset 0 1px 0 #f3a8c43d;
+}
+#status.error { background: #69142e; color: #ffd0df; border-color: #ed89ab; }
+.activation-note p, .support-message p, .verification-placeholder p { color: #f3c3d7; }
+.statement, .statement-band, .family, .panel, .steps, .pricing,
+.payment-section, .campaign-teaser, .character-story, .page-character {
+  background: var(--chrome-panel); color: var(--text); border-color: var(--chrome-edge);
+}
+.statement p, .family p, .family .eyebrow, .human-story .image-note,
+.character-story-copy > p, .page-character p { color: var(--muted); }
+.character-story-copy > p, .page-character p, .steps > div,
+.hero-photo figcaption, .character-card figcaption, .supplied-character figcaption {
+  background: #5c1734ed; color: var(--text); border-color: #d37499;
+}
+.hero-photo { border-color: #e58cad; }
+.payment-chips span, .footer-chip { background: #70203e; color: var(--text); border-color: #c36b8f; }
+.payment-note { color: var(--muted); border-color: #f3a6c5; }
+body > footer, body > footer:has(.payment-catalog) {
+  background: linear-gradient(115deg, #7f2948f7, #4a0e26f7 50%, #75213ff7);
+  color: var(--text); border-color: #ca6c91;
+  box-shadow: inset 0 1px 0 #efa3c03d;
+}
+footer p, footer a, footer .footer-links a, .payment-catalog,
+.payment-catalog h2, .footer-trust-strip h2 { color: var(--text); }
+footer .footer-links a:hover { color: #ffbed8; }
+.payment-catalog h2 .translation-bn, .payment-catalog .payment-catalog-note,
+.footer-payment-block > p, .footer-chip-label, .footer-verified > p { color: var(--muted); }
+.footer-trust-strip, .footer-navigation, footer nav[aria-label="Service information"] { border-color: #b65c7e; }
+/* Retain the payment providers' original artwork inside softly tinted tiles. */
+.payment-brand, .payment-logo-card { background: #f3c1d4; border-color: #d381a2; box-shadow: inset 0 1px 0 #fad9e7; }
+.verification-mark { color: #f7a4c5; border-color: #d37499; }
+.brand, .brand-showcase { background-color: #570f2a; border-color: #bd5f84; }
+.skip { background: #f7a4c5; color: #3b0a20; }
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid #ffd1e3; outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid-background { transition: none; }
+}

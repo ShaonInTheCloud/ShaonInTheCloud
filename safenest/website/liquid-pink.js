@@ -1,4 +1,4 @@
-/* Adapted from the owner's Metallic Baby Pink suite. No external services. */
+/* The approved Raspberry Pink chrome, animated without external services. */
 (() => {
   const canvas = document.createElement('canvas');
   canvas.className = 'liquid-background';
@@ -15,17 +15,20 @@
     void main(){
       vec2 st=gl_FragCoord.xy/u_resolution;
       vec2 uv=(gl_FragCoord.xy*2.-u_resolution)/min(u_resolution.x,u_resolution.y);
-      float t=u_time*.45;
+      float t=u_time*.38;
       float w1=sin(uv.x*2.2+t*.8+cos(uv.y*1.8+t*.5));
       float w2=cos(uv.y*2.5-t*.7+sin(uv.x*1.5-t*.4));
       float wave=w1*.6+w2*.4;
       float fold=sin(uv.x*2.6+uv.y*2.+wave*2.2);
       float ridge=pow(abs(cos(fold*1.4)),4.);
-      vec3 pink=mix(vec3(.98,.52,.70),vec3(1.,.78,.88),smoothstep(-.8,.8,wave));
-      pink=mix(pink,vec3(1.),clamp(ridge*.8+pow(ridge,3.)*.6,0.,1.));
-      vec2 drift=vec2(sin(st.y*5.+t)*.018,cos(st.x*5.-t)*.018);
-      vec3 foil=texture2D(u_foil,clamp(vec2(st.x,1.-st.y)*.94+.03+drift,0.,1.)).rgb;
-      gl_FragColor=vec4(mix(pink,foil,.72),1.);
+      vec3 pink=mix(vec3(.25,.025,.10),vec3(.72,.12,.32),smoothstep(-.8,.8,wave));
+      pink=mix(pink,vec3(.99,.69,.82),ridge*.72);
+      vec2 drift=vec2(sin(st.y*4.+t+wave)*.055,cos(st.x*4.-t)*.035);
+      vec3 foil=texture2D(u_foil,clamp(vec2(st.x,1.-st.y)*.86+.07+drift,0.,1.)).rgb;
+      vec3 chrome=mix(pink,foil,.84);
+      // Preserve the logo's deeper top and luminous rose-pink lower folds.
+      chrome*=mix(1.04,.78,smoothstep(.15,1.,st.y));
+      gl_FragColor=vec4(chrome,1.);
     }`;
   function compile(type, source) {
     const shader = gl.createShader(type);
@@ -78,7 +81,7 @@
   }
   const image=new Image();
   image.onload=()=>{gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,image);ready=true;resize();canvas.classList.add('ready');};
-  image.src='assets/liquid-pink/foil.webp';
+  image.src='assets/liquid-pink/raspberry-foil.webp';
   addEventListener('resize',resize,{passive:true});
   document.addEventListener('visibilitychange',resume);
   reduced.addEventListener('change',resume);
