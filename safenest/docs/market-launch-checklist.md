@@ -68,7 +68,7 @@ Prepared release choice: **consumption-only Play app** for existing paid account
 
 - [x] Keep public prices proposed and checkout inactive; remove any impression that a prototype payment form or payment reference activates protection.
 - [x] Keep `protection-access` authenticated and read-only for customers; client-selected dates/paid flags cannot grant or release access.
-- [ ] Finalize monthly/annual price, currency, taxes, device limits, cancellation/refund policy and whether renewal is manual or automatic. The current pricing page proposes ৳299/month and ৳2,999/year; these are not approved merchant products.
+- [ ] Finalize monthly/annual price, currency, taxes, device limits, cancellation/refund policy and whether renewal is manual or automatic. The owner requested ৳379/month; the updated website uses ৳999 for three months and ৳3,799 yearly as implementation defaults. Access windows are explicitly 30, 90 and 365 days. Catalogue products remain disabled; these are not approved live merchant offers.
 - [ ] Open/approve a merchant gateway account and provide sandbox credentials through server-secret configuration. Confirm international cards and each requested wallet (bKash, Nagad, Rocket, upay) in the merchant's enabled channels.
 - [ ] Implement hosted website checkout: authenticate customer, create a server-priced order, create a provider session, and redirect only to an allowlisted provider URL. Never collect card/CVV fields in SafeNest.
 - [ ] Implement provider notification validation, exact amount/currency/order matching, idempotency and transactional entitlement issuance; never trust a browser success page or unverified webhook fields.
@@ -121,7 +121,7 @@ Verified locally in this work: 12 account/deletion/RLS tests; 8 protection-acces
 
 Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. The live email/API disposable-account flow passed on 6 October; browser-form regression remains pending.
 
-Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. New source is 0.4.2/code 19 with Play/direct flavors. Do not describe the new Play source as already installed or published on Play.
+Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. Current source is 0.4.8/code 25 with Play/direct/lab flavors and trial support. Android CI for `8457e300b9df596ee7fca61312f040fcf8dfee53` remains pending; web/security CI passed. Do not describe the new Play source as already installed or published on Play.
 
 The latest Supabase security advisor still reports leaked-password protection disabled. No merchant credentials, release upload key, Play Console access or verified customer-support/legal identity has been supplied. These dependencies prevent paid/store release today even if the public website deployment succeeds.
 
@@ -164,6 +164,14 @@ Publication: Sites version 21, source commit `abd25f0854430054378bb0a0d2cd2d15ff
 Verification: `npm test` passed all 18 existing tests; `npm run build` succeeded. Local and live-domain checks covered all 11 HTML pages and 227 local navigation/download links and anchors, with zero errors. Privacy, terms, deletion and help links exist on every page, including the account page. The host redirects .html URLs to extensionless routes; the account deletion fragment resolves to its existing section. This checks publication, copy and navigation, not a new Auth/deletion flow or Android-device acceptance run.
 
 Seller identity, verified support/privacy contact, exact provider/log/backup retention, final commercial terms and payment activation remain unresolved. No seller, contact address, retention period, live payment channel, certification or approval was invented. Final paid/Play privacy and legal readiness remains pending in section 7.
+
+### Trial and plan update — 7 October 2026
+
+Server-timed 72-hour trial support is deployed, once per confirmed account, with unchanged retry end time and a saved selected plan. Its private ledger and service-only RPC deny customer access. A rolled-back production fixture verifies duration, unchanged retries, expired-trial rejection and access privileges; no test identity remains. Android 0.4.8 source adds trial consent/plan selection and trial/quarterly verification to the existing automatic expiry flow. Website trial enrolment stays disabled until a compatible Android build passes confirmed login, trial start, consent, expiry and cleanup testing; the public download remains 0.4.0.
+
+Sites version 29 succeeded, source `939a5b76cda55d0b80884d9ae13621c8771c0954`, deployment `appgdep_6ac591cbc7fc8191ac4b98c8b2508b6e`. Updated pricing/account/legal pages are published. All eleven generated HTML URLs return HTTPS 200 on mysafenestbd.com; all local navigation/anchors and live legal links pass. 62 local source tests plus a focused 11-test run passed. No new security-advisor errors; the existing Free-plan leaked-password warning remains.
+
+Automatic payment-method verification and recurring charging are not implemented or active. Confirm merchant recurring capability, implement a provider-hosted verified mandate with separate amount/date/cycle consent, cancellation/failure handling, idempotent charge scheduling and verified settlement/reversal callbacks, then test before enabling live charges. bKash subscription payment is separate from tokenized checkout. Nagad and SSLCOMMERZ recurring availability for this merchant is unconfirmed. Account deletion removes the trial claim; this is not a one-person anti-abuse guarantee. Seller identity, verified support contact, taxes, cancellation/refund terms, retention and signed customer release remain unresolved. See `trial-subscriptions-2026-10-07.md`.
 
 ## Primary references checked for this release
 
