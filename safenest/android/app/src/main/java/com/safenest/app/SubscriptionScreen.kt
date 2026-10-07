@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -42,19 +43,21 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
         busy = true; message = ""
         scope.launch {
             try {
+                val captcha = awaitAuthChallenge(context, language)
                 if (committed) {
                     val id = checkNotNull(ProtectionCommitment.entitlementId(context))
-                    val result = withContext(Dispatchers.IO) { SubscriptionClient.checkAccess(email, password, id) }
+                    val result = withContext(Dispatchers.IO) { SubscriptionClient.checkAccess(email, password, captcha, id) }
                     val released = withContext(Dispatchers.IO) { ProtectionCommitment.reconcile(context, result) }
                     message = if (released) t("The server ended this period. Protection has been released.", "সার্ভারে এই মেয়াদ শেষ হয়েছে। সুরক্ষা শেষ করা হয়েছে।")
                         else t("This paid period remains active. Protection continues.", "এই পেইড মেয়াদ এখনও সক্রিয়। সুরক্ষা চলবে।")
                 } else {
-                    val window = withContext(Dispatchers.IO) { SubscriptionClient.verify(email, password) }
+                    val window = withContext(Dispatchers.IO) { SubscriptionClient.verify(email, password, captcha) }
                     withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
                     onVerified()
                 }
                 password = ""
-            } catch (cancel: CancellationException) { throw cancel }
+            } catch (_: TimeoutCancellationException) { message = t("Security check timed out. Try again.", "নিরাপত্তা যাচাইয়ের সময় শেষ। আবার চেষ্টা করুন।") }
+            catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) { message = error.message ?: t("Verification failed.", "যাচাই হয়নি।") }
             finally { busy = false; password = "" }
         }
@@ -74,10 +77,12 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
             busy = true; message = ""
             scope.launch {
                 try {
-                    val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan) }
+                    val captcha = awaitAuthChallenge(context, language)
+                    val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan, captcha) }
                     withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
                     onVerified()
-                } catch (cancel: CancellationException) { throw cancel }
+                } catch (_: TimeoutCancellationException) { message = t("Security check timed out. Try again.", "নিরাপত্তা যাচাইয়ের সময় শেষ। আবার চেষ্টা করুন।") }
+                catch (cancel: CancellationException) { throw cancel }
                 catch (error: Exception) { message = error.message ?: t("Trial unavailable.", "ট্রায়াল পাওয়া যাচ্ছে না।") }
                 finally { busy = false; password = "" }
             }

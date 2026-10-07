@@ -18,13 +18,18 @@ if (key && !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key)) {
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await cp('website', 'dist', { recursive: true });
-for (const file of ['account.html', 'account.css']) {
+for (const file of ['account.html', 'account.css', 'android-captcha.html', 'android-captcha.css']) {
   await copyFile(`web/${file}`, `dist/${file}`);
 }
 await build({
   entryPoints: ['web/account.js'], outfile: 'dist/account.js',
   bundle: true, minify: true, format: 'esm', target: ['es2022'],
   define: { __SUPABASE_URL__: JSON.stringify(url.origin), __SUPABASE_KEY__: JSON.stringify(key), __AUTH_CAPTCHA_ENABLED__: JSON.stringify(captchaEnabled), __TURNSTILE_SITEKEY__: JSON.stringify(captchaSitekey) }
+});
+await build({
+  entryPoints: ['web/android-captcha.js'], outfile: 'dist/android-captcha.js',
+  bundle: true, minify: true, format: 'esm', target: ['es2022'],
+  define: { __TURNSTILE_SITEKEY__: JSON.stringify(captchaSitekey) }
 });
 // Apply these headers through the website host. The HTML also carries its CSP.
 await writeFile('dist/_headers', securityHeaders(url.origin));

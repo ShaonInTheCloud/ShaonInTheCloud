@@ -27,6 +27,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node --test supabase/functions/protection-access/test/*.test.mjs
+      - name: Build CAPTCHA-enabled clients without changing rollout
+        run: npm run build
+        env:
+          SAFENEST_AUTH_CAPTCHA_ENABLED: 'true'
       - run: npm run build
         env:
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl

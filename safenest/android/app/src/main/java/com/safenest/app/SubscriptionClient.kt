@@ -9,28 +9,39 @@ data class AccessCheck(val userId: String, val checkedId: String?, val serverNow
 
 /** Auth credentials are sent only to the configured Supabase HTTPS endpoint and never logged/saved. */
 object SubscriptionClient {
-    fun verify(email: String, password: String): PaidWindow {
-        return checkAccess(email, password).window
+    fun verify(email: String, password: String, captcha: AuthCaptchaToken): PaidWindow {
+        return checkAccess(email, password, captcha).window
             ?: error("No active trial or subscription. Access must be confirmed on the server.")
     }
-    fun startTrial(email: String, password: String, plan: String): PaidWindow {
+    fun startTrial(email: String, password: String, plan: String, captcha: AuthCaptchaToken): PaidWindow {
         require(plan in setOf("monthly", "quarterly", "annual"))
-        return checkAccess(email, password, startTrialPlan = plan).window
+        return checkAccess(email, password, captcha, startTrialPlan = plan).window
             ?: error("Your trial has already ended. A verified subscription is required.")
     }
-    fun checkAccess(email: String, password: String, entitlementId: String? = null, startTrialPlan: String? = null): AccessCheck {
+    fun checkAccess(email: String, password: String, captcha: AuthCaptchaToken, entitlementId: String? = null, startTrialPlan: String? = null): AccessCheck {
         val base = BuildConfig.SUPABASE_URL
         val key = BuildConfig.SUPABASE_PUBLISHABLE_KEY
         check(base.startsWith("https://") && key.isNotBlank()) { "Paid access is not configured in this build." }
-        val auth = post("$base/auth/v1/token?grant_type=password", key, null,
-            JSONObject().put("email", email.trim()).put("password", password))
+        return checkAccessUsing(email, password, captcha, entitlementId, startTrialPlan) { path, jwt, body ->
+            post("$base$path", key, jwt, body)
+        }
+    }
+    /** Injectable transport exercises the real Auth request and access ordering in JVM tests. */
+    internal fun checkAccessUsing(email: String, password: String, captcha: AuthCaptchaToken?,
+        entitlementId: String? = null, startTrialPlan: String? = null,
+        request: (String, String?, JSONObject) -> JSONObject): AccessCheck {
+        if (startTrialPlan != null) require(startTrialPlan in setOf("monthly", "quarterly", "annual"))
+        val challenge = checkNotNull(captcha) { "Complete the security check before verifying access." }.take()
+        val auth = request("/auth/v1/token?grant_type=password", null,
+            JSONObject().put("email", email.trim()).put("password", password)
+                .put("gotrue_meta_security", JSONObject().put("captcha_token", challenge)))
         val token = auth.optString("access_token")
         check(token.isNotBlank()) { "Sign in to your SafeNest account first." }
         if (startTrialPlan != null) {
-            post("$base/functions/v1/start-trial", key, token, JSONObject().put("plan_code", startTrialPlan))
+            request("/functions/v1/start-trial", token, JSONObject().put("plan_code", startTrialPlan))
         }
         val body = JSONObject().apply { if (entitlementId != null) put("entitlement_id", entitlementId) }
-        val reply = post("$base/functions/v1/protection-access", key, token, body)
+        val reply = request("/functions/v1/protection-access", token, body)
         val user = reply.getString("user_id")
         val serverNow = Instant.parse(reply.getString("server_now")).toEpochMilli()
         val checkedId = if (reply.isNull("checked_entitlement_id")) null else reply.getString("checked_entitlement_id")
@@ -67,12 +78,15 @@ object SubscriptionClient {
                     check(out.size() + n <= 65536) { "Paid access reply was too large." }; out.write(buffer, 0, n)
                 }; out.toByteArray()
             } ?: byteArrayOf()
+            val response = runCatching { JSONObject(String(bytes, Charsets.UTF_8)) }.getOrNull()
+            if (code !in 200..299 && response?.optString("error_code") == "captcha_failed")
+                error("Security verification failed. Complete a new check and try again.")
             if (code !in 200..299) error(when (code) {
                 400, 401, 403 -> "Sign-in or access verification failed. Check your account and confirmed email."
                 429 -> "Too many attempts. Wait before retrying."
                 else -> "Paid access verification is unavailable. Try again when connected."
             })
-            return JSONObject(String(bytes, Charsets.UTF_8))
+            return checkNotNull(response) { "Access verification returned an invalid reply." }
         } finally { connection.disconnect() }
     }
 }

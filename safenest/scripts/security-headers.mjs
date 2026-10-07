@@ -8,7 +8,7 @@ export function securityHeaders(projectOrigin) {
   const policy = contentSecurityPolicy(projectOrigin);
   let headers = `/*\n  Strict-Transport-Security: max-age=31536000\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n  Content-Security-Policy: ${policy}\n`;
   // Static hosts can serve /account.html as /account. Protect both names.
-  for (const route of ['/account', '/account/', '/account.html', '/delete-account', '/delete-account.html']) {
+  for (const route of ['/account', '/account/', '/account.html', '/delete-account', '/delete-account.html', '/android-captcha', '/android-captcha/', '/android-captcha.html']) {
     headers += `${route}\n  Cache-Control: no-store\n  Referrer-Policy: no-referrer\n`;
   }
   return headers + '/account.js\n  Cache-Control: no-cache\n';
