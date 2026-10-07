@@ -76,6 +76,18 @@ test('isolated PostgreSQL payment callback/transition load and scheduler races',
       assert.equal((await pool.query('select sum(amount_minor)::int total from payments.recoveries')).rows[0].total,1200);
       assert.equal((await pool.query('select state from payments.orders')).rows[0].state,'refunded');await clear();
     });
+    await t.test('64 copies of the original payment resume a cancelled hold once without extending its window',async()=>{
+      const o=await order(db),p=await evidence(db,o);
+      await recover(db,p,{state:'pending',amountMinor:null});
+      assert.equal((await paid(db,p)).action,'recovery_review_prevents_new_grant');
+      await recover(db,p,{state:'cancelled',amountMinor:null});
+      const results=await overlap(o.id,Array.from({length:64},()=>()=>paid(db,p)));
+      assert.equal(results.filter(x=>x.status==='rejected').length,0);
+      assert.equal(await count('payments.sandbox_entitlements'),1);
+      const row=(await pool.query('select * from payments.sandbox_entitlements')).rows[0];
+      assert.equal(row.starts_at.toISOString(),p.paidAt);assert.equal(row.ends_at-row.starts_at,3600000);
+      assert.equal(await count('payments.events'),3);await clear();
+    });
     await t.test('one receipt racing across two orders belongs to one order only',async()=>{
       const a=await order(db,'fixture-race-key-0001'),b=await order(db,'fixture-race-key-0002');
       const p=await evidence(db,a),q={...p,orderId:b.id,eventId:'paid-other-order'};

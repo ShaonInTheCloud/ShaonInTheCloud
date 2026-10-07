@@ -128,6 +128,7 @@ declare
   outcome jsonb;
   entitlement_id uuid;
   grant_end timestamptz;
+  resumed_event boolean := false;
 begin
   perform 1 from payments.configuration where singleton and mode=p_environment for share;
   if not found then raise exception 'payment_processing_disabled' using errcode='P0001'; end if;
@@ -154,7 +155,13 @@ begin
   select * into previous from payments.events where provider=p_provider and environment=p_environment and event_id=p_event_id;
   if found then
     if previous.normalized is distinct from normalized then raise exception 'event_replay_conflict' using errcode='P0001'; end if;
-    return previous.result || jsonb_build_object('duplicate',true);
+    if previous.result->>'action'='recovery_review_prevents_new_grant' and not ord.recovery_review then
+      -- Re-evaluate the SAME independently verified event after its hold clears.
+      -- The original paid-at/window stay immutable; no synthetic payment is needed.
+      resumed_event:=true;
+    else
+      return previous.result || jsonb_build_object('duplicate',true);
+    end if;
   end if;
   if p_status in ('paid','refunded','chargeback') then
     if p_transaction_id is null or length(p_transaction_id) not between 1 and 200 or p_paid_at is null
@@ -210,8 +217,9 @@ begin
     outcome := jsonb_build_object('order_id',ord.id,'action','no_grant','environment',p_environment);
   end if;
   insert into payments.events(provider,environment,event_id,order_id,normalized,result)
-    values(p_provider,p_environment,p_event_id,ord.id,normalized,outcome);
-  return outcome || jsonb_build_object('duplicate',false);
+    values(p_provider,p_environment,p_event_id,ord.id,normalized,outcome)
+    on conflict(provider,environment,event_id) do update set result=excluded.result;
+  return outcome || jsonb_build_object('duplicate',resumed_event);
 end;
 $$;
 

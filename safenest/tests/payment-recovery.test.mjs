@@ -43,7 +43,8 @@ test('review preceding paid holds new grants; cancellation clears only its own p
     assert.equal((await paid(db,p)).action,'recovery_review_prevents_new_grant');
     assert.equal((await query(db,'select count(*)::int n from payments.sandbox_entitlements'))[0].n,0);
     await recover(db,p,{state:'cancelled',amountMinor:null});
-    await paid(db,{...p,eventId:'fresh-paid'});
+    assert.equal((await paid(db,p)).action,'paid');
+    assert.equal((await paid(db,p)).duplicate,true);
     assert.equal((await query(db,'select count(*)::int n from payments.sandbox_entitlements'))[0].n,1);
   }finally{await db.close();}
 });
