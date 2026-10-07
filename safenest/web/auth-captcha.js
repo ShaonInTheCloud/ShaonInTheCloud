@@ -4,6 +4,7 @@ export function captchaError() {
 }
 export function createCaptchaGate({ enabled, adapter, render }) {
   const widgets = new Map();
+  const consumed = new Set();
   return {
     async activate(form) {
       if (!enabled || widgets.has(form)) return;
@@ -15,10 +16,12 @@ export function createCaptchaGate({ enabled, adapter, render }) {
       await this.activate(form);
       const { api, id } = widgets.get(form);
       const token = api.getResponse(id);
-      if (!token || api.isExpired(id)) {
+      if (!token || token.length > 2048 || api.isExpired(id) || consumed.has(token)) {
         if (token) api.reset(id);
         throw captchaError();
       }
+      consumed.add(token);
+      api.reset(id); // Consume before any network request, including failed requests.
       return token;
     },
     reset(form) {

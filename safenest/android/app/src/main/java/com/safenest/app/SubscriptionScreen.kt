@@ -7,10 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -36,25 +38,27 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
     }
     if (committed) Text(t("For technical support, you can check the server status of this period. Checking does not pause protection. Only a period ended or revoked by the server is released.",
         "প্রযুক্তিগত সহায়তার জন্য এই মেয়াদের সার্ভার অবস্থা যাচাই করতে পারেন। যাচাই করলে সুরক্ষা বন্ধ হয় না। সার্ভারে মেয়াদ শেষ বা অনুমতি প্রত্যাহার হলেই সুরক্ষা শেষ হয়।"))
-    OutlinedTextField(email, { email = it }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(password, { password = it }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(email, { email = it }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("trial-email"))
+    OutlinedTextField(password, { password = it }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("trial-password"))
     Button(enabled = !busy && email.isNotBlank() && password.isNotEmpty(), onClick = {
         busy = true; message = ""
         scope.launch {
             try {
+                val captcha = awaitAuthChallenge(context, language)
                 if (committed) {
                     val id = checkNotNull(ProtectionCommitment.entitlementId(context))
-                    val result = withContext(Dispatchers.IO) { SubscriptionClient.checkAccess(email, password, id) }
+                    val result = withContext(Dispatchers.IO) { SubscriptionClient.checkAccess(email, password, captcha, id) }
                     val released = withContext(Dispatchers.IO) { ProtectionCommitment.reconcile(context, result) }
                     message = if (released) t("The server ended this period. Protection has been released.", "সার্ভারে এই মেয়াদ শেষ হয়েছে। সুরক্ষা শেষ করা হয়েছে।")
                         else t("This paid period remains active. Protection continues.", "এই পেইড মেয়াদ এখনও সক্রিয়। সুরক্ষা চলবে।")
                 } else {
-                    val window = withContext(Dispatchers.IO) { SubscriptionClient.verify(email, password) }
+                    val window = withContext(Dispatchers.IO) { SubscriptionClient.verify(email, password, captcha) }
                     withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
                     onVerified()
                 }
                 password = ""
-            } catch (cancel: CancellationException) { throw cancel }
+            } catch (_: TimeoutCancellationException) { message = t("Security check timed out. Try again.", "নিরাপত্তা যাচাইয়ের সময় শেষ। আবার চেষ্টা করুন।") }
+            catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) { message = error.message ?: t("Verification failed.", "যাচাই হয়নি।") }
             finally { busy = false; password = "" }
         }
@@ -65,19 +69,21 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
         listOf(Triple("monthly", "Monthly · ৳379 / 30 days", "মাসিক · ৳৩৭৯ / ৩০ দিন"),
             Triple("quarterly", "Three months · ৳999 / 90 days", "তিন মাস · ৳৯৯৯ / ৯০ দিন"),
             Triple("annual", "Yearly · ৳3,799 / 365 days", "বার্ষিক · ৳৩,৭৯৯ / ৩৬৫ দিন")).forEach { (code, en, bn) ->
-            Row { RadioButton(selected = trialPlan == code, enabled = !busy, onClick = { trialPlan = code }); Text(t(en, bn)) }
+            Row { RadioButton(selected = trialPlan == code, enabled = !busy, onClick = { trialPlan = code }, modifier = Modifier.testTag("trial-plan-$code")); Text(t(en, bn)) }
         }
-        Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it });
+        Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it }, modifier = Modifier.testTag("trial-consent"));
             Text(t("Start my 72-hour trial now. It ends automatically; payment setup and automatic charging are not yet available.",
                 "এখন আমার ৭২ ঘণ্টার ট্রায়াল শুরু করুন। মেয়াদ শেষে স্বয়ংক্রিয়ভাবে বন্ধ হবে; পেমেন্ট সেটআপ ও স্বয়ংক্রিয় চার্জ এখনো চালু নয়।")) }
-        Button(enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
+        Button(modifier = Modifier.testTag("trial-start"), enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
             busy = true; message = ""
             scope.launch {
                 try {
-                    val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan) }
+                    val captcha = awaitAuthChallenge(context, language)
+                    val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan, captcha) }
                     withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
                     onVerified()
-                } catch (cancel: CancellationException) { throw cancel }
+                } catch (_: TimeoutCancellationException) { message = t("Security check timed out. Try again.", "নিরাপত্তা যাচাইয়ের সময় শেষ। আবার চেষ্টা করুন।") }
+                catch (cancel: CancellationException) { throw cancel }
                 catch (error: Exception) { message = error.message ?: t("Trial unavailable.", "ট্রায়াল পাওয়া যাচ্ছে না।") }
                 finally { busy = false; password = "" }
             }
