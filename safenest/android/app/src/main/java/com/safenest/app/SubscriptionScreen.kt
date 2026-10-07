@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -36,8 +37,8 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
     }
     if (committed) Text(t("For technical support, you can check the server status of this period. Checking does not pause protection. Only a period ended or revoked by the server is released.",
         "প্রযুক্তিগত সহায়তার জন্য এই মেয়াদের সার্ভার অবস্থা যাচাই করতে পারেন। যাচাই করলে সুরক্ষা বন্ধ হয় না। সার্ভারে মেয়াদ শেষ বা অনুমতি প্রত্যাহার হলেই সুরক্ষা শেষ হয়।"))
-    OutlinedTextField(email, { email = it }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(password, { password = it }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(email, { email = it }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("trial-email"))
+    OutlinedTextField(password, { password = it }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("trial-password"))
     Button(enabled = !busy && email.isNotBlank() && password.isNotEmpty(), onClick = {
         busy = true; message = ""
         scope.launch {
@@ -65,12 +66,12 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
         listOf(Triple("monthly", "Monthly · ৳379 / 30 days", "মাসিক · ৳৩৭৯ / ৩০ দিন"),
             Triple("quarterly", "Three months · ৳999 / 90 days", "তিন মাস · ৳৯৯৯ / ৯০ দিন"),
             Triple("annual", "Yearly · ৳3,799 / 365 days", "বার্ষিক · ৳৩,৭৯৯ / ৩৬৫ দিন")).forEach { (code, en, bn) ->
-            Row { RadioButton(selected = trialPlan == code, enabled = !busy, onClick = { trialPlan = code }); Text(t(en, bn)) }
+            Row { RadioButton(selected = trialPlan == code, enabled = !busy, onClick = { trialPlan = code }, modifier = Modifier.testTag("trial-plan-$code")); Text(t(en, bn)) }
         }
-        Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it });
+        Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it }, modifier = Modifier.testTag("trial-consent"));
             Text(t("Start my 72-hour trial now. It ends automatically; payment setup and automatic charging are not yet available.",
                 "এখন আমার ৭২ ঘণ্টার ট্রায়াল শুরু করুন। মেয়াদ শেষে স্বয়ংক্রিয়ভাবে বন্ধ হবে; পেমেন্ট সেটআপ ও স্বয়ংক্রিয় চার্জ এখনো চালু নয়।")) }
-        Button(enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
+        Button(modifier = Modifier.testTag("trial-start"), enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
             busy = true; message = ""
             scope.launch {
                 try {
