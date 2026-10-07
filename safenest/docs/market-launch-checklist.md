@@ -121,7 +121,7 @@ Verified locally in this work: 12 account/deletion/RLS tests; 8 protection-acces
 
 Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. The live email/API disposable-account flow passed on 6 October; browser-form regression remains pending.
 
-Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. Current source is 0.4.8/code 25 with Play/direct/lab flavors and trial support. Android CI for `8457e300b9df596ee7fca61312f040fcf8dfee53` remains pending; web/security CI passed. Do not describe the new Play source as already installed or published on Play.
+Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. Current source is 0.4.8/code 25 with Play/direct/lab flavors and trial support. Android and web/security CI for `8457e300b9df596ee7fca61312f040fcf8dfee53` passed in run `37551842395`, including the Settings-guard emulator flow. Its `safenest-test-apk` artifact is the lab build and cannot exercise the customer trial flow. Do not describe the new Play source as already installed or published on Play.
 
 The latest Supabase security advisor still reports leaked-password protection disabled. No merchant credentials, release upload key, Play Console access or verified customer-support/legal identity has been supplied. These dependencies prevent paid/store release today even if the public website deployment succeeds.
 
@@ -172,6 +172,18 @@ Server-timed 72-hour trial support is deployed, once per confirmed account, with
 Sites version 29 succeeded, source `939a5b76cda55d0b80884d9ae13621c8771c0954`, deployment `appgdep_6ac591cbc7fc8191ac4b98c8b2508b6e`. Updated pricing/account/legal pages are published. All eleven generated HTML URLs return HTTPS 200 on mysafenestbd.com; all local navigation/anchors and live legal links pass. 62 local source tests plus a focused 11-test run passed. No new security-advisor errors; the existing Free-plan leaked-password warning remains.
 
 Automatic payment-method verification and recurring charging are not implemented or active. Confirm merchant recurring capability, implement a provider-hosted verified mandate with separate amount/date/cycle consent, cancellation/failure handling, idempotent charge scheduling and verified settlement/reversal callbacks, then test before enabling live charges. bKash subscription payment is separate from tokenized checkout. Nagad and SSLCOMMERZ recurring availability for this merchant is unconfirmed. Account deletion removes the trial claim; this is not a one-person anti-abuse guarantee. Seller identity, verified support contact, taxes, cancellation/refund terms, retention and signed customer release remain unresolved. See `trial-subscriptions-2026-10-07.md`.
+
+### Trial acceptance evidence — 7 October 2026
+
+- [x] Original 0.4.8 artifact archive digest matched GitHub; actual APK DEX reports `com.safenest.app.lab`, `0.4.8-test`, code 25 and `LOCAL_TEST_BUILD=true`. This artifact replaces Account with Test tools and refuses server-verified access caching. It cannot pass the requested trial acceptance flow.
+- [x] Real owned disposable email signup, delivered confirmation and confirmed password login passed. Unconfirmed login was denied. Live trial API saved the quarterly plan and an exact 72-hour window; same-plan and changed-plan retries preserved its ID, plan and end. Read-only login/access lookup did not start protection; client end-time/paid overrides were rejected.
+- [x] A narrowly scoped forced expiry of that disposable trial caused live access denial. Repeat start returned the original spent claim, without fresh access. Account deletion and repeat-login denial passed. Read-only SQL verified no remaining test user, identity, session, entitlement or trial claim. This is forced-fixture/API evidence, not natural 72-hour device expiry.
+- [x] Integrated real-migration/handler tests exercise the exact end boundary, retry preservation, revoked/deleted entitlement non-restart and deletion cleanup. A behavioral website test verifies that disabled enrollment cannot call the trial endpoint even for a consenting account.
+- [ ] Run the compatible Play/debug emulator UI and cached-expiry checks proposed in [draft PR #3](https://github.com/ShaonInTheCloud/ShaonInTheCloud/pull/3); record their actual results separately. CI run `37556517360` has passed web/security and is still running Android checks. The cached tests use an isolated device fixture, not a paid production entitlement.
+- [ ] Run the optional owned-account Android flow for confirmed login, explicit trial consent and plan choice, server trial start, unchanged retry end, separate Accessibility/DNS/VPN consent, running protection and accelerated cleanup. Missing private credentials cause an explicit skip, never acceptance. The separate live API checker also supports a later natural-expiry phase.
+- [ ] Confirm exact expiry and cleanup on the compatible release/owner phone, including idle/background/reboot, plus spent-trial rejection without forced server or cached-clock edits. A simulated/forced expiry and a skipped optional test do not pass this gate.
+
+Website trial enrollment remains `releaseReady:false`. No paid entitlement, live charge, merchant activation or customer-release replacement was made. See `trial-acceptance-2026-10-07.md` for evidence scope and commands.
 
 ## Primary references checked for this release
 
