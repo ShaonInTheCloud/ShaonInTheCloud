@@ -1,8 +1,10 @@
 package com.safenest.app
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.opengl.GLUtils
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -96,7 +98,7 @@ private class LiquidMetalView(context: Context) : GLSurfaceView(context) {
     }
 }
 
-private class MetalRenderer(context: Context) : GLSurfaceView.Renderer {
+private class MetalRenderer(private val context: Context) : GLSurfaceView.Renderer {
     @Volatile var seconds = 0f
     private val fragment = context.assets.open("liquid-metal.frag").bufferedReader().use { it.readText() }
     private val vertices = ByteBuffer.allocateDirect(12 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
@@ -106,7 +108,10 @@ private class MetalRenderer(context: Context) : GLSurfaceView.Renderer {
     private var height = 1
     private var resolution = -1
     private var time = -1
-    private var mouse = -1
+    private var texture = 0
+    private var artSize = -1
+    private var artWidth = 1
+    private var artHeight = 1
     private var position = -1
     private fun shader(type: Int, source: String): Int {
         val shader = GLES20.glCreateShader(type)
@@ -123,7 +128,7 @@ private class MetalRenderer(context: Context) : GLSurfaceView.Renderer {
     }
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         program = 0
-        GLES20.glClearColor(1f, 0.78f, 0.88f, 1f)
+        GLES20.glClearColor(.76f, .38f, .53f, 1f)
         val shaders = mutableListOf<Int>()
         var candidate = 0
         try {
@@ -139,9 +144,26 @@ private class MetalRenderer(context: Context) : GLSurfaceView.Renderer {
             position = GLES20.glGetAttribLocation(program, "position")
             resolution = GLES20.glGetUniformLocation(program, "u_resolution")
             time = GLES20.glGetUniformLocation(program, "u_time")
-            mouse = GLES20.glGetUniformLocation(program, "u_mouse")
+            artSize = GLES20.glGetUniformLocation(program, "u_artSize")
+            val artwork = context.assets.open("liquid-artwork.webp").use { BitmapFactory.decodeStream(it) }
+                ?: error("Liquid artwork unavailable")
+            try {
+                val textures = IntArray(1)
+                GLES20.glGenTextures(1, textures, 0)
+                texture = textures[0]
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture)
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
+                GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, artwork, 0)
+                artWidth = artwork.width; artHeight = artwork.height
+                GLES20.glUseProgram(program)
+                GLES20.glUniform1i(GLES20.glGetUniformLocation(program, "u_art"), 0)
+            } finally { artwork.recycle() }
         } catch (failure: Exception) {
             if (candidate != 0) GLES20.glDeleteProgram(candidate)
+            program = 0
             Log.w("SafeNestMetal", "Using baby pink fallback", failure)
         } finally { shaders.forEach { GLES20.glDeleteShader(it) } }
     }
@@ -153,11 +175,13 @@ private class MetalRenderer(context: Context) : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         if (program == 0) return
         GLES20.glUseProgram(program)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture)
         vertices.position(0)
         GLES20.glEnableVertexAttribArray(position)
         GLES20.glVertexAttribPointer(position, 2, GLES20.GL_FLOAT, false, 0, vertices)
         GLES20.glUniform2f(resolution, width.toFloat(), height.toFloat())
-        GLES20.glUniform2f(mouse, width * 0.5f, height * 0.5f)
+        GLES20.glUniform2f(artSize, artWidth.toFloat(), artHeight.toFloat())
         GLES20.glUniform1f(time, seconds)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6)
     }

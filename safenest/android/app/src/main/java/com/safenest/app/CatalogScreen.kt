@@ -75,7 +75,7 @@ fun CatalogScreen(language: String, onChanged: () -> Unit, onBack: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(t("Verified website lists", "যাচাইকৃত ওয়েবসাইট তালিকা"), fontSize = 25.sp, fontWeight = FontWeight.Bold)
         Text(t("Fresh lists help cover new sites. SafeNest verifies the publisher's signature before using an update. This does not make the list complete or correctly classified by itself.", "নতুন সাইট ধরতে হালনাগাদ তালিকা প্রয়োজন। ব্যবহারের আগে SafeNest প্রকাশকের ডিজিটাল স্বাক্ষর যাচাই করে। স্বাক্ষর তালিকাটি সম্পূর্ণ বা নির্ভুল প্রমাণ করে না।"), fontSize = 12.sp)
-        Surface(color = Color.White, shape = RoundedCornerShape(18.dp)) {
+        Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = .85f), shape = RoundedCornerShape(18.dp)) {
             Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 val current = status
                 Text(when {

@@ -12,6 +12,7 @@
   --glass: #54112fbf;
   --glass-text: #ffe3ef;
   --glass-muted: #fbd0e3;
+  --bar-ink: #ffe3ef;
 }
 body {
   background: #d789aa url('assets/liquid-pink/floating-reference.webp') center/cover fixed;
@@ -25,9 +26,9 @@ body {
 }
 .liquid-art-fallback::before {
   content: ''; position: absolute; inset: -10%;
-  background: #bf668f url('assets/liquid-pink/floating-reference.webp') center/100% 100%;
+  background: #c26187 url('assets/liquid-pink/floating-reference.webp') center/100% 100%;
   background-blend-mode: lighten;
-  animation: liquid-art-float 16s ease-in-out infinite alternate;
+  animation: liquid-art-float 11s ease-in-out infinite alternate;
 }
 .liquid-art-fallback.paused::before { animation-play-state: paused; }
 body[data-liquid-ready] .liquid-art-fallback { display: none; }
@@ -165,7 +166,7 @@ input[type=checkbox], input[type=radio] { accent-color: #f6b8d1; }
 footer p, footer a, footer .footer-links a, .payment-catalog, .payment-catalog h2,
 .footer-trust-strip h2, .payment-catalog h2 .translation-bn,
 .payment-catalog .payment-catalog-note, .footer-payment-block > p,
-.footer-chip-label, .footer-verified > p { color: var(--ink); text-shadow: 0 1px 0 #ffd6e780; }
+.footer-chip-label, .footer-verified > p { color: var(--bar-ink); text-shadow: none; }
 footer .footer-links a { padding: 6px 12px; border-radius: 999px; background: #efb4cf99; }
 footer .footer-links a:hover { color: #300c21; background: #f6bfd8cc; }
 .footer-trust-strip, .footer-navigation, footer nav[aria-label="Service information"] { border: 0; }
@@ -174,6 +175,30 @@ footer nav[aria-label="Service information"] a { padding: 7px 12px; border-radiu
 .verification-mark { color: #ffd6e7; border-color: #ffd0e26b; }
 .footer-chip { background: #54112fbf; color: #ffe3ef; border-color: var(--line); }
 .skip { background: #efb4cf; color: #300c21; }
+/* Compact header chrome and a separate, deeper rose footer frame the live artwork. */
+.nav, body > header:not(.nav) {
+  background: linear-gradient(115deg, #661431, #842347 52%, #58112e);
+  color: var(--bar-ink); border-bottom: 1px solid #ed99bc55;
+  padding-top: 8px; padding-bottom: 8px;
+  box-shadow: 0 4px 18px #4b0c2626, inset 0 1px 0 #ffd6e730;
+}
+body > header:not(.nav) { padding-inline: max(20px, calc((100vw - 1136px) / 2)); }
+body > footer, body > footer:has(.payment-catalog),
+body > footer:has(.payment-catalog):not(:has(.footer-main)) {
+  max-width: none; margin: 32px 0 0;
+  padding: 28px max(20px, calc((100vw - 1136px) / 2)) 36px;
+  background: linear-gradient(120deg, #490b24, #711b3f 52%, #4b0c26);
+  color: var(--bar-ink); border-top: 1px solid #ed99bc55;
+  box-shadow: inset 0 1px 0 #ffd6e72b;
+}
+footer h2, footer summary, footer .translation-bn,
+footer .footer-help, footer .footer-navigation { color: var(--bar-ink); text-shadow: none; }
+footer > p { max-width: 90ch; margin-inline: auto; }
+footer .footer-links a, footer nav[aria-label="Service information"] a {
+  background: #8d305569; color: var(--bar-ink);
+}
+footer .footer-links a:hover { background: #ad4b7569; color: var(--bar-ink); }
+footer .payment-catalog { max-width: 1136px; margin-inline: auto; }
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
 textarea:focus-visible, summary:focus-visible { outline: 3px solid #6a1b40; outline-offset: 4px; }
 @media (max-width: 760px) {

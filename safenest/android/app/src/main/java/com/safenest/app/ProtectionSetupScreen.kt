@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
 
 private val SetupInk = Color(0xFF28111F)
 private val SetupPurple = Color(0xFF982957)
-private val SetupMuted = Color(0xFF69545D)
+private val SetupMuted = Color(0xFF2D081C)
 
 @Composable
 fun ProtectionSetupScreen(
@@ -293,7 +293,7 @@ fun ProtectionSetupScreen(
 }
 
 @Composable private fun SetupCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = Color.White) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = .85f)) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title, color = SetupInk, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             content()
