@@ -3,19 +3,19 @@
   color-scheme: dark;
   --bg: #631332;
   --panel: #51132d;
-  --text: #ffe0ed;
-  --ink: #ffe0ed;
-  --muted: #edb7cc;
+  --text: #ffe8f1;
+  --ink: #ffe8f1;
+  --muted: #f3c2d6;
   --mint: #f7a4c5;
   --rose: #f7a4c5;
   --pink: #8c2850;
-  --line: #bc577d;
-  --chrome-panel: linear-gradient(135deg, #8a2d50f5 0%, #57122ff5 28%, #411025f5 62%, #752242f5 100%);
-  --chrome-edge: #da769e;
-  --chrome-shadow: 0 18px 45px #25041345, inset 0 1px 0 #f8b0cc55;
+  --line: #f7a4c530;
+  --chrome-panel: linear-gradient(135deg, #72213ef5, #51122df5 45%, #601a35f5);
+  --chrome-edge: #f7a4c530;
+  --chrome-shadow: 0 12px 35px #25041326, inset 0 1px 0 #f8b0cc18;
 }
 body {
-  background: #631332 url('assets/liquid-pink/raspberry-foil.webp') center/100% 100% fixed;
+  background: linear-gradient(145deg, #4b1029, #70203d 50%, #52132c) fixed;
   color: var(--text);
   isolation: isolate;
 }
@@ -44,11 +44,11 @@ a { color: inherit; }
 }
 .announcement a, .announcement span { background-color: transparent; }
 .product-intro {
-  background: linear-gradient(115deg, #4e102bde, #631332c9 60%, #4e102bd9);
-  border-bottom: 1px solid #d3749955;
+  background: linear-gradient(115deg, #4e102bf0, #631332e8 60%, #4e102bee);
+  border-bottom: 0;
 }
 .product-intro .lead, .page-intro p, .hero-copy > p:not(.slogan) { color: #f5c6da; }
-main > .intro { background: #51132dec; padding: 24px; border: 1px solid #bc577d; border-radius: 24px; }
+main > .intro { background: #51132df5; padding: 24px; border: 0; border-radius: 16px; }
 .eyebrow, .cards article > .eyebrow { color: #f7adc9; background: transparent; border-color: #b65c7e; }
 .hero h1 .translation-en, .hero h1 .translation-bn, .page-intro h1,
 .character-story h2, .page-character h2 { color: var(--text); background: none; }
@@ -56,7 +56,8 @@ main > .intro { background: #51132dec; padding: 24px; border: 1px solid #bc577d;
 .info-card, .card, .portal-open .card, .cards article, .tile {
   color: var(--text);
   background: var(--chrome-panel);
-  border-color: var(--chrome-edge);
+  border: 0;
+  border-radius: 16px;
   box-shadow: var(--chrome-shadow);
 }
 .product-overview dl > div, .question, .faq-list article { border-color: #b65c7e; }
@@ -65,15 +66,15 @@ main > .intro { background: #51132dec; padding: 24px; border: 1px solid #bc577d;
 .price-card .price-note, .installation-steps p, .download-details p { color: var(--muted); }
 .product-overview dd { color: var(--text); }
 .content-section, .content-section:nth-of-type(2n+1), .human-story, .section {
-  background: linear-gradient(115deg, #601731d1, #4b0f28de 55%, #742240cf);
-  border-color: #cf71924d;
+  background: linear-gradient(115deg, #601731ed, #4b0f28f0 55%, #64203de8);
+  border: 0;
 }
-.page-body { background: #54132ecf; }
+.page-body { background: #54132eea; }
 .page-body > p { color: var(--text); }
 .page-body > p a, .info-card a, .question a { color: #fbb5d0; text-decoration: underline; text-underline-offset: 4px; }
 .plans .price-amount, .plans .price-card .price-amount, .price-card .price-amount { color: #ffcade; }
 .price-card li::before { color: #f7a4c5; }
-.price-card.featured, .challenge[aria-pressed=true] { background: linear-gradient(135deg, #a34064, #691b3c 55%, #8c3054); border-color: #f5abc8; }
+.price-card.featured, .challenge[aria-pressed=true] { background: linear-gradient(135deg, #883051, #691b3c 55%, #802b4b); border: 0; box-shadow: inset 0 0 0 1px #f5abc85c; }
 .price-badge, .badge { color: #ffd4e6; background: #8a2850; border: 1px solid #dc81a4; }
 .progress-track { background: #3b0b21; border: 1px solid #aa5276; }
 .progress-track > div { background: linear-gradient(90deg, #d95d91, #fac2da); }
@@ -141,6 +142,37 @@ footer .footer-links a:hover { color: #ffbed8; }
 .payment-brand, .payment-logo-card { background: #f3c1d4; border-color: #d381a2; box-shadow: inset 0 1px 0 #fad9e7; }
 .verification-mark { color: #f7a4c5; border-color: #d37499; }
 .brand, .brand-showcase { background-color: #570f2a; border-color: #bd5f84; }
+/* A readable, open layout: no oversized poster or framed right-hand column. */
+.product-hero { display: block; min-height: 0; }
+.product-intro { padding: 60px 36px 48px; }
+.product-intro > div { max-width: 900px; }
+.product-intro h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.14; }
+.product-intro .lead { font-size: 18px; line-height: 1.8; max-width: 74ch; }
+.product-overview {
+  background: transparent; border: 0; border-top: 1px solid var(--line);
+  border-radius: 0; box-shadow: none; padding: 30px 0 0; margin-top: 36px;
+}
+.product-overview h2 { font-size: 26px; margin-bottom: 22px; }
+.product-overview dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.product-overview dl > div { display: block; padding: 0; border: 0; }
+.product-overview dt { margin-bottom: 10px; }
+.product-overview .note { padding-top: 22px; }
+.product-card, .plans .price-card, .challenge { border: 0; }
+.product-card p, .content-section > p, .info-card p, .question > p { line-height: 1.85; }
+.translation-bn { opacity: 1; }
+.question, .product-overview dl > div, .footer-trust-strip, .footer-navigation { border-color: var(--line); }
+.portal-panel, .activation-note, .intro .bubble, .support-message { border: 0; border-radius: 14px; }
+.brand { border: 0; box-shadow: none; padding: 0; background: transparent; border-radius: 0; }
+.nav, body > header, body > footer { border: 0; }
+.btn, .primary, .textBtn, .nav .account-login { border-radius: 10px; }
+@media (max-width: 760px) {
+  .product-intro { padding: 40px 22px 36px; }
+  .product-intro h1 { font-size: clamp(36px, 9vw, 46px); }
+  .product-overview dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 18px; }
+}
+@media (max-width: 380px) {
+  .product-overview dl { grid-template-columns: 1fr; }
+}
 .skip { background: #f7a4c5; color: #3b0a20; }
 a:focus-visible, button:focus-visible, input:focus-visible,
 select:focus-visible, textarea:focus-visible, summary:focus-visible {

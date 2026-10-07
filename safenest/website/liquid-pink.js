@@ -14,7 +14,7 @@
     void main(){
       vec2 st=gl_FragCoord.xy/u_resolution;
       vec2 uv=(gl_FragCoord.xy*2.-u_resolution)/min(u_resolution.x,u_resolution.y);
-      float t=u_time*.45;
+      float t=u_time*.28;
       float w1=sin(uv.x*2.2+t*.8+cos(uv.y*1.8+t*.5));
       float w2=cos(uv.y*2.5-t*.7+sin(uv.x*1.5-t*.4));
       float wave=w1*.6+w2*.4;
@@ -22,7 +22,7 @@
       float ridge=pow(abs(cos(fold*1.4)),4.);
       vec3 deepPink=vec3(.40,.045,.16);
       vec3 babyPink=vec3(.90,.30,.51);
-      vec3 roseChrome=vec3(1.,.75,.86);
+      vec3 roseChrome=vec3(.94,.60,.75);
       vec3 chrome=mix(deepPink,babyPink,smoothstep(-.8,.8,wave));
       chrome=mix(chrome,roseChrome,clamp(ridge*.8+pow(ridge,3.)*.6,0.,1.));
       // Narrow moving crests retain the polished liquid-metal contrast.
