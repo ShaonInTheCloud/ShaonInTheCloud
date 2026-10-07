@@ -1,0 +1,13 @@
+# Public launch audit — 7 October 2026
+
+Run `node scripts/check-launch-surfaces.mjs` from `safenest`. Exit zero means the public checks pass; it never establishes Auth, trial, merchant, production signing or physical-phone acceptance. Exit one means at least one check failed. The JSON records only fixed check labels, boolean results and a timestamp; it does not print raw headers, cookies, page bodies or private data.
+
+The checker makes bounded, credential-free GET requests to the existing website and the public payment catalogue. It checks page availability, enforced response headers, native challenge URL/noindex/quiet layout, login forms, development-download metadata, obsolete support instructions, same-origin marketing sitemap and the disabled checkout contract. External, credential-bearing and query-bearing redirects are refused before following. It neither starts trials nor sends payments, support messages or authentication requests.
+
+The first live run completed at `2026-10-07T04:59:21.784Z`. All expected pages returned HTTP 200; the native challenge returned without redirect and had its script/noindex/quiet layout. The catalogue returned unavailable with no products and no-store. The marketing sitemap excludes private account/checkout/challenge paths. Launch readiness failed because the host lacks enforced security headers and the help page still mentioned the superseded 0.4.0 download. The help/terms generator is corrected to describe the actual 0.4.10 direct development APK; no APK was replaced.
+
+Read-only checks also reconfirmed open/unmerged PR #5 and PR #6, successful CI run `37570571618`, unchanged GitHub main `c40d2df223741977cd472c8c1d88abee30151d7e`, healthy Supabase/PostgreSQL `17.6.1.166`, disabled payments, zero enabled providers/products/orders/trial claims/entitlements, and the verified trial FK index migration. The security advisor still warns about leaked-password protection. No production setting was changed.
+
+Both previous Android branch CI runs passed, including cached trial expiry and Settings/network emulator tests. The owned-account Android trial test remains skipped; no new live trial, natural 72-hour expiry or Honor acceptance is claimed. The earlier automatic approval review rejection of merging to GitHub main remains binding; this follow-up only updates the review branch and the separately hosted website copy.
+
+Before sales: verify real account/device trial acceptance, owner signing/store identity, merchant credentials and genuine sandbox acceptance, response-level hosting headers, owner database upgrade/Pro password protection, seller/refund/retention details and inbound support mail. Keep checkout and public website trial enrollment closed.

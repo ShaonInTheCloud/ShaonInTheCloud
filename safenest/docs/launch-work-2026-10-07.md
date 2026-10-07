@@ -6,7 +6,7 @@ The latest rose-chrome UI is integrated with Android CAPTCHA and trial acceptanc
 
 PR #5 integrates the existing CAPTCHA and trial branches with current main. The optional owned-account test no longer calls obsolete tokenless authentication: first start and retry use the actual app security-check flow. Ordinary CI has no live credentials and must report that owned flow as skipped. Cached-window tests and emulator fixtures do not prove real 72-hour expiry, actual provider challenges or Honor acceptance.
 
-Local verification passed 80 Node tests, 9 protection-access tests, core DNS/domain/alias/upstream/HTTPS/signature/commitment/CAPTCHA regressions, 5 signing tests, 171 Android unit tests and all three debug APK builds. The local lint/instrumentation attempt could not download uncached Compose Android-test dependencies. CI run 37569576336 is the authoritative full runner check for implementation commit `4d4662092c53b9fad159a7020f9f76c80f4e4e0a`; record its terminal result before merging.
+Local verification passed 80 Node tests, 9 protection-access tests, core DNS/domain/alias/upstream/HTTPS/signature/commitment/CAPTCHA regressions, 5 signing tests, 171 Android unit tests and all three debug APK builds. The local lint/instrumentation attempt could not download uncached Compose Android-test dependencies. CI run 37569576336 is the authoritative full runner check for implementation commit `4d4662092c53b9fad159a7020f9f76c80f4e4e0a`; its terminal result is SUCCESS, including all Android and web/security checks. Follow-up run `37570571618` also passed for exact head `2bdef97ea021be509640ad395789bc15e94e36f4`. Live-account acceptance remains a separate open gate; no main merge is authorized by these results.
 
 ## Website
 

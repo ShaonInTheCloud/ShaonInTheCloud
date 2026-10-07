@@ -2,7 +2,7 @@
 
 Updated: 7 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
 
-Current continuation: Android 0.4.11/code 28 integrates the current UI with CAPTCHA and trial acceptance. Local 171 unit tests and three debug builds passed; the full CI/device result must be recorded before merge. Site version 40 serves the canonical Android challenge page and search metadata. Applied trial-claim FK index and restored payment gateway configuration/runbook. See `launch-work-2026-10-07.md` for evidence and owner-dependent gates. Public download remains direct debug 0.4.10; production signing and phone acceptance remain pending.
+Current continuation: Android 0.4.11/code 28 integrates the current UI with CAPTCHA and trial acceptance. Local 171 unit tests and three debug builds passed. CI runs `37569576336` and `37570571618` passed all web/security, Android build/unit/lint/bundle and emulator checks; live-account and physical-phone acceptance remain pending. Site version 40 serves the canonical Android challenge page and search metadata. Applied trial-claim FK index and restored payment gateway configuration/runbook. See `launch-work-2026-10-07.md` for evidence and owner-dependent gates. Public download remains direct debug 0.4.10; production signing and phone acceptance remain pending.
 
 **Release decision: development website live; paid sales and Play production release are blocked.** A working website, source tests or a debug APK do not establish reliable protection on customer phones.
 
@@ -121,7 +121,7 @@ Verified locally in this work: 12 account/deletion/RLS tests; 8 protection-acces
 
 Backend deletion endpoint deployed with JWT verification enabled. No real customer was deleted during verification. The live email/API disposable-account flow passed on 6 October; browser-form regression remains pending.
 
-Current public Android download remains the older 0.4.0 debug APK until a new signed, tested artifact is available. Current source is 0.4.8/code 25 with Play/direct/lab flavors and trial support. Android and web/security CI for `8457e300b9df596ee7fca61312f040fcf8dfee53` passed in run `37551842395`, including the Settings-guard emulator flow. Its `safenest-test-apk` artifact is the lab build and cannot exercise the customer trial flow. Do not describe the new Play source as already installed or published on Play.
+Current public Android download is the 0.4.10 direct debug development APK; current candidate source is 0.4.11/code 28 in review PRs #5/#6, with full CI passing and live acceptance pending. No signed production artifact is published. Earlier 0.4.8/code 25 Android and web/security CI for `8457e300b9df596ee7fca61312f040fcf8dfee53` passed in run `37551842395`, including the Settings-guard emulator flow. Its `safenest-test-apk` artifact is the lab build and cannot exercise the customer trial flow. Do not describe the new Play source as already installed or published on Play.
 
 The latest Supabase security advisor still reports leaked-password protection disabled. No merchant credentials, release upload key, Play Console access or verified customer-support/legal identity has been supplied. These dependencies prevent paid/store release today even if the public website deployment succeeds.
 
