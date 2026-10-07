@@ -74,3 +74,5 @@ summary:focus-visible { outline:3px solid var(--rose); outline-offset:4px; }
 .legal-links { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; padding: 1.5rem; }
 
 .auth-captcha{margin:12px 0;min-width:0}
+
+textarea {width:100%;border:1px solid #d6bbc8;border-radius:15px;background:#fffcfd;color:var(--ink);padding:14px;font:inherit;font-size:16px;resize:vertical;min-height:110px} textarea:focus-visible{outline:3px solid var(--rose);outline-offset:4px} .support-panel{grid-column:1/-1} .support-panel form{max-width:720px} .support-ticket{display:block;width:100%;text-align:start;border-radius:14px;margin:10px 0;overflow-wrap:anywhere} .support-message{padding:16px;border:1px solid var(--line);border-radius:16px;margin:12px 0} .support-message p{white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0} .support-message p:first-child{font-size:13px;color:var(--muted)} #support-reference{overflow-wrap:anywhere} #support-status{white-space:pre-wrap} #support-thread{scroll-margin-top:24px}

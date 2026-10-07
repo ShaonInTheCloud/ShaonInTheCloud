@@ -87,6 +87,7 @@ if (searchForm) {
     { href: 'campaign.html', en: 'Practical steps', bn: 'করণীয়', summaryEn: 'Private checkmarks and practical steps', summaryBn: 'ব্যক্তিগত চিহ্ন ও করণীয়', terms: 'campaign challenge mindful online habits screen time recovery' },
     { href: 'how-it-works.html', en: 'Features & setup', bn: 'ফিচার ও সেটআপ', summaryEn: 'Android filtering, app guard and current limits', summaryBn: 'অ্যান্ড্রয়েড ফিল্টার, অ্যাপ গার্ড ও সীমাবদ্ধতা', terms: 'how works android dns filter website app guard vpn limits private dns encrypted security' },
     { href: 'pricing.html', en: 'Pricing', bn: 'মূল্য', summaryEn: 'Proposed prices and payment status', summaryBn: 'প্রস্তাবিত মূল্য ও পেমেন্টের অবস্থা', terms: 'pricing plans price cost subscription payment visa mastercard bkash rocket upay dbbl wallet dutch bangla bank support progress' },
+    { href: 'contact.html', en: 'Contact', bn: 'যোগাযোগ', summaryEn: 'Private support, billing and privacy requests', summaryBn: 'ব্যক্তিগত সহায়তা, বিলিং ও গোপনীয়তার অনুরোধ', terms: 'contact email support billing privacy business help' },
     { href: 'support.html', en: 'Help', bn: 'সহায়তা', summaryEn: 'Testing, DNS troubleshooting and account help', summaryBn: 'পরীক্ষা, DNS সমস্যা ও অ্যাকাউন্টের সহায়তা', terms: 'help support contact release testing dns troubleshooting account delete privacy' },
     { href: 'our-story.html', en: 'About', bn: 'আমাদের সম্পর্কে', summaryEn: 'Why SafeNest is being built', summaryBn: 'কেন SafeNest তৈরি হচ্ছে', terms: 'story about mission why safenest recovery family' }
   ];

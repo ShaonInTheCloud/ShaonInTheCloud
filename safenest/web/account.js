@@ -1,6 +1,7 @@
 import { installAuthCaptcha } from './auth-captcha.js';
 import {installBilling} from './billing.js';
 import {installTrial} from './trial.js';
+import {installSupportDesk} from './support-desk.js';
 import { createClient } from '@supabase/supabase-js';
 import { nextAccountState, mayShowProfile } from './account-state.js';
 import { entitlementState } from './entitlement-state.js';
@@ -90,6 +91,7 @@ async function start() {
     onPaid:()=>{if(state.user)void loadAccess(state.user.id,revision);}});
   installTrial(client,{identity:()=>state.view==='account'?state.user?.id:null,
     onStarted:()=>{if(state.user)void loadAccess(state.user.id,revision);},releaseReady:false});
+  const supportDesk=installSupportDesk(client,{identity:()=>state.view==='account'?state.user?.id:null});
   const linkHasError = new URLSearchParams(location.hash.slice(1)).has('error');
 
   function chooseMode(mode) {
@@ -177,6 +179,7 @@ async function start() {
     const identityChanged = previousId !== state.user?.id;
     setTimeout(()=>billing.refresh(),0);
     if (identityChanged) revision++;
+    setTimeout(()=>supportDesk.refresh(),0);
     $('guest').hidden = state.view !== 'login';
     $('account').hidden = state.view !== 'account';
     $('recovery').hidden = state.view !== 'recovery';
