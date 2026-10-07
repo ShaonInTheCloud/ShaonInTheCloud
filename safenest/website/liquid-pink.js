@@ -1,4 +1,4 @@
-/* Live shader from the owner's metallic_baby_pink_suite, in logo-matched pink. */
+/* Animate the owner's actual liquid artwork; every route shares this layer. */
 (() => {
   const canvas = document.createElement('canvas');
   canvas.className = 'liquid-background';
@@ -11,24 +11,26 @@
   const fragment = `precision mediump float;
     uniform vec2 u_resolution;
     uniform float u_time;
+    uniform sampler2D u_art;
+    uniform vec2 u_artSize;
     void main(){
       vec2 st=gl_FragCoord.xy/u_resolution;
-      vec2 uv=(gl_FragCoord.xy*2.-u_resolution)/min(u_resolution.x,u_resolution.y);
-      float t=u_time*.28;
-      float w1=sin(uv.x*2.2+t*.8+cos(uv.y*1.8+t*.5));
-      float w2=cos(uv.y*2.5-t*.7+sin(uv.x*1.5-t*.4));
-      float wave=w1*.6+w2*.4;
-      float fold=sin(uv.x*2.6+uv.y*2.+wave*2.2);
-      float ridge=pow(abs(cos(fold*1.4)),4.);
-      vec3 deepPink=vec3(.40,.045,.16);
-      vec3 babyPink=vec3(.90,.30,.51);
-      vec3 roseChrome=vec3(.94,.60,.75);
-      vec3 chrome=mix(deepPink,babyPink,smoothstep(-.8,.8,wave));
-      chrome=mix(chrome,roseChrome,clamp(ridge*.8+pow(ridge,3.)*.6,0.,1.));
-      // Narrow moving crests retain the polished liquid-metal contrast.
-      chrome=mix(chrome,vec3(.22,.018,.08),pow(1.-ridge,5.)*.42);
-      // Preserve the logo's deeper top and luminous rose-pink lower folds.
-      chrome*=mix(1.04,.78,smoothstep(.15,1.,st.y));
+      float t=u_time*.22;
+      float screenAspect=u_resolution.x/u_resolution.y;
+      float artAspect=u_artSize.x/u_artSize.y;
+      vec2 cover=vec2(min(1.,screenAspect/artAspect),min(1.,artAspect/screenAspect));
+      // Show the full abstract artwork on portrait screens instead of a flat crop.
+      cover=mix(vec2(1.),cover,smoothstep(1.,1.6,screenAspect));
+      vec2 uv=(vec2(st.x,1.-st.y)-.5)*cover*.90+.5;
+      // Flow and breathing deform the supplied folds rather than replace them.
+      uv+=vec2(sin(st.y*4.+t)+sin(st.x*3.-t*.6),cos(st.x*4.-t*.8))*cover*.022;
+      uv+=vec2(sin(t*.45),cos(t*.35))*cover*.028;
+      vec3 art=texture2D(u_art,clamp(uv,0.,1.)).rgb;
+      vec3 shadowPink=vec3(.75,.40,.56);
+      // Preserve the reference's continuous gloss and fine highlight detail.
+      vec3 chrome=max(art*vec3(.97,.83,.88),shadowPink);
+      // Rosier at the top, baby-pink reflections below; no opaque page scrim.
+      chrome=mix(chrome,shadowPink,st.y*.12);
       gl_FragColor=vec4(chrome,1.);
     }`;
   function compile(type, source) {
@@ -52,10 +54,17 @@
   gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
   const resolution=gl.getUniformLocation(program,'u_resolution');
   const time=gl.getUniformLocation(program,'u_time');
-  let frame=0, last=0, elapsed=0, lost=false;
+  const texture=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.uniform1i(gl.getUniformLocation(program,'u_art'),0);
+  let frame=0, last=0, elapsed=0, lost=false, ready=false;
   function draw(now) {
     frame=0;
-    if (lost || document.hidden) return;
+    if (!ready || lost || document.hidden) return;
     if (!last || now-last>=1000/30) {
       if (last) elapsed+=Math.min(now-last,100);
       last=now;
@@ -66,7 +75,7 @@
   }
   function resume() {
     cancelAnimationFrame(frame); last=0;
-    if (!lost && !document.hidden) frame=requestAnimationFrame(draw);
+    if (ready && !lost && !document.hidden) frame=requestAnimationFrame(draw);
   }
   function resize() {
     const scale=Math.min(devicePixelRatio||1,1.25,1400/innerWidth);
@@ -74,9 +83,14 @@
     gl.viewport(0,0,canvas.width,canvas.height); gl.uniform2f(resolution,canvas.width,canvas.height);
     resume();
   }
-  // Live mode starts immediately; the logo texture is only the CSS fallback.
-  resize();
-  canvas.classList.add('ready');
+  const artwork=new Image();
+  artwork.onload=()=>{
+    gl.bindTexture(gl.TEXTURE_2D,texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,artwork);
+    gl.uniform2f(gl.getUniformLocation(program,'u_artSize'),artwork.width,artwork.height);
+    ready=true; resize(); canvas.classList.add('ready');
+  };
+  artwork.src='assets/liquid-pink/floating-reference.webp';
   addEventListener('resize',resize,{passive:true});
   document.addEventListener('visibilitychange',resume);
   reduced.addEventListener('change',resume);
