@@ -9,7 +9,7 @@ Prepared 6 October 2026; reviewed 7 October 2026. Checkout remains closed. The g
 - Public IPN and POST return independently call the merchant validation API. Browser success, callback amount and `verified=true` never grant access. Exact order, merchant when returned, environment, BDT amount/currency, original transaction time, validation ID and risk level are checked. Risky, malformed or ambiguous responses require review. No card details or raw gateway payloads enter the ledger.
 - Existing transactional ledger grants at most one finite entitlement per order. Replay never extends it; cross-account/transaction reuse fails. Sandbox grants cannot activate Android. The existing Android account verification consumes the real server entitlement; no new payment SDK or fabricated access is placed in the app.
 - Public, gated catalogue; owner-authenticated status; website payment form with account-scoped retry key and saved order reference; fixed return destination. Redirects only cause status checking. The user can refresh status after an IPN arrives; a return does not display confirmed payment by itself.
-- Protected reconciliation endpoint with a separate secret, a three-order batch and bounded concurrent provider checks. Merchant lookup must produce exactly one successful transaction, then the validator is called again before the existing processor runs. It is deployed but not scheduled yet.
+- Protected reconciliation endpoint with a separate secret, a three-order batch and bounded concurrent provider checks. Merchant lookup must produce exactly one successful transaction, then the validator is called again before the existing processor runs. It is deployed but not scheduled yet. A separate reviewable recovery follow-up adds disabled-by-default leased batches, retry outcomes and owner-only Vault dispatch; see `payment-recovery-2026-10-07.md`. That follow-up is not deployed.
 
 ## Files and endpoints
 
@@ -75,3 +75,8 @@ Live HTTP checks also passed: catalogue 200/unavailable; order and status withou
 ## 7 October source integration check
 
 The current source restored the six explicit payment JWT gateway declarations from this payment branch while retaining start-trial/account settings. Live function metadata matches the declarations. Payment mode remains disabled, with zero enabled providers/products and zero orders. Migration filenames for later trial/support work were corrected to their actual applied timestamps. The website keeps checkout disabled, and no genuine merchant session or live charge has occurred.
+
+
+## Recovery follow-up (prepared; not deployed)
+
+`payment-recovery-2026-10-07.md` records the credential-independent recovery ledger, partial/amount-unknown review handling, verified refund-query normalization, protected scheduler/lease design and concurrency acceptance checks. Earlier statements above describe the deployed baseline. The new chargeback boundary is provider-neutral only; genuine SSLCOMMERZ chargeback verification and refund-reference discovery remain pending. Checkout and scheduling stay disabled. Financial retention and account-deletion behavior still require a decision before sales.

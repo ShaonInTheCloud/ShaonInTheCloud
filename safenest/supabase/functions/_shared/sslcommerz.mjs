@@ -22,6 +22,14 @@ async function digest(value) {
   const data=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value)));
   return Array.from(new Uint8Array(data),b=>b.toString(16).padStart(2,'0')).join('');
 }
+/** Internal independent-verification boundary; never pass browser/callback fields here. */
+export async function normalizeVerifiedRecovery(purchase, recovery) {
+  const proof={...purchase,status:'recovery',kind:recovery.kind,recoveryId:recovery.id,
+    recoveryState:recovery.state,recoveryAmountMinor:recovery.amountMinor};
+  delete proof.eventId; delete proof.evidenceSha256;
+  const hash=await digest(proof);
+  return {...proof,eventId:'recovery:'+hash,evidenceSha256:hash};
+}
 export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
   if (env.SSLCOMMERZ_ENABLED!=='true') throw new PaymentError('payment_provider_not_configured');
   const environment=env.SSLCOMMERZ_ENVIRONMENT;
@@ -63,6 +71,21 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
       paidAt:providerTime(result.tran_date),validationReference:valId};
     // VALID and VALIDATED are equivalent. No card fields or callback data enter the hash.
     return {...proof,eventId:'paid:'+result.bank_tran_id,evidenceSha256:await digest(proof)};
+  }
+  async function refund(order, valId, reference) {
+    if (!token(reference,50)) throw new PaymentError('invalid_recovery_reference',400);
+    const purchase=await normalize(order,valId);
+    const result=await api('/validator/api/merchantTransIDvalidationAPI.php',{refund_ref_id:reference});
+    const state={refunded:'completed',processing:'pending',cancelled:'cancelled'}[result.status];
+    if (result.APIConnect!=='DONE' || !state || result.refund_ref_id!==reference ||
+        result.tran_id!==order.provider_order_id || result.bank_tran_id!==purchase.transactionId ||
+        (result.store_id!==undefined && result.store_id!==store))
+      throw new PaymentError('invalid_recovery_evidence',400);
+    // The published query example omits refund_amount. Never substitute callback
+    // amount or original price. Missing amount remains an explicit review item.
+    const amount=result.refund_amount===undefined ? null : moneyMinor(result.refund_amount);
+    if (amount!==null && amount>purchase.amountMinor) throw new PaymentError('invalid_recovery_evidence',400);
+    return normalizeVerifiedRecovery(purchase,{kind:'refund',id:reference,state,amountMinor:amount});
   }
   return {
     provider:'sslcommerz',environment,checkoutOrigins:[base],
@@ -106,6 +129,12 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
         throw new PaymentError('invalid_notification',400);
       const order=await rpc('payment_order_lookup',{p_reference:fields.get('tran_id'),p_environment:environment});
       if (!order) throw new PaymentError('order_not_found',404);
+      if (fields.has('refund_ref_id')) return refund(order,fields.get('val_id'),fields.get('refund_ref_id'));
+      // Public API documentation supplies no authenticated chargeback query/contract.
+      // Reject that claim until a merchant-tested verifier exists; paid validation
+      // alone cannot validate a dispute or grant in response to such a callback.
+      if (/chargeback|dispute|refund/i.test(fields.get('status')??''))
+        throw new PaymentError('recovery_verification_unavailable',409);
       return normalize(order,fields.get('val_id'));
     },
     async reconcile(order) {
@@ -114,7 +143,14 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
       const matches=Array.isArray(result.element)?result.element.filter(x=>
         x.tran_id===order.provider_order_id && ['VALID','VALIDATED'].includes(x.status)):[];
       if (result.APIConnect!=='DONE' || matches.length!==1) throw new PaymentError('payment_requires_review',409);
-      return normalize(order,matches[0].val_id);
+      const evidence=[await normalize(order,matches[0].val_id)];
+      const recoveries=order.recoveries??[];
+      if (!Array.isArray(recoveries) || recoveries.length>12) throw new PaymentError('payment_requires_review',409);
+      for (const recovery of recoveries) {
+        if (recovery.kind!=='refund') throw new PaymentError('recovery_verification_unavailable',409);
+        evidence.push(await refund(order,matches[0].val_id,recovery.recovery_id));
+      }
+      return evidence.length===1?evidence[0]:evidence;
     },
   };
 }

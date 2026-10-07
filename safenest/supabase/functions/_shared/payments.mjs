@@ -64,15 +64,45 @@ export async function processNotification(adapter, raw, headers, rpc) {
   // timeouts and no redirects to notification-supplied URLs. This call must complete
   // before any ledger operation. Unknown/partial reversals require manual review.
   const evidence = await adapter.validateNotification(raw, headers);
-  return rpc('process_validated_payment', validatedArguments(adapter, evidence));
+  return processEvidence(adapter, evidence, rpc);
+}
+
+/** Recovery amounts are distinct from the original purchase price. Null is unknown. */
+export function validatedRecoveryArguments(adapter, evidence) {
+  if (!evidence || evidence.status !== 'recovery' || !['refund','chargeback'].includes(evidence.kind) ||
+      !['pending','completed','cancelled'].includes(evidence.recoveryState) ||
+      typeof evidence.recoveryId !== 'string' || !evidence.recoveryId.length || evidence.recoveryId.length > 160 ||
+      (evidence.recoveryAmountMinor !== null && (!Number.isSafeInteger(evidence.recoveryAmountMinor) ||
+        evidence.recoveryAmountMinor <= 0 || evidence.recoveryAmountMinor > evidence.amountMinor)))
+    throw new PaymentError('invalid_recovery_evidence',400);
+  const {p_status, ...purchase} = validatedArguments(adapter, {...evidence,status:'paid'});
+  return {...purchase,p_kind:evidence.kind,p_recovery_id:evidence.recoveryId,
+    p_recovery_state:evidence.recoveryState,p_recovery_amount_minor:evidence.recoveryAmountMinor};
+}
+
+export async function processEvidence(adapter, evidence, rpc) {
+  return evidence?.status === 'recovery'
+    ? rpc('process_validated_recovery',validatedRecoveryArguments(adapter,evidence))
+    : rpc('process_validated_payment',validatedArguments(adapter,evidence));
 }
 
 export async function reconcileOrder(adapter, order, rpc) {
-  const evidence = await adapter.reconcile(order);
-  const args = validatedArguments(adapter, evidence);
-  if (args.p_order_id !== order.id || adapter.provider !== order.provider ||
-      adapter.environment !== order.environment) throw new PaymentError('reconciliation_order_mismatch',400);
-  return rpc('process_validated_payment', args);
+  const output = await adapter.reconcile(order);
+  const evidence = Array.isArray(output) ? output : [output];
+  if (!evidence.length || evidence.length>13) throw new PaymentError('invalid_provider_evidence',400);
+  // Validate the complete bounded set before writing; recoveries precede payment.
+  for (const item of evidence) {
+    if (item?.orderId !== order.id || adapter.provider !== order.provider ||
+        adapter.environment !== order.environment) throw new PaymentError('reconciliation_order_mismatch',400);
+    if (item.status==='recovery') validatedRecoveryArguments(adapter,item);
+    else validatedArguments(adapter,item);
+  }
+  let result;
+  for (const item of evidence.sort((a,b)=>Number(b.status==='recovery')-Number(a.status==='recovery'))) {
+    const next=await processEvidence(adapter,item,rpc);
+    if (!result || next?.action==='recovery_requires_review') result=next;
+  }
+  return result;
 }
 
 export async function readLimitedBody(req, limit = 16_384) {
