@@ -2,6 +2,8 @@
 
 Updated: 7 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
 
+CAPTCHA continuation: Android 0.4.9 source now passes challenge tokens for initial verification, re-verification and trial start; website/native provider-contract tests pass. Enforcement stays off: dashboard access redirects to sign-in, candidate publication and actual device/live Auth acceptance remain pending. See `android-auth-captcha-2026-10-07.md`; do not mark project-wide bot protection complete from source tests.
+
 Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
 
 **Release decision: development website live; paid sales and Play production release are blocked.** A working website, source tests or a debug APK do not establish reliable protection on customer phones.
