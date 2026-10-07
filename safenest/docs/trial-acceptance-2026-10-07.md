@@ -59,7 +59,12 @@ to complete cleanup rather than blindly creating another account.
 
 ## Android automation
 
-`TrialDeviceAcceptanceTest` targets compatible builds. Default CI now runs its
+Automation is proposed in [draft PR #3](https://github.com/ShaonInTheCloud/ShaonInTheCloud/pull/3),
+source `1b49588ff33bf28021c34779f6f56dae99d379af`. Its web/security job passed in
+[CI run 37556517360](https://github.com/ShaonInTheCloud/ShaonInTheCloud/actions/runs/37556517360);
+Android checks are still in progress. Commands below refer to that review branch.
+
+`TrialDeviceAcceptanceTest` targets compatible builds. Proposed CI runs its
 Play/debug suite after the lab Settings-guard flow. Tests cover:
 
 - Real trial screen: email/password alone cannot enable Start; explicit plan
@@ -101,7 +106,7 @@ and normal internet must remain usable. Device-owner cleanup is not established
 by the Play/debug fixture. Enrollment stays `releaseReady:false` in `web/account.js`.
 The public APK and payment configuration were not replaced or enabled.
 
-Local verification: source/account/security/payment suite, protection-access
-tests, standalone Java regressions, build, Python/JavaScript syntax, workflow YAML
-and diff checks passed. Exact boundary integration tests use real migrations and
+Local verification: 68 source/account/security/payment tests, 9 protection-access
+tests, 5 signing-script tests, standalone Java regressions, web build,
+Python/JavaScript syntax, workflow YAML and diff checks passed. Exact boundary integration tests use real migrations and
 handlers with fixture Auth/REST transport; they are not real Android evidence.
