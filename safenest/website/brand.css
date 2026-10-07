@@ -1,0 +1,11 @@
+/* Selected Raspberry Pink option 07: exact exported artwork. */
+.brand{display:inline-flex;align-items:center;gap:7px;text-decoration:none;flex-shrink:0;line-height:1;background:#570f2a;border:1px solid #9d365a;border-radius:16px;padding:5px 8px 5px 5px;box-shadow:0 4px 16px #57102822;max-width:100%}
+.brand .brand-mark{display:block;width:44px;height:44px;object-fit:cover;flex-shrink:0;border-radius:12px}
+.brand .brand-wordmark{display:block;width:122px;height:auto;max-width:calc(100% - 51px);object-fit:contain;border-radius:5px}
+.brand-showcase{margin:0 0 28px;overflow:hidden;aspect-ratio:1;border-radius:18px;background:#570f2a;box-shadow:0 12px 35px #570f2a2b}
+.brand-showcase img{display:block;width:100%;height:100%;object-fit:cover;animation:safenest-reveal 1.6s cubic-bezier(.16,1,.3,1) both}
+@keyframes safenest-reveal{from{transform:scale(1.07);filter:brightness(.65);opacity:.65}to{transform:scale(1);filter:brightness(1);opacity:1}}
+@media(max-width:650px){.brand .brand-mark{width:40px;height:40px}.brand .brand-wordmark{width:114px;max-width:calc(100% - 47px)}.brand{border-radius:14px}.brand-showcase{max-width:400px;margin-inline:auto}}
+@media(prefers-reduced-motion:reduce){.brand-showcase img{animation:none}}
+/* Keep the account language controls usable beside the logo on small screens. */
+body>header:not(.nav){flex-wrap:wrap}

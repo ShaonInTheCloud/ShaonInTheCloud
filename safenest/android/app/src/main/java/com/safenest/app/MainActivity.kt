@@ -15,6 +15,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
 private fun SafeNestStartup() {
     val context = LocalContext.current.applicationContext
     var ready by remember { mutableStateOf(false) }
+    var introFinished by rememberSaveable { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     var attempt by remember { mutableIntStateOf(0) }
     LaunchedEffect(attempt) {
@@ -77,7 +81,8 @@ private fun SafeNestStartup() {
         } catch (cancel: CancellationException) { throw cancel }
         catch (_: Exception) { failed = true }
     }
-    if (ready) SafeNestApp()
+    if (!introFinished) SafeNestBrandIntro(onFinished = { introFinished = true })
+    else if (ready) SafeNestApp()
     else Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         if (failed) {
             Text("SafeNest could not load its saved rules. Retry before changing protection settings.")
@@ -277,8 +282,8 @@ private fun SafeNestApp() {
         },
         topBar = {
             Row(Modifier.fillMaxWidth().background(Sunshine).padding(start=20.dp,end=20.dp,top=18.dp,bottom=10.dp), verticalAlignment=Alignment.CenterVertically) {
-                Box(Modifier.size(34.dp).clip(RoundedCornerShape(12.dp,12.dp,12.dp,4.dp)).background(Violet), contentAlignment=Alignment.Center) { Text("s",color=Color.White,fontWeight=FontWeight.ExtraBold,fontSize=22.sp) }
-                Spacer(Modifier.width(9.dp)); Text("safe",fontWeight=FontWeight.ExtraBold,fontSize=18.sp,color=Ink,letterSpacing=(-1).sp); Text("nest",fontWeight=FontWeight.Medium,fontSize=18.sp,color=SoftText,letterSpacing=(-1).sp)
+                Image(painterResource(R.drawable.safenest_brand), null, Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)))
+                Spacer(Modifier.width(8.dp)); Image(painterResource(R.drawable.safenest_wordmark), "SafeNest", Modifier.width(105.dp).height(25.dp).clip(RoundedCornerShape(4.dp)))
                 Spacer(Modifier.weight(1f)); TextButton(onClick={language=if(language=="en")"bn" else "en";prefs.edit().putString("language",language).apply()}) { Text(if(language=="en")"বাংলা" else "EN", color=Ink,fontSize=11.sp) }
                 IconButton(onClick={page="account"}) { Icon(if(LocalTestSession.enabled)Icons.Rounded.Science else Icons.Rounded.AccountCircle,if(LocalTestSession.enabled)t("Test tools","পরীক্ষার টুল")else t("Account","অ্যাকাউন্ট"),tint=SoftText) }
                 IconButton(onClick={page="settings"}) { Icon(Icons.Rounded.Settings,null,tint=SoftText) }
@@ -440,3 +445,4 @@ private fun SafeNestApp() {
 @Composable private fun StatCard(title:String,value:String,caption:String,color:Color,modifier:Modifier){Surface(modifier,shape=RoundedCornerShape(16.dp),color=color){Column(Modifier.padding(14.dp)){Text(title,fontSize=8.sp,color=SoftText,letterSpacing=.5.sp,fontWeight=FontWeight.Bold);Text(value,fontSize=23.sp,color=Ink,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=7.dp));Text(caption,fontSize=9.sp,color=SoftText,modifier=Modifier.padding(top=3.dp))}}}
 @Composable private fun RecoveryDisclaimer(lang:String){Text(s(lang,"SafeNest recovery tools are supportive prompts, not medical care. If you are in immediate danger, contact local emergency services.","SafeNest পুনরুদ্ধার টুল সহায়ক নির্দেশনা, চিকিৎসা নয়। তাৎক্ষণিক বিপদে স্থানীয় জরুরি পরিষেবায় যোগাযোগ করুন।"),fontSize=9.sp,color=SoftText,lineHeight=14.sp,modifier=Modifier.padding(horizontal=3.dp))}
 private fun s(lang:String,en:String,bn:String)=if(lang=="bn")bn else en
+

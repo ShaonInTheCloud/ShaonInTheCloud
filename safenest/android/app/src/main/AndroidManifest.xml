@@ -43,7 +43,7 @@
         </intent>
         <intent><action android:name="android.intent.action.DIAL" /></intent>
     </queries>
-    <application android:name=".SafeNestApplication" android:allowBackup="false" android:label="@string/app_name" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="false">
+    <application android:name=".SafeNestApplication" android:allowBackup="false" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -77,3 +77,4 @@
         </receiver>
     </application>
 </manifest>
+
