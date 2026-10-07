@@ -62,7 +62,8 @@ to complete cleanup rather than blindly creating another account.
 Automation is proposed in [draft PR #3](https://github.com/ShaonInTheCloud/ShaonInTheCloud/pull/3),
 source `1b49588ff33bf28021c34779f6f56dae99d379af`. Its web/security job passed in
 [CI run 37556517360](https://github.com/ShaonInTheCloud/ShaonInTheCloud/actions/runs/37556517360);
-Android checks are still in progress. Commands below refer to that review branch.
+Android unit/lint/build, Settings guard and the new Play trial checks also passed.
+Commands below refer to that review branch.
 
 `TrialDeviceAcceptanceTest` targets compatible builds. Proposed CI runs its
 Play/debug suite after the lab Settings-guard flow. Tests cover:
@@ -98,7 +99,24 @@ natural-expiry and owner-device gates are verified.
 
 ## Remaining gate
 
-Run these Android tests and inspect their JUnit evidence. Then test a compatible
+The new default Android tests have run. The actual Play JUnit report contains
+3 tests, 0 failures/errors, and 1 skipped:
+
+| Android check | Verified result |
+| --- | --- |
+| `explicitConsentAndSelectedPlanAreRequired` | Passed; real Compose UI gating and quarterly plan selection. No live credentials or trial start. |
+| `expiredCachedTrialReleasesGuardAndCannotBeReactivated` | Passed; isolated cached server-anchor fixture, guard cleanup and activation denial. No real VPN activation or 72-hour wait. |
+| `ownedLiveTrialConsentActivationAndAcceleratedDeviceCleanup` | Skipped; no private disposable credentials supplied to CI. This is still pending. |
+
+The lab suite passed its existing guard flow and skipped all three trial methods
+because lab mode cannot test customer trials. Those skips are not trial evidence.
+Device evidence artifact `11454609990`, ZIP SHA-256
+`d150479b45a4e5d48aa43566ab6990d3392967bea0eea3fb80e19cbc0ec1b83f`,
+matches GitHub's digest and passes ZIP integrity. Both flavor JUnit reports and
+the lab guard's actual passing result were inspected. Artifact retention is 14
+days; this document retains the verified results without private credentials.
+
+Run the skipped live-account Android test. Then test a compatible
 release/owner phone through a real server-ended trial, with idle/background/reboot
 coverage and no forced database or cached-clock edits. Confirm the app's guard,
 VPN and managed policies are released when required; device settings, permissions
