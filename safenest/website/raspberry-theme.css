@@ -44,7 +44,7 @@ a { color: inherit; }
 }
 .announcement a, .announcement span { background-color: transparent; }
 .product-intro {
-  background: linear-gradient(115deg, #4e102be8, #631332e0 60%, #4e102bea);
+  background: linear-gradient(115deg, #4e102bde, #631332c9 60%, #4e102bd9);
   border-bottom: 1px solid #d3749955;
 }
 .product-intro .lead, .page-intro p, .hero-copy > p:not(.slogan) { color: #f5c6da; }
@@ -65,10 +65,10 @@ main > .intro { background: #51132dec; padding: 24px; border: 1px solid #bc577d;
 .price-card .price-note, .installation-steps p, .download-details p { color: var(--muted); }
 .product-overview dd { color: var(--text); }
 .content-section, .content-section:nth-of-type(2n+1), .human-story, .section {
-  background: linear-gradient(115deg, #601731e8, #4b0f28ec 55%, #742240e5);
+  background: linear-gradient(115deg, #601731d1, #4b0f28de 55%, #742240cf);
   border-color: #cf71924d;
 }
-.page-body { background: #54132edb; }
+.page-body { background: #54132ecf; }
 .page-body > p { color: var(--text); }
 .page-body > p a, .info-card a, .question a { color: #fbb5d0; text-decoration: underline; text-underline-offset: 4px; }
 .plans .price-amount, .plans .price-card .price-amount, .price-card .price-amount { color: #ffcade; }
