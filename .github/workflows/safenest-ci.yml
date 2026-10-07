@@ -12,6 +12,40 @@ concurrency:
   group: safenest-guard-qa-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  payment-recovery-races:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_DB: safenest_payment_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: fixture-only-local
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d safenest_payment_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: safenest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # existing repository pin
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # existing repository pin
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: safenest/package-lock.json
+      - run: npm ci
+      - name: Real PostgreSQL duplicate, reversal and scheduler concurrency checks
+        run: node --test tests/integration/payment-races.test.mjs
+        env:
+          SAFENEST_PAYMENT_RACE_TEST: local-fixture-only
+          PGHOST: '127.0.0.1'
+          PGPORT: '5432'
+          PGDATABASE: safenest_payment_test
+          PGUSER: postgres
+          PGPASSWORD: fixture-only-local
   intelligence-and-rls:
     runs-on: ubuntu-latest
     timeout-minutes: 10

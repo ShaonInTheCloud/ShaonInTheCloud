@@ -48,7 +48,8 @@ export async function handleReturn(req,env,deps={}) {
   return new Response(null,{status:303,headers:{Location:origin+'/account.html?payment=checking',
     'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 }
-export async function handleReconcile(req,env,{fetcher=fetch,rpc=serviceRpc(env,fetcher)}={}) {
+export async function handleReconcile(req,env,{fetcher=fetch,rpc=serviceRpc(env,fetcher),
+  adapterFor=(boundedFetch)=>configuredAdapter(env,rpc,boundedFetch)}={}) {
   if(req.method!=='POST')return response(req,{error:'method_not_allowed'},405);
   const expected=env.SSLCOMMERZ_RECONCILE_KEY;
   const actual=req.headers.get('x-reconcile-key')??'';
@@ -56,11 +57,40 @@ export async function handleReconcile(req,env,{fetcher=fetch,rpc=serviceRpc(env,
   let difference=0;for(let i=0;i<expected.length;i++)difference|=expected.charCodeAt(i)^actual.charCodeAt(i);
   if(difference)return response(req,{error:'unauthorized'},401);
   try {
-    if((await readLimitedBody(req))!=='')throw new PaymentError('invalid_request',400);
-    const adapter=configuredAdapter(env,rpc,fetcher);
+    const body=(await readLimitedBody(req,1024)).trim();
+    // pg_net sends an empty object; neither form accepts order IDs or caller options.
+    if(body!=='' && body!=='{}')throw new PaymentError('invalid_request',400);
+    const deadline=AbortSignal.timeout(45000);
+    const boundedFetch=(url,init={})=>fetcher(url,{...init,
+      signal:AbortSignal.any([deadline,...(init.signal?[init.signal]:[])])});
+    const adapter=adapterFor(boundedFetch);
     const orders=await rpc('payment_reconciliation_batch',{p_environment:adapter.environment});
-    let processed=0,review=0;
-    await Promise.all(orders.map(async order=>{try{await reconcileOrder(adapter,order,rpc);processed++;}catch{review++;}}));
-    return response(req,{processed,review});
+    if(!Array.isArray(orders)||orders.length>12||orders.some(o=>!uuid.test(o?.id??'')||
+      !uuid.test(o?.reconciliation_lease??'')))throw new PaymentError('invalid_reconciliation_batch');
+    let processed=0,review=0,retry=0,unfinished=0;
+    const queue=[...orders];
+    async function worker() {
+      while(queue.length) {
+        const order=queue.shift();let result='retry';
+        try {
+          if(deadline.aborted)throw new PaymentError('reconciliation_deadline');
+          const outcome=await reconcileOrder(adapter,order,(name,args)=>{
+            deadline.throwIfAborted();return rpc(name,args);
+          });
+          result=['recovery_requires_review','recovery_review_prevents_new_grant'].includes(outcome?.action)?'review':'processed';
+        } catch(e) {
+          // Invalid/ambiguous verification is review; provider/DB outages are retries.
+          result=e instanceof PaymentError && e.status<500?'review':'retry';
+        }
+        try {
+          const saved=await rpc('payment_reconciliation_finish',{p_order_id:order.id,
+            p_lease:order.reconciliation_lease,p_result:result});
+          if(saved!==true) {unfinished++;continue;}
+          if(result==='processed')processed++;else if(result==='review')review++;else retry++;
+        } catch {unfinished++;} // Expiring lease recovers crashes/ambiguous DB completion.
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(3,queue.length)},worker));
+    return response(req,{processed,review,retry,unfinished},retry||unfinished?503:200);
   } catch(e){return response(req,{error:e instanceof PaymentError?e.code:'payment_backend_unavailable'},e instanceof PaymentError?e.status:503);}
 }
