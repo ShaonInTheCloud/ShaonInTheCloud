@@ -5,7 +5,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AuthChallengeMessageTest {
-    private val page = "https://mysafenestbd.com/android-captcha.html"
+    private val page = "https://mysafenestbd.com/android-captcha"
     private val origin = "https://mysafenestbd.com"
     private val nonce = "1234567890abcdef1234567890abcdef"
     private fun body(n: String = nonce, type: String = "token", token: String = "fresh") =
@@ -22,7 +22,7 @@ class AuthChallengeMessageTest {
         assertNull(read(frame = false))
         for (source in listOf("https://challenges.cloudflare.com", "https://mysafenestbd.com.evil.test", "http://mysafenestbd.com"))
             assertNull(read(source = source))
-        for (url in listOf(null, "about:blank", "$origin/account.html", "$page/extra", "https://evil.test/android-captcha.html"))
+        for (url in listOf(null, "about:blank", "$origin/account.html", "$page.html", "$page/extra", "https://evil.test/android-captcha"))
             assertNull(read(url = url))
     }
     @Test fun rejectsOldAttemptsMalformedMessagesAndMissingTokens() {

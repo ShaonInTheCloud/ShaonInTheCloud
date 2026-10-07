@@ -18,7 +18,8 @@ android {
         buildConfigField("boolean", "LOCAL_TEST_BUILD", "false")
         buildConfigField("String", "SUPABASE_URL", "\"https://kflenmeizngmafwnwhgv.supabase.co\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl\"")
-        buildConfigField("String", "AUTH_CHALLENGE_URL", "\"https://mysafenestbd.com/android-captcha.html\"")
+        // The production static host redirects .html to the extensionless route.
+        buildConfigField("String", "AUTH_CHALLENGE_URL", "\"https://mysafenestbd.com/android-captcha\"")
     }
     flavorDimensions += "distribution"
     productFlavors {
