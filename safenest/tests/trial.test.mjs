@@ -13,7 +13,7 @@ test('trial is server-timed, one per account, retry-safe, private and cannot iss
       grant usage on schema auth,public to anon,authenticated,service_role;
       grant select,update on auth.users to service_role;
       insert into auth.users values ('${owner}',now(),false),('${other}',null,false);`);
-    for(const name of ['20261003095341_protection_entitlements.sql','20261006215529_payment_foundation.sql','20261006215803_payment_foundation_hardening.sql','20261007001224_trial_subscriptions.sql'])
+    for(const name of ['20261003095341_protection_entitlements.sql','20261006215529_payment_foundation.sql','20261006215803_payment_foundation_hardening.sql','20261007001933_trial_subscriptions.sql','20261007040839_trial_claim_entitlement_index.sql'])
       await db.exec(await readFile(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
     await db.exec('set role service_role');
     const start=async(plan='monthly',user=owner)=>(await db.query('select public.start_protection_trial($1,$2) result',[user,plan])).rows[0].result;

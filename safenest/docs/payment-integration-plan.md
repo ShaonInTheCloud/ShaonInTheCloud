@@ -1,10 +1,10 @@
 # SafeNest payment implementation plan
 
-Current state: no merchant credentials, no live checkout and no receipt-driven entitlement issuance. Checkout remains inactive. Do not create sample paid rows in production or treat client flags as payment evidence.
+Current state: the SSLCOMMERZ hosted-checkout adapter, independently validated notification/return handlers, private ledger and gated website UI are prepared. Merchant credentials and genuine sandbox/live acceptance are pending; checkout remains inactive. See `sslcommerz-readiness.md` for exact endpoints, backend settings and activation checks. Do not create sample paid rows in production or treat client flags as payment evidence.
 
 ## Website path
 
-Use a hosted Bangladesh gateway checkout after merchant onboarding. SSLCOMMERZ is one candidate with server session/IPN/validation APIs; confirm its currently enabled international cards and wallet channels with the merchant account. The documentation's channel names are not proof that every wallet is enabled for this business.
+Use a hosted Bangladesh gateway checkout after merchant onboarding. SSLCOMMERZ is the selected provider with server session/IPN/validation APIs; confirm its currently enabled international cards and wallet channels with the merchant account. The documentation's channel names are not proof that every wallet is enabled for this business.
 
 The implementation should authenticate the buyer, price an order server-side, request a gateway session, validate provider notifications independently, match the stored order/amount/currency and issue one finite entitlement transactionally. Idempotency must reject duplicate grants. Refunds, chargebacks and provider reconciliation must update the entitlement. Store no card/CVV data. Keep sandbox and live credentials/routes separate.
 

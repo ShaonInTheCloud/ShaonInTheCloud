@@ -37,3 +37,24 @@ verify_jwt = true
 # Preserve the live function's own authorization model.
 [functions.intelligence]
 verify_jwt = false
+
+[functions.payment-order]
+verify_jwt = true
+
+# Merchant notifications authenticate through independent provider validation,
+# not through a customer's JWT. The adapter remains disabled without secrets.
+[functions.payment-notification]
+verify_jwt = false
+
+[functions.payment-catalogue]
+verify_jwt = false
+
+[functions.payment-status]
+verify_jwt = true
+
+[functions.payment-return]
+verify_jwt = false
+
+# The backend scheduler must present its separate server-only secret.
+[functions.payment-reconcile]
+verify_jwt = false

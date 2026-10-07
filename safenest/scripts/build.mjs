@@ -44,7 +44,7 @@ for (const file of await readdir('dist')) {
   let html = await readFile(path, 'utf8');
   // The app challenge uses its own quiet layout; do not add marketing motion.
   if (file === 'android-captcha.html') {
-    html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(url.origin, { meta: true })}">`);
+    if (!html.includes('http-equiv="Content-Security-Policy"')) html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(url.origin, { meta: true })}">`);
     await writeFile(path, html);
     continue;
   }
@@ -66,3 +66,5 @@ for (const file of await readdir('dist')) {
   }
   await writeFile(path, html);
 }
+
+await import('./search-metadata.mjs');

@@ -1,0 +1,9 @@
+# Intelligence and RLS release checks — 7 October 2026
+
+The release workflow now includes a separate `intelligence-and-rls` job. It installs the pinned intelligence lockfile under Node 24 and runs the complete intelligence test suite, including the actual applied database migrations. The job has read-only repository permissions and does not receive Supabase, signing, merchant or customer credentials. No test connects to production, publishes a blocklist, starts a trial or creates a live entitlement.
+
+The new consolidation regression loads migrations `20260929092635_gambling_intelligence`, `20261005035025_launch_rls_performance` and `20261007061659_consolidate_intelligence_admin_policies` into disposable PGlite PostgreSQL. It verifies RLS stays enabled on all five affected tables, exactly one authenticated-admin `FOR ALL` policy remains on each, `USING` and `WITH CHECK` still match, and read-only release/audit tables retain their SELECT policies. Seeded fixture rows are visible to an app-metadata admin and invisible to an ordinary user, a user-metadata admin spoof, and a false app-metadata admin claim. Unauthorized inserts and anonymous reads are rejected.
+
+The new regression also checks that ordinary-user updates/deletes affect zero rows and admin updates/deletes still work on every affected table. The existing database regression covers authorized admin insertion and write-audit creation. The broader intelligence suite covers domain normalization, shared-parent isolation, stale/unverified exclusion, signed-release tampering, private-address crawler rejection and API authorization.
+
+Local validation passed 18 tests. Runner results must be recorded for the exact new review-branch head; a source change or local pass is not a CI pass. This work does not authorize merging to `main`, enabling checkout or public trials, a production signing claim, or replacing real-account and physical-device acceptance.

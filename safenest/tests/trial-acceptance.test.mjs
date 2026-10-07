@@ -38,7 +38,7 @@ test('trial endpoint → ledger → access: exact expiry, unchanged retries and 
       grant select,update on auth.users to service_role;
       insert into auth.users values ('${owner}',now(),false);`);
     for (const file of ['20261003095341_protection_entitlements.sql','20261006215529_payment_foundation.sql',
-      '20261006215803_payment_foundation_hardening.sql','20261007001224_trial_subscriptions.sql']) {
+      '20261006215803_payment_foundation_hardening.sql','20261007001933_trial_subscriptions.sql','20261007040839_trial_claim_entitlement_index.sql']) {
       await db.exec(await readFile(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
     }
     const rpc = async (name,args) => {

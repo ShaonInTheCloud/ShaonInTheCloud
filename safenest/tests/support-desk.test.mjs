@@ -15,7 +15,7 @@ test('support requests are private, retry-safe, bounded and require a live confi
    create function auth.uid() returns uuid language sql stable as $$select (auth.jwt()->>'sub')::uuid$$;
    grant usage on schema auth,public to anon,authenticated;`);
   for(const id of sessions.keys()){await db.query('insert into auth.users values($1,$2,$3,false)',[id,id===operator?'operator@example.test':id+'@example.test',id===unconfirmed?null:new Date().toISOString()]);await db.query('insert into auth.sessions values($1,$2,null)',[sessions.get(id),id]);}
-  await db.exec(await readFile(new URL('../supabase/migrations/20261007004620_support_desk.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261007005106_support_desk.sql',import.meta.url),'utf8'));
   await db.exec("insert into supportdesk.operators values('operator@example.test')");
   const as=async(id,role='authenticated')=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:id,session_id:sessions.get(id),user_metadata:{safenest_admin:true}})]);await db.exec('set role '+role);};
   const send=async(ticket=randomUUID(),message=randomUUID())=>(await db.query("select public.support_send($1,$2,$3,'app','DNS help') id",[message,ticket,'A normal website will not load.'])).rows[0].id;

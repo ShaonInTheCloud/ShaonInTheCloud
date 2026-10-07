@@ -1,4 +1,6 @@
-# SafeNest listing draft — not ready for submission
+# SafeNest Play listing draft
+
+This copy describes the consumer `play` flavor. Submission remains gated on signed-artifact, supported-phone, privacy/support and store-policy acceptance. The direct development build has different controls.
 
 ## Name
 
@@ -6,20 +8,22 @@ SafeNest
 
 ## Short description
 
-Website lists, optional app limits and private check-ins for healthier habits.
+Website filters, optional app limits and private check-ins for healthier habits.
 
 ## Description
 
-SafeNest helps you create distance from selected gambling and adult-content websites. Add your own domains or use the small bundled starter list. Android's VPN interface directs supported DNS lookups through the local filter. Allowed queries use your network's resolver, with external DNS fallback when needed. SafeNest does not offer anonymous browsing.
+SafeNest helps you create practical digital boundaries with local website rules, optional app limits and private check-ins. Use your verified SafeNest account and review the app’s setup and permission explanations before enabling protection.
 
-With separate consent, the optional Accessibility guard sends selected apps and detected VPN windows Home. It can also check visible addresses in supported Chrome and Firefox versions. Checks happen locally without recording browsing history, page content, messages or passwords. Android permission controls remain available.
+Android’s VPN interface directs supported DNS lookups through the local filter. Allowed queries use certificate-verified encrypted DNS, or an active user-selected strict Private DNS provider on Android 10 and above. SafeNest does not provide anonymous browsing or a full-traffic privacy VPN. Browser DNS settings and encrypted proxies can affect coverage.
 
-Optional Device Administrator activation adds Android's ordinary deactivation step before uninstall. Stronger controls require separate device-owner enrollment on an eligible managed device. They can restrict VPN/Private DNS changes, apply a Chrome Secure DNS policy, suspend detected VPN clients and restrict ordinary unknown-source installs and uninstall.
+With separate consent, the optional Accessibility app guard returns selected blocked apps and detected VPN apps to the Home screen. Processing is local, and the app does not upload app-observation history, page content, messages or passwords. Android uninstall and permission controls remain available in this Play version.
 
-Private prompts include a timed grounding exercise, check-ins, reflections and a support plan. These prompts do not provide medical treatment.
+English and Bangla interfaces are available. Custom rules, private check-ins and protection state stay on your device. A verified protection period does not itself enable Android permissions. Optional grounding exercises and support prompts are personal tools and do not provide medical treatment.
 
-## Coverage and readiness
+This Play version serves existing accounts and has no in-app purchase flow. Coverage depends on current rules, enabled permissions, browser settings and your Android device. It cannot guarantee every gambling site, adult-content site, VPN or proxy is blocked. In this DNS-only build, leave Android’s “Block connections without VPN” off.
 
-This is an early development version, not a verified commercial release. DNS and UI barriers do not block every encrypted proxy, browser, new site or VPN activation route. Starter lists are not continuously updated. Full Android builds, phone testing and store review remain necessary. Do not publish this draft as evidence that the app is tested or bypass-proof.
+## Submission details still required
 
-Before submission, use reviewed copy and a privacy-policy URL, complete VPN/Accessibility declarations and verify all claims on supported devices.
+Use actual screenshots and permission-declaration videos from the final signed Play artifact. Add the verified support email and approved seller/legal details, complete Data safety and App access with private reviewer credentials, and verify all claims on supported phones. Website: https://mysafenestbd.com. Privacy: https://mysafenestbd.com/privacy. Deletion: https://mysafenestbd.com/delete-account.
+
+See `play-submission-pack.md` for the working data inventory and `release-signing.md` for owner signing configuration. This draft is not a store approval or evidence of device acceptance.
