@@ -176,6 +176,7 @@ class SafeNestVpnService : VpnService() {
             session = current
             reportedUnderlying = initialNetwork
             isRunning.set(true)
+            runCatching { ProtectionAlerts.resumed(this) }
             getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("protection_on", true).apply()
             samplePlatformStatus()
             registerNetworkCallback()
@@ -507,13 +508,19 @@ class SafeNestVpnService : VpnService() {
         getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("protection_on", false).apply()
     }
 
-    override fun onRevoke() { stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it."); super.onRevoke() }
+    override fun onRevoke() {
+        stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it.")
+        // During a paid period this is the WARP / other-VPN takeover case: alert immediately.
+        runCatching { ProtectionAlerts.check(this) }
+        super.onRevoke()
+    }
     override fun onDestroy() {
         val wasRunning = session != null
         disposeSession()
         if (wasRunning) {
             dnsHealth.set("failed")
             lastError.set("Android stopped the DNS service. Reopen SafeNest to check protection.")
+            runCatching { ProtectionAlerts.check(this) }
         }
         super.onDestroy()
     }

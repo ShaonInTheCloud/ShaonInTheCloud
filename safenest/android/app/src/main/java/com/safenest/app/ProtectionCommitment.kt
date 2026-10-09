@@ -112,6 +112,8 @@ object ProtectionCommitment {
         GuardPreferences.clearForExpiry(c)
         val remaining = if (ManagedProtection.isConfigured(c)) ManagedProtection.release(c).managed else false
         c.stopService(Intent(c, SafeNestVpnService::class.java))
+        ProtectionAlerts.cancelWatch(c)
+        ProtectionAlerts.clear(c)
         if (!ManagedProtection.isDeviceOwner(c) && GuardPreferences.isAdminActive(c)) {
             c.getSystemService(DevicePolicyManager::class.java)?.removeActiveAdmin(
                 ComponentName(c, SafeNestAdminReceiver::class.java))

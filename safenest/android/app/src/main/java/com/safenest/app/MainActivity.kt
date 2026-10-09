@@ -68,7 +68,21 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
+        noteRestoreRequest(intent)
         setContent { SafeNestTheme { SafeNestStartup() } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        noteRestoreRequest(intent)
+    }
+
+    /** Tapping a "protection is off" alert asks the running UI to restart protection. */
+    private fun noteRestoreRequest(intent: Intent?) {
+        if (intent?.action == ProtectionAlerts.ACTION_RESTORE) {
+            getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("restore_requested", true).apply()
+        }
     }
 }
 
@@ -270,6 +284,22 @@ private fun SafeNestApp() {
         } else vpnPermission.launch(prepare)
     }
 
+    // Alert tap or in-app banner: restart protection during an active period.
+    var interruption by remember { mutableStateOf(ProtectionAlerts.lastInterruption(context)) }
+    LaunchedEffect(lifecycleOwner) {
+        while (true) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                val committed = ProtectionCommitment.isActive(context)
+                interruption = if (committed && !protectionOn) ProtectionAlerts.lastInterruption(context) ?: ProtectionAlerts.Interruption(0L, false) else null
+                if (prefs.getBoolean("restore_requested", false)) {
+                    prefs.edit().putBoolean("restore_requested", false).apply()
+                    if (committed && !protectionOn) startProtection()
+                }
+            }
+            delay(1000)
+        }
+    }
+
     val t = { english: String, bangla: String -> s(language, english, bangla) }
     fun requestActivation() {
         if (LocalTestSession.enabled && !GuardPreferences.isTestSetupReady(context)) {
@@ -320,6 +350,7 @@ private fun SafeNestApp() {
                 if (LocalTestSession.enabled) TestBuildBanner(language, testActive,
                     onStart={requestActivation()}, onStop={LocalTestSession.stop(context);testActive=false;protectionOn=false},
                     onTools={page="account"})
+                interruption?.let { stopped -> ProtectionInterruptedBanner(language, stopped, onRestore = { startProtection() }) }
                 if (page == "settings") {
                     OutlinedButton(onClick={metalMotion=!metalMotion;prefs.edit().putBoolean("metal_motion",metalMotion).apply()}, modifier=Modifier.fillMaxWidth()) {
                         Icon(if(metalMotion)Icons.Rounded.PauseCircle else Icons.Rounded.PlayCircle, null)
@@ -391,6 +422,33 @@ private fun SafeNestApp() {
     if (showCheckin) AlertDialog(onDismissRequest={showCheckin=false},title={Text(t("How are you, really?","সত্যি করে বলুন, কেমন আছেন?"),fontWeight=FontWeight.Bold)},text={Column { Text(t("No score, no judgement. Choose the closest feeling.","কোনো নম্বর বা বিচার নেই। কাছাকাছি অনুভূতিটি বেছে নিন।"),color=SoftText,fontSize=12.sp); Spacer(Modifier.height(10.dp)); listOf("Low" to "মন খারাপ","On edge" to "উদ্বিগ্ন","Okay" to "মোটামুটি","Hopeful" to "আশাবাদী").forEach { pair -> FilterChip(selected=mood==pair.first,onClick={mood=pair.first},label={Text(t(pair.first,pair.second))},modifier=Modifier.fillMaxWidth()) } }},confirmButton={TextButton(onClick={if(mood.isNotBlank()){checkins=checkins+1;prefs.edit().putInt("checkins",checkins).apply();showCheckin=false;mood="";toast=t("Check-in saved on this device.","চেক-ইন এই ডিভাইসে সংরক্ষিত হয়েছে.")}}){Text(t("Save check-in","চেক-ইন সংরক্ষণ করুন"))}},dismissButton={TextButton(onClick={showCheckin=false}){Text(t("Cancel","বাতিল"))}})
 
     AnimatedVisibility(visible=toast.isNotBlank(),modifier=Modifier.fillMaxWidth().padding(bottom=156.dp)) { Snackbar(modifier=Modifier.padding(horizontal=18.dp),action={TextButton(onClick={toast=""}){Text("OK",color=BarInk)}}){Text(toast)} }
+}
+
+/** Shown on every page while a paid period is active but protection is not running. */
+@Composable private fun ProtectionInterruptedBanner(lang: String, stopped: ProtectionAlerts.Interruption, onRestore: () -> Unit) {
+    val t = { en: String, bn: String -> s(lang, en, bn) }
+    val time = if (stopped.at > 0) java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(stopped.at)) else null
+    Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFF7A0F2E), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Warning, null, tint = BarInk)
+                Spacer(Modifier.width(8.dp))
+                Text(if (stopped.otherVpn) t("Another VPN turned SafeNest off", "অন্য একটি VPN SafeNest বন্ধ করেছে")
+                    else t("SafeNest protection is off", "SafeNest সুরক্ষা বন্ধ আছে"),
+                    color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+            Text(
+                t("Gambling sites aren't blocked right now", "এখন জুয়ার সাইট ব্লক হচ্ছে না") +
+                    (time?.let { t(" (since $it).", " ($it থেকে)।") } ?: ".") +
+                    (if (stopped.otherVpn) t(" Turn off the other VPN, then turn SafeNest back on.", " অন্য VPN বন্ধ করে SafeNest আবার চালু করুন।") else ""),
+                color = BarInk, fontSize = 12.sp, lineHeight = 17.sp
+            )
+            Button(onClick = onRestore, colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF7A0F2E)),
+                modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
+                Text(t("Turn protection back on", "সুরক্ষা আবার চালু করুন"), fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable private fun HomeScreen(lang:String,active:Boolean,paid:Boolean,dnsState:String,lockdown:Boolean,checkins:Int,onToggle:()->Unit,onReset:()->Unit,onCheckin:()->Unit,onProtect:()->Unit,onRecover:()->Unit) {
