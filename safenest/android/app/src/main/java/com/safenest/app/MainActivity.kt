@@ -68,7 +68,23 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
+        // Only a fresh launch from the alert counts: not a rotation or a relaunch from recents.
+        if (savedInstanceState == null) noteRestoreRequest(intent)
         setContent { SafeNestTheme { SafeNestStartup() } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        noteRestoreRequest(intent)
+    }
+
+    /** Tapping a "protection is off" alert asks the running UI to restart protection. */
+    private fun noteRestoreRequest(intent: Intent?) {
+        if (intent?.action != ProtectionAlerts.ACTION_RESTORE) return
+        val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
+        if (!fromHistory) getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("restore_requested", true).apply()
+        setIntent(Intent(intent).setAction(null))
     }
 }
 
@@ -85,6 +101,7 @@ private fun SafeNestStartup() {
             withContext(Dispatchers.IO) {
                 CatalogStore.status(context)
                 RuleCategory.entries.forEach { RulesStore.get(context, it) }
+                BundledGamblingRules.load(context)
             }
             ready = true
         } catch (cancel: CancellationException) { throw cancel }
@@ -269,6 +286,22 @@ private fun SafeNestApp() {
         } else vpnPermission.launch(prepare)
     }
 
+    // Alert tap or in-app banner: restart protection during an active period.
+    var interruption by remember { mutableStateOf(ProtectionAlerts.lastInterruption(context)) }
+    LaunchedEffect(lifecycleOwner) {
+        while (true) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                val committed = ProtectionCommitment.isActive(context)
+                interruption = if (committed && !protectionOn) ProtectionAlerts.lastInterruption(context) ?: ProtectionAlerts.Interruption(0L, false) else null
+                if (prefs.getBoolean("restore_requested", false)) {
+                    prefs.edit().putBoolean("restore_requested", false).apply()
+                    if (committed && !protectionOn) startProtection()
+                }
+            }
+            delay(1000)
+        }
+    }
+
     val t = { english: String, bangla: String -> s(language, english, bangla) }
     fun requestActivation() {
         if (LocalTestSession.enabled && !GuardPreferences.isTestSetupReady(context)) {
@@ -319,6 +352,7 @@ private fun SafeNestApp() {
                 if (LocalTestSession.enabled) TestBuildBanner(language, testActive,
                     onStart={requestActivation()}, onStop={LocalTestSession.stop(context);testActive=false;protectionOn=false},
                     onTools={page="account"})
+                interruption?.let { stopped -> ProtectionInterruptedBanner(language, stopped, onRestore = { startProtection() }) }
                 if (page == "settings") {
                     OutlinedButton(onClick={metalMotion=!metalMotion;prefs.edit().putBoolean("metal_motion",metalMotion).apply()}, modifier=Modifier.fillMaxWidth()) {
                         Icon(if(metalMotion)Icons.Rounded.PauseCircle else Icons.Rounded.PlayCircle, null)
@@ -392,6 +426,33 @@ private fun SafeNestApp() {
     AnimatedVisibility(visible=toast.isNotBlank(),modifier=Modifier.fillMaxWidth().padding(bottom=156.dp)) { Snackbar(modifier=Modifier.padding(horizontal=18.dp),action={TextButton(onClick={toast=""}){Text("OK",color=BarInk)}}){Text(toast)} }
 }
 
+/** Shown on every page while a paid period is active but protection is not running. */
+@Composable private fun ProtectionInterruptedBanner(lang: String, stopped: ProtectionAlerts.Interruption, onRestore: () -> Unit) {
+    val t = { en: String, bn: String -> s(lang, en, bn) }
+    val time = if (stopped.at > 0) java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(stopped.at)) else null
+    Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFF7A0F2E), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Warning, null, tint = BarInk)
+                Spacer(Modifier.width(8.dp))
+                Text(if (stopped.otherVpn) t("Another VPN turned SafeNest off", "অন্য একটি VPN SafeNest বন্ধ করেছে")
+                    else t("SafeNest protection is off", "SafeNest সুরক্ষা বন্ধ আছে"),
+                    color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+            Text(
+                t("Gambling sites aren't blocked right now", "এখন জুয়ার সাইট ব্লক হচ্ছে না") +
+                    (time?.let { t(" (since $it).", " ($it থেকে)।") } ?: ".") +
+                    (if (stopped.otherVpn) t(" Turn off the other VPN, then turn SafeNest back on.", " অন্য VPN বন্ধ করে SafeNest আবার চালু করুন।") else ""),
+                color = BarInk, fontSize = 12.sp, lineHeight = 17.sp
+            )
+            Button(onClick = onRestore, colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF7A0F2E)),
+                modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
+                Text(t("Turn protection back on", "সুরক্ষা আবার চালু করুন"), fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
 @Composable private fun HomeScreen(lang:String,active:Boolean,paid:Boolean,dnsState:String,lockdown:Boolean,checkins:Int,onToggle:()->Unit,onReset:()->Unit,onCheckin:()->Unit,onProtect:()->Unit,onRecover:()->Unit) {
     val t={en:String,bn:String->s(lang,en,bn)}
     Text(t("YOUR SAFENEST","আপনার SAFENEST"),fontSize=9.sp,letterSpacing=1.1.sp,color=SoftText,fontWeight=FontWeight.Bold)
@@ -461,7 +522,7 @@ private fun SafeNestApp() {
     Text(t("Settings & privacy.","সেটিংস ও গোপনীয়তা।"),fontSize=24.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.padding(top=4.dp))
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("Your preferences","আপনার পছন্দ"),fontSize=14.sp,fontWeight=FontWeight.Bold);HorizontalDivider(Modifier.padding(vertical=12.dp),color=Color(0xFFF0EFF3));Row(verticalAlignment=Alignment.CenterVertically){Text(t("Interface language","ইন্টারফেসের ভাষা"),modifier=Modifier.weight(1f),fontSize=11.sp);TextButton(onClick=onLanguage){Text(t("English · বাংলা","বাংলা · English"),fontSize=10.sp)}};HorizontalDivider(color=Color(0xFFF0EFF3));Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(t("VPN status","VPN-এর অবস্থা"),fontSize=11.sp);Text(if(active)t("DNS service running — see setup for health","DNS সেবা চলছে — অবস্থা সেটআপে দেখুন")else t("Not connected","সংযুক্ত নয়"),fontSize=9.sp,color=SoftText)};TextButton(onClick=onVpnSettings){Text(t("Android VPN settings ↗","Android VPN সেটিংস ↗"),fontSize=10.sp)}} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("Device protection","ডিভাইস সুরক্ষা"),fontSize=14.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(8.dp));Text(t("Personal mode: Android VPN settings can make SafeNest always-on, but this DNS-only build must not use Lockdown. Owner-managed mode can prevent VPN reconfiguration and suspend VPN apps Android lets it manage.","Personal mode: Android VPN settings দিয়ে SafeNest সবসময় চালু রাখা যায়, তবে এই DNS-only build-এ Lockdown ব্যবহার করা যাবে না। Owner-managed mode VPN settings পরিবর্তন ঠেকাতে ও Android অনুমোদিত VPN apps suspend করতে পারে।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp);TextButton(onClick=onSetup,modifier=Modifier.align(Alignment.End)){Text(t("Permissions and app guard setup ↗","Permissions and app guard setup ↗"),fontSize=10.sp)} } }
-    if (BuildConfig.MANAGED_CONTROLS) Surface(shape=RoundedCornerShape(18.dp),color=Mint){Column(Modifier.padding(17.dp)){Text(t("Owner-managed protection","Owner-managed সুরক্ষা"),fontSize=14.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(7.dp));Text(if(isOwner)t(if(managedActive)"Managed controls have saved setup state. Open Setup to verify the actual Android policies and administrator recovery code." else "This device is enrolled, but managed protection is not applied.",if(managedActive)"পরিচালিত নিয়ন্ত্রণের সেটআপ সংরক্ষিত। Android-এর প্রকৃত নীতি ও প্রশাসকের পুনরুদ্ধার কোড যাচাই করতে Setup খুলুন।" else "এই device enrolled, কিন্তু managed protection চালু হয়নি।") else t("Requires deliberate Android device-owner enrollment. It is not a normal permission popup: Android setup generally requires a factory-reset device and provisioning.","ইচ্ছাকৃত Android device-owner enrollment দরকার। এটি সাধারণ permission popup নয়: Android setup-এর সময় সাধারণত factory-reset device ও provisioning লাগে।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp);TextButton(onClick=onManaged,modifier=Modifier.align(Alignment.End)){Text(t(if(managedActive)"Review managed status" else "Review managed controls","Managed control পর্যালোচনা"),fontSize=10.sp)} } }
+    if (BuildConfig.MANAGED_CONTROLS) Surface(shape=RoundedCornerShape(18.dp),color=Mint){Column(Modifier.padding(17.dp)){Text(t("Strong lock (managed phone)","শক্ত লক (পরিচালিত ফোন)"),fontSize=14.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(7.dp));Text(if(isOwner)t(if(managedActive)"Managed controls have saved setup state. Open Setup to verify the actual Android policies and administrator recovery code." else "This device is enrolled, but managed protection is not applied.",if(managedActive)"পরিচালিত নিয়ন্ত্রণের সেটআপ সংরক্ষিত। Android-এর প্রকৃত নীতি ও প্রশাসকের পুনরুদ্ধার কোড যাচাই করতে Setup খুলুন।" else "এই device enrolled, কিন্তু managed protection চালু হয়নি।") else t("Locks VPN settings and blocks uninstalling SafeNest until your paid period ends. Needs a phone set up for SafeNest: factory reset, tap the welcome screen six times, and scan the SafeNest setup QR.","পেইড মেয়াদ শেষ না হওয়া পর্যন্ত VPN সেটিংস লক থাকে এবং SafeNest আনইনস্টল করা যায় না। এজন্য ফোনটি SafeNest-এর জন্য সেট আপ করতে হবে: ফ্যাক্টরি রিসেট করে স্বাগত স্ক্রিনে ছয়বার ট্যাপ করুন এবং SafeNest সেটআপ QR স্ক্যান করুন।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp);TextButton(onClick=onManaged,modifier=Modifier.align(Alignment.End)){Text(t(if(managedActive)"Review managed status" else "Review managed controls","Managed control পর্যালোচনা"),fontSize=10.sp)} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Mint){Column(Modifier.padding(17.dp)){Text(t("Private by design","গোপনীয়তা অগ্রাধিকার"),fontSize=14.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(7.dp));Text(t("Your lists and check-ins stay on this device. Paid access is verified with Supabase Auth and server-issued entitlements. Passwords, session tokens and Accessibility observations are not saved or uploaded as history. Billing checkout is still being connected.","তালিকা ও চেক-ইন এই ফোনেই থাকে। Supabase Auth ও সার্ভারের অনুমতি দিয়ে পেইড মেয়াদ যাচাই হয়। পাসওয়ার্ড, টোকেন ও Accessibility তথ্য ইতিহাস হিসেবে জমা বা পাঠানো হয় না। বিলিং সংযোগের কাজ বাকি।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp)} }
 }
 

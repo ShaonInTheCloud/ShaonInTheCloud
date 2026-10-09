@@ -50,10 +50,13 @@ object RulesStore {
         return source.mapNotNull { normalize(it) }.toSet()
     }
 
-    /** Effective rules union separate editable lists and authenticated catalog rules. */
+    /**
+     * Editable lists plus authenticated catalog rules for a category. The large bundled
+     * gambling list is held separately in compact form (BundledGamblingRules) and is
+     * consulted by isBlocked/isCatalogRule; it is deliberately not expanded into this set.
+     */
     @Synchronized fun get(context: Context, category: RuleCategory): Set<String> =
-        local(context, category) + CatalogStore.domains(context, category) +
-            (if (category == RuleCategory.GAMBLING) BundledGamblingRules.domains(context) else emptySet())
+        local(context, category) + CatalogStore.domains(context, category)
 
     /** User additions and the small verified starter list take priority in Chrome's finite policy budget. */
     @Synchronized fun priorityDomains(context: Context): Set<String> =
@@ -62,7 +65,7 @@ object RulesStore {
     fun isCatalogRule(context: Context, category: RuleCategory, domain: String): Boolean =
         DomainRules.normalizeHostname(domain)?.let {
             CatalogStore.domains(context, category).contains(it) ||
-                (category == RuleCategory.GAMBLING && it in BundledGamblingRules.domains(context))
+                (category == RuleCategory.GAMBLING && BundledGamblingRules.contains(context, it))
         } ?: false
 
     /** Callbacks run on a dedicated worker, never under RulesStore/CatalogStore locks. */
@@ -107,7 +110,8 @@ object RulesStore {
             preferences(context)
             blockedCache ?: RuleCategory.entries.flatMap { get(context, it) }.toSet().also { blockedCache = it }
         }
-        return DomainRules.isBlocked(host, rules)
+        val normalized = DomainRules.normalizeHostname(host) ?: return false
+        return DomainRules.isBlocked(normalized, rules) || BundledGamblingRules.isBlockedNormalized(context, normalized)
     }
 
     fun matches(host: String, rule: String): Boolean = DomainRules.matches(host, rule)

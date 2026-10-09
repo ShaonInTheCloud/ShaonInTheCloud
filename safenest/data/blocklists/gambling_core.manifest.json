@@ -1,0 +1,19 @@
+{
+  "format": "SNBL v1",
+  "asset": "gambling_core.snbl",
+  "asset_sha256": "4c106b104650575bb6927f13b94b0f1824d4d553476ddf155410790aedf1f996",
+  "unique_hostnames": 346073,
+  "fingerprints_before_minus": 346073,
+  "fingerprints": 346073,
+  "minus": null,
+  "excluded_hosts_removed": ["bangladeshtannersassociation.org", "biz.com"],
+  "sources": [
+    {"file": "gambling_bangladesh_research_2026-10_web.tsv", "sha256": "d2450b05f0d1b84e04d7df42008079c6d292ea4ec4a11f50007910dc5946700d", "accepted": 390, "invalid": 0, "excluded": 0},
+    {"file": "gambling_bangladesh_researched.txt", "sha256": "24c728ff1bd5a33e7fce3749bb8c4e6382d578d3bdd1916f6792845081ab2915", "accepted": 10, "invalid": 0, "excluded": 0},
+    {"file": "gambling_south_asia_researched.txt", "sha256": "1404989f696e255dab9266a049852ba3ebdd51405f9fba57a0ded0f2011de28b", "accepted": 107, "invalid": 0, "excluded": 0},
+    {"file": "gambling_hosts_vn.txt", "sha256": "ebbf0b52a6d8dddb5e5cde85c5f08174dbdcd683ce82cfdfad3c052aa3eb4f56", "accepted": 3983, "invalid": 0, "excluded": 0},
+    {"file": "gambling_hosts_sinfonietta.txt", "sha256": "bd2e22d391b3c69b5d2f846f465076071ba03d249f59fa488dd92f4f1e9d00a8", "accepted": 2690, "invalid": 0, "excluded": 0},
+    {"file": "gambling_brand_families.txt", "sha256": "1091f27739984d39b3a5b76e3fadf58b64950c58e8f233fa06036e81e6ddd26b", "accepted": 28526, "invalid": 0, "excluded": 0},
+    {"file": "gambling_hosts_blocklistproject.txt", "sha256": "73af5a17c9caeff38a287da96a0af91c10e5351ed1dde07c4a23f6aa0fda5275", "accepted": 342620, "invalid": 0, "excluded": 2}
+  ]
+}
