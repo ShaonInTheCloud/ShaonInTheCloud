@@ -30,3 +30,19 @@ Download `safenest-signed-play-release` from the successful run. Upload the chec
 Direct-distribution APK signing needs a separate distribution/upgrade plan: a Play-installed app signed by Google's app-signing key cannot be updated with an APK signed only by the upload key. This workflow intentionally generates the Play bundle only.
 
 Primary references: [Android app signing](https://developer.android.com/studio/publish/app-signing), [GitHub environment configuration](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).
+
+## 0.4.12: two release keys
+
+Release signing now reads two independent keys from the environment, each applied only to its own flavor's release build (debug builds keep the debug key):
+
+| Flavor | Use | Environment variables |
+|---|---|---|
+| `play` | AAB uploaded to Google Play (Play App Signing re-signs for users) | `SAFENEST_UPLOAD_KEYSTORE`, `SAFENEST_UPLOAD_STORE_PASSWORD`, `SAFENEST_UPLOAD_KEY_ALIAS`, `SAFENEST_UPLOAD_KEY_PASSWORD` |
+| `direct` | Website APK and Strong lock QR enrollment | `SAFENEST_DIRECT_KEYSTORE`, `SAFENEST_DIRECT_STORE_PASSWORD`, `SAFENEST_DIRECT_KEY_ALIAS`, `SAFENEST_DIRECT_KEY_PASSWORD` |
+
+Public certificate fingerprints (SHA-256):
+
+- Upload: `64:59:CC:EC:36:32:00:31:7A:E0:AD:AC:C6:5F:64:D4:B1:D6:A2:97:BC:BA:D2:A2:CE:0D:32:FD:73:E5:CA:D9`
+- Direct: `E1:72:5D:0F:C6:23:C0:2A:69:93:FD:21:23:EA:8B:B1:C5:26:21:14:7F:5B:AC:9E:04:F1:A2:F7:0E:FF:64:62`
+
+The direct key is permanent for every Strong lock phone: the provisioning QR names its certificate, and Android only accepts updates signed with it. Losing it means re-enrolling every managed phone. Keep two offline backups. The upload key can be reset through Play Console support if lost.
