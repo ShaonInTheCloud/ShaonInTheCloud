@@ -1,0 +1,14 @@
+{
+  "format": "SNBL v1",
+  "asset": "gambling_hagezi_gpl3.snbl",
+  "asset_sha256": "2a9b6cdc1936caa40722c6102910bfc0f55c2b5aaa6d47c8ad639f2d979b3318",
+  "unique_hostnames": 195741,
+  "fingerprints_before_minus": 195741,
+  "fingerprints": 195411,
+  "minus": "gambling_core.snbl",
+  "excluded_hosts_removed": [],
+  "sources": [
+    {"file": "gambling_hagezi_medium.txt", "sha256": "1c33f47ca7b3b687c14f39d471e50787d2d18b12ba22cb63c1c726f848ace1f1", "accepted": 195320, "invalid": 0, "excluded": 0},
+    {"file": "gambling_bangladesh_hagezi_brandmatch_2026-10.tsv", "sha256": "64c843b13e6c8ed8ef62043a37889f900980ee5ec109c0b1368f97143e981d40", "accepted": 595, "invalid": 0, "excluded": 0}
+  ]
+}

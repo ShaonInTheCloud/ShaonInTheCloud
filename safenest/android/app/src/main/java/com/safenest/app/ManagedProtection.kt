@@ -349,7 +349,10 @@ object ManagedProtection {
         }
         val existing = decodeList(original)
         val allowlist = decodeList(restrictionValue(currentBundle, ALLOWLIST_KEY))
-        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet()
+        // Chrome's managed list is capped; send editable/catalog rules plus the Bangladesh-researched
+        // names. DNS filtering still uses the full compact bundled list.
+        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet() +
+            BundledGamblingRules.priorityDomains(context)
         val plan = ChromePolicyRules.plan(existing, domains, priorityDomains = RulesStore.priorityDomains(context))
         val desired = JSONArray(plan.entries).toString()
         val warnings = listOfNotNull(
