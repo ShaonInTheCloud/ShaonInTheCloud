@@ -67,6 +67,8 @@ fun ProtectionSetupScreen(
     var policyBusy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var confirmRemoval by remember { mutableStateOf(false) }
+    var removed by remember { mutableStateOf(false) }
     var showConsent by remember { mutableStateOf(false) }
     var enableVpnAfterConsent by remember { mutableStateOf(false) }
     var showPicker by remember { mutableStateOf(false) }
@@ -242,7 +244,34 @@ fun ProtectionSetupScreen(
             Text(t("Android can display SafeNest in VPN settings because website filtering uses Android VpnService. Device Owner controls may restrict changes after enrollment. Paid activation reads server-issued access; billing checkout remains pending.", "ওয়েবসাইট ফিল্টার Android VpnService ব্যবহার করে, তাই VPN সেটিংসে SafeNest দেখা যেতে পারে। Device Owner নিবন্ধনের পর সেটিংস পরিবর্তন সীমিত হতে পারে। পেমেন্ট চালু করা এখনো বাকি।"), fontSize = 11.sp, color = SetupMuted)
             OutlinedButton(onClick = { showEnrollment = true }) { Text(t("Device-owner setup guide", "Device Owner সেটআপ নির্দেশিকা")) }
             if (isOwner) OutlinedButton(onClick = onManaged) { Text(if (managedActive) t("Administrator support", "প্রশাসকের সহায়তা") else t("Apply managed controls", "পরিচালিত নিয়ন্ত্রণ প্রয়োগ")) }
+            if (!removed && RemovalRules.canRemoveManagement(isOwner, ProtectionCommitment.isActive(context), managedActive)) {
+                Text(t("Your paid period has ended and Strong lock is released. You can remove SafeNest from this phone without a factory reset.",
+                    "আপনার পেইড মেয়াদ শেষ এবং শক্ত লক তুলে নেওয়া হয়েছে। ফ্যাক্টরি রিসেট ছাড়াই এই ফোন থেকে SafeNest সরাতে পারবেন।"), fontSize = 12.sp)
+                OutlinedButton(onClick = { confirmRemoval = true }) { Text(t("Remove SafeNest from this phone", "এই ফোন থেকে SafeNest সরান")) }
+            }
         }
+        if (confirmRemoval) AlertDialog(
+            onDismissRequest = { confirmRemoval = false },
+            title = { Text(t("Remove SafeNest?", "SafeNest সরাবেন?")) },
+            text = { Text(t("SafeNest gives up its management rights, then Android's app page opens so you can tap Uninstall. To use Strong lock again later, the phone must be set up with the SafeNest QR again.",
+                "SafeNest তার পরিচালনার অধিকার ছেড়ে দেবে, তারপর Android-এর অ্যাপ পেজ খুলবে যেখানে Uninstall চাপতে পারবেন। পরে আবার শক্ত লক ব্যবহার করতে ফোনটি আবার SafeNest QR দিয়ে সেট আপ করতে হবে।")) },
+            confirmButton = { TextButton(onClick = {
+                confirmRemoval = false
+                scope.launch {
+                    val result = withContext(Dispatchers.IO) { ManagedProtection.removeManagement(context) }
+                    if (ManagedProtection.isDeviceOwner(context)) {
+                        message = result.message ?: t("Removal did not complete. Retry.", "সরানো শেষ হয়নি। আবার চেষ্টা করুন।")
+                    } else {
+                        removed = true
+                        runCatching {
+                            context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${context.packageName}"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }
+                    }
+                }
+            }) { Text(t("Remove", "সরান")) } },
+            dismissButton = { TextButton(onClick = { confirmRemoval = false }) { Text(t("Cancel", "বাতিল")) } }
+        )
         if (BuildConfig.MANAGED_CONTROLS && isOwner && managedActive) SetupCard(t("Managed Chrome website rules", "পরিচালিত Chrome ওয়েবসাইট তালিকা")) {
             if (chromePolicy.omittedDomains > 0) Text(t("Some rules exceed Android's managed Chrome policy limit; see the warning below.", "কিছু নিয়ম Android-এর পরিচালিত Chrome নীতির সীমা ছাড়িয়েছে; নিচের সতর্কতা দেখুন।"), fontSize = 12.sp)
             Text(t("These rules cover navigation inside managed Chrome, independently of its DNS. They do not cover every browser, WebView, in-page request or already-open connection. Open chrome://policy in Chrome and verify URLBlocklist and DnsOverHttpsMode are applied.", "এই তালিকা পরিচালিত Chrome-এ ঠিকানা খোলার সময় DNS থেকে স্বাধীনভাবে কাজ করে। সব ব্রাউজার, WebView, পৃষ্ঠার ভেতরের অনুরোধ বা আগে খোলা সংযোগে প্রযোজ্য নয়। Chrome-এ chrome://policy খুলে URLBlocklist ও DnsOverHttpsMode যাচাই করুন।"), fontSize = 11.sp)

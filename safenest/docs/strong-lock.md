@@ -8,7 +8,7 @@ Strong lock is SafeNest's strongest protection mode. During a paid period it:
 - applies the gambling list to Chrome's managed policy as a second layer;
 - **releases these restrictions automatically** when the paid period ends (and a pending or failed payment never extends it).
 
-After release SafeNest stays the phone's device owner, so it still cannot be uninstalled from Settings; removing it completely needs a factory reset. Before selling Strong lock, either add a "Remove SafeNest management" action for after the period (it would call `clearDeviceOwnerApp`, and a new Strong lock would then need a fresh QR setup) or state this clearly at signup.
+After the period ends and the restrictions are released, **Setup → Remove SafeNest from this phone** gives up device-owner rights (`clearDeviceOwnerApp`) and opens Android's app page so the customer can tap Uninstall. No factory reset is needed. The button only appears when no paid period is active and every restriction is released. To use Strong lock again afterwards, the phone needs a fresh QR setup.
 
 It only exists in the **direct** build. The Play build cannot offer it: Google Play does not allow apps that stop their own removal.
 
