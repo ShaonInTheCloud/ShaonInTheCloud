@@ -351,9 +351,9 @@ object ManagedProtection {
         val allowlist = decodeList(restrictionValue(currentBundle, ALLOWLIST_KEY))
         // Chrome's managed list is capped; send editable/catalog rules plus the Bangladesh-researched
         // names. DNS filtering still uses the full compact bundled list.
-        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet() +
-            BundledGamblingRules.priorityDomains(context)
-        val plan = ChromePolicyRules.plan(existing, domains, priorityDomains = RulesStore.priorityDomains(context))
+        val bangladesh = BundledGamblingRules.priorityDomains(context)
+        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet() + bangladesh
+        val plan = ChromePolicyRules.plan(existing, domains, priorityDomains = RulesStore.priorityDomains(context) + bangladesh)
         val desired = JSONArray(plan.entries).toString()
         val warnings = listOfNotNull(
             if (plan.omittedDomains > 0) "Chrome capacity: ${plan.listedDomains}/${plan.requestedDomains} domains submitted; ${plan.omittedDomains} omitted from this layer. DNS and the optional app guard still use the full list." else null,

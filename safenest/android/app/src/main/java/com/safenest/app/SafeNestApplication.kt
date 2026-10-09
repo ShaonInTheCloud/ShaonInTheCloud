@@ -7,6 +7,10 @@ class SafeNestApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ProtectionCommitment.checkpoint(applicationContext)
+        // Load the compact blocklist off the main and DNS threads (also covers always-on VPN at boot).
+        Thread({ runCatching { BundledGamblingRules.load(applicationContext) } }, "SafeNest-blocklist-preload").apply {
+            priority = Thread.NORM_PRIORITY - 1
+        }.start()
         // RulesStore dispatches outside its lock, on its own worker. No browser
         // policy or network operation runs on the DNS packet-reader thread.
         RulesStore.addChangeListener { context ->

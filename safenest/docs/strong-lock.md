@@ -6,7 +6,9 @@ Strong lock is SafeNest's strongest protection mode. During a paid period it:
 - **suspends VPN apps** already installed and any VPN app installed later;
 - **blocks uninstalling SafeNest** and installing apps from unknown sources;
 - applies the gambling list to Chrome's managed policy as a second layer;
-- **releases everything automatically** when the paid period ends (and a pending or failed payment never extends it).
+- **releases these restrictions automatically** when the paid period ends (and a pending or failed payment never extends it).
+
+After release SafeNest stays the phone's device owner, so it still cannot be uninstalled from Settings; removing it completely needs a factory reset. Before selling Strong lock, either add a "Remove SafeNest management" action for after the period (it would call `clearDeviceOwnerApp`, and a new Strong lock would then need a fresh QR setup) or state this clearly at signup.
 
 It only exists in the **direct** build. The Play build cannot offer it: Google Play does not allow apps that stop their own removal.
 

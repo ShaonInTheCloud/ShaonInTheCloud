@@ -68,7 +68,8 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
-        noteRestoreRequest(intent)
+        // Only a fresh launch from the alert counts: not a rotation or a relaunch from recents.
+        if (savedInstanceState == null) noteRestoreRequest(intent)
         setContent { SafeNestTheme { SafeNestStartup() } }
     }
 
@@ -80,9 +81,10 @@ class MainActivity : ComponentActivity() {
 
     /** Tapping a "protection is off" alert asks the running UI to restart protection. */
     private fun noteRestoreRequest(intent: Intent?) {
-        if (intent?.action == ProtectionAlerts.ACTION_RESTORE) {
-            getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("restore_requested", true).apply()
-        }
+        if (intent?.action != ProtectionAlerts.ACTION_RESTORE) return
+        val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
+        if (!fromHistory) getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("restore_requested", true).apply()
+        setIntent(Intent(intent).setAction(null))
     }
 }
 

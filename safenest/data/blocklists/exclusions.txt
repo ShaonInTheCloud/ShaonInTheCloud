@@ -81,3 +81,5 @@ net.bd
 org.bd
 co.uk
 co.in
+# Generic second-level names found in upstream feeds that would block unrelated tenants
+biz.com

@@ -222,7 +222,14 @@ class SafeNestVpnService : VpnService() {
                 if (size == 0) continue
                 val request = DnsPacketCodec.parseRequest(buffer.copyOf(size), DNS_ADDRESS) ?: continue
                 // Blocked lookups never wait behind slow allowed-name queries.
-                if (RulesStore.isBlocked(this, request.query.hostname)) {
+                // If the blocklist cannot be read, refuse the lookup (fail closed) rather than end protection.
+                val blocked = try { RulesStore.isBlocked(this, request.query.hostname) } catch (error: Exception) {
+                    recordFailure(current, "SafeNest could not read its blocklist; lookups are refused. Reinstall or update SafeNest.")
+                    Log.e(TAG, "Blocklist lookup failed: ${error.javaClass.simpleName}")
+                    writeReply(current, request, DnsPacketCodec.error(request.query, 2))
+                    continue
+                }
+                if (blocked) {
                     noteBlocked(request.query.hostname)
                     writeReply(current, request, DnsPacketCodec.error(request.query, 3))
                     continue
@@ -490,6 +497,8 @@ class SafeNestVpnService : VpnService() {
         lastError.set(error ?: "")
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+        // Any error stop (revoke, reader failure, status poll) during a paid period alerts at once.
+        if (error != null) runCatching { ProtectionAlerts.check(this) }
     }
 
     @Synchronized private fun disposeSession() {
@@ -509,9 +518,8 @@ class SafeNestVpnService : VpnService() {
     }
 
     override fun onRevoke() {
+        // During a paid period this is the WARP / other-VPN takeover case; stopProtection alerts.
         stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it.")
-        // During a paid period this is the WARP / other-VPN takeover case: alert immediately.
-        runCatching { ProtectionAlerts.check(this) }
         super.onRevoke()
     }
     override fun onDestroy() {

@@ -47,10 +47,13 @@ object ProtectionAlerts {
         if (state == ProtectionAlertRules.State.PROTECTED) { clear(app); return }
         val p = prefs(app)
         val now = System.currentTimeMillis()
-        val otherVpn = ProtectionAlertRules.likelyOtherVpn(holdsConsent(app))
+        // Lost consent alone can also mean the user tapped Disconnect, so only name "another VPN"
+        // when a recognised VPN app is installed; otherwise the alert stays neutral.
+        val names = if (ProtectionAlertRules.likelyOtherVpn(holdsConsent(app))) knownVpnNames(app) else emptyList()
+        val otherVpn = names.isNotEmpty()
         if (p.getLong("interrupted_at", 0L) == 0L) p.edit().putLong("interrupted_at", now).putBoolean("other_vpn", otherVpn).apply()
         if (!ProtectionAlertRules.shouldNotify(state, p.getLong("notified_at", 0L), now)) return
-        if (post(app, otherVpn)) p.edit().putLong("notified_at", now).apply()
+        if (post(app, names)) p.edit().putLong("notified_at", now).apply()
     }
 
     /** Protection is running again: remove the alert and keep watching for the rest of the period. */
@@ -77,7 +80,8 @@ object ProtectionAlerts {
         catch (_: PackageManager.NameNotFoundException) { null }
     }.sorted().take(3)
 
-    private fun post(c: Context, otherVpn: Boolean): Boolean {
+    private fun post(c: Context, names: List<String>): Boolean {
+        val otherVpn = names.isNotEmpty()
         val manager = c.getSystemService(NotificationManager::class.java) ?: return false
         if (!manager.areNotificationsEnabled()) return false
         manager.createNotificationChannel(NotificationChannel(CHANNEL, "Protection alerts", NotificationManager.IMPORTANCE_HIGH).apply {
@@ -90,8 +94,12 @@ object ProtectionAlerts {
             bn -> "SafeNest সুরক্ষা বন্ধ আছে"
             else -> "SafeNest protection is off"
         }
-        val names = if (otherVpn) knownVpnNames(c) else emptyList()
-        val detected = if (names.isEmpty()) "" else if (bn) " শনাক্ত: ${names.joinToString()}।" else " Detected: ${names.joinToString()}."
+        val detected = when {
+            otherVpn && bn -> " শনাক্ত: ${names.joinToString()}।"
+            otherVpn -> " Detected: ${names.joinToString()}."
+            bn -> " অন্য কোনো VPN চালু থাকলে আগে সেটি বন্ধ করুন।"
+            else -> " If another VPN is on, turn it off first."
+        }
         val body = (if (bn) "এখন জুয়ার সাইট ব্লক হচ্ছে না। আবার চালু করতে ট্যাপ করুন।" else "Gambling sites aren't blocked right now. Tap to turn protection back on.") + detected
         val open = PendingIntent.getActivity(c, 1,
             Intent(c, MainActivity::class.java).setAction(ACTION_RESTORE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),

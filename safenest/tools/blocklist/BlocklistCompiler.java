@@ -53,6 +53,17 @@ public final class BlocklistCompiler {
             excluded.add(host);
         }
 
+        // Rules also match subdomains, so a parent of a protected name (e.g. "gov.bd" above
+        // "btrc.gov.bd") would block it. Such entries are dropped and reported too.
+        Set<String> protectedParents = new TreeSet<>();
+        for (String host : excluded) {
+            String parent = host;
+            while (parent.indexOf('.') >= 0 && (parent = parent.substring(parent.indexOf('.') + 1)).indexOf('.') >= 0) {
+                protectedParents.add(parent);
+            }
+        }
+        protectedParents.removeAll(excluded);
+
         Set<String> all = new LinkedHashSet<>();
         Map<String, int[]> perSource = new LinkedHashMap<>();   // {accepted, invalid, excluded}
         Map<String, String> sourceHashes = new LinkedHashMap<>();
@@ -62,7 +73,7 @@ public final class BlocklistCompiler {
             for (String raw : readNames(source, source.toString().endsWith(".tsv"))) {
                 String host = DomainRules.normalizeHostname(raw);
                 if (host == null) { invalid++; continue; }
-                if (excluded.contains(host)) { dropped++; removedByExclusion.add(host); continue; }
+                if (excluded.contains(host) || protectedParents.contains(host)) { dropped++; removedByExclusion.add(host); continue; }
                 all.add(host);
                 accepted++;
             }

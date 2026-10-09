@@ -11,7 +11,8 @@ Safety checks before anything is written:
   * the download URL is HTTPS;
   * the APK is package com.safenest.app and contains the direct build's ProvisioningModeActivity
     (a Play or lab APK cannot be enrolled);
-  * the APK is not signed with an Android debug key unless --allow-debug is given for a test phone.
+  * the APK is not signed with an Android debug key unless --allow-debug is given for a test phone
+    (detected by the standard "CN=Android Debug" certificate name).
 Android verifies the downloaded APK against the signing-certificate checksum in the QR, so the
 hosted file must be signed with exactly the certificate inspected here.
 """
@@ -69,7 +70,10 @@ def inspect_apk(apk: str):
         raise SystemExit(f"expected exactly one signer, found {len(digests)}")
     debug = "CN=Android Debug" in certs
     badging = subprocess.run([_tool("aapt2"), "dump", "badging", apk], capture_output=True, text=True, check=True).stdout
-    package = re.search(r"package: name='([^']+)'", badging).group(1)
+    match = re.search(r"package: name='([^']+)'", badging)
+    if not match:
+        raise SystemExit("could not read the APK package name with aapt2")
+    package = match.group(1)
     tree = subprocess.run([_tool("aapt2"), "dump", "xmltree", "--file", "AndroidManifest.xml", apk],
                           capture_output=True, text=True, check=True).stdout
     return digests[0], debug, package, "ProvisioningModeActivity" in tree

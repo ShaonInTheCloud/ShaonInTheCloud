@@ -110,7 +110,8 @@ object RulesStore {
             preferences(context)
             blockedCache ?: RuleCategory.entries.flatMap { get(context, it) }.toSet().also { blockedCache = it }
         }
-        return DomainRules.isBlocked(host, rules) || BundledGamblingRules.isBlocked(context, host)
+        val normalized = DomainRules.normalizeHostname(host) ?: return false
+        return DomainRules.isBlocked(normalized, rules) || BundledGamblingRules.isBlockedNormalized(context, normalized)
     }
 
     fun matches(host: String, rule: String): Boolean = DomainRules.matches(host, rule)
