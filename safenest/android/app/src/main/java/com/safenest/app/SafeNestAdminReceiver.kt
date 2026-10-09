@@ -26,4 +26,14 @@ class SafeNestAdminReceiver : DeviceAdminReceiver() {
         // The guard keeps running on the VPN and Accessibility services; nothing to tear down here.
         super.onDisabled(context, intent)
     }
+
+    /**
+     * Delivered after QR/NFC device-owner enrollment (direct build). Opens SafeNest so the
+     * customer can sign in; no restriction is applied until they choose Strong lock during a paid period.
+     */
+    override fun onProfileProvisioningComplete(context: Context, intent: Intent) {
+        runCatching {
+            context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+    }
 }
