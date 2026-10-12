@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { mkdir, copyFile, writeFile, cp, rm, readdir, readFile } from 'node:fs/promises';
 import { securityHeaders, contentSecurityPolicy } from './security-headers.mjs';
+import { finalizeSite } from './site-finalize.mjs';
 
 const projectUrl = process.env.SUPABASE_URL || 'https://kflenmeizngmafwnwhgv.supabase.co';
 const key = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl';
@@ -55,3 +56,5 @@ for (const file of await readdir('dist')) {
   }
   await writeFile(path, html);
 }
+// Canonical/social meta, robots, sitemap, manifest and a hard link check.
+await finalizeSite('dist');
