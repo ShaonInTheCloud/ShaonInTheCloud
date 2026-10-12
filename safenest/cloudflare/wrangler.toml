@@ -1,0 +1,9 @@
+# Deploys the generated security-headers Worker in front of mysafenestbd.com.
+# Build first: `npm run build` writes dist/cloudflare-security-headers-worker.js.
+name = "safenest-security-headers"
+main = "../dist/cloudflare-security-headers-worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+routes = [
+  { pattern = "mysafenestbd.com/*", zone_name = "mysafenestbd.com" }
+]
