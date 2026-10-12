@@ -51,6 +51,7 @@ fun ProtectionSetupScreen(
     var guardConnected by remember { mutableStateOf(GuardPreferences.isServiceConnected()) }
     var unrestricted by remember { mutableStateOf(GuardPreferences.isBatteryUnrestricted(context)) }
     var blockVpns by remember { mutableStateOf(GuardPreferences.blocksVpnApps(context)) }
+    var blockEncryptedDns by remember { mutableStateOf(GuardPreferences.blocksEncryptedDnsBypass(context)) }
     var selected by remember { mutableStateOf(GuardPreferences.getBlockedPackages(context)) }
     var health by remember { mutableStateOf(SafeNestVpnService.dnsHealth.get()) }
     var lastBlockedHost by remember { mutableStateOf(SafeNestVpnService.lastBlockedHost.get()) }
@@ -197,6 +198,14 @@ fun ProtectionSetupScreen(
                     else { GuardPreferences.setBlockVpnApps(context, false); blockVpns = false }
                 })
             }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(t("Block encrypted-DNS bypass names", "এনক্রিপ্টেড DNS এড়ানোর নাম ব্লক করুন"), modifier = Modifier.weight(1f), fontSize = 12.sp)
+                Switch(checked = blockEncryptedDns, enabled = ProtectionCommitment.hasVerifiedAccess(context) && !ProtectionCommitment.isActive(context) && !managedActive, onCheckedChange = { enabled ->
+                    GuardPreferences.setBlockEncryptedDnsBypass(context, enabled)
+                    blockEncryptedDns = GuardPreferences.blocksEncryptedDnsBypass(context)
+                })
+            }
+            Text(t("When on, SafeNest refuses lookups of well-known public encrypted-DNS resolver names and browser Secure DNS signal names, so browsers fall back to the filtered DNS. A Private DNS provider that uses one of these names may stop working. Apps that connect to a resolver by IP address are not covered.", "চালু থাকলে SafeNest পরিচিত পাবলিক এনক্রিপ্টেড DNS সার্ভার ও ব্রাউজারের Secure DNS সংকেতের নামের লুকআপ প্রত্যাখ্যান করে, ফলে ব্রাউজার ফিল্টার করা DNS-এ ফিরে আসে। এই নামগুলোর কোনোটি ব্যবহারকারী Private DNS সেবা কাজ বন্ধ করতে পারে। IP ঠিকানা দিয়ে সংযোগ করা অ্যাপ এর আওতায় নেই।"), fontSize = 11.sp, color = SetupMuted)
             Text(t("Android visibility restrictions can hide some VPN apps. A VPN started through system settings may still replace SafeNest on a personal phone.", "Android-এর সীমাবদ্ধতায় কিছু VPN অ্যাপ দেখা নাও যেতে পারে। ব্যক্তিগত ফোনে সেটিংস থেকে চালু VPN SafeNest-কে বদলে দিতে পারে।"), fontSize = 11.sp, color = SetupMuted)
             selected.sorted().forEach { pkg ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
