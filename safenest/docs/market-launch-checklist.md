@@ -1,12 +1,29 @@
 # SafeNest market launch checklist
 
-Updated: 7 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+Updated: 12 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
 
 Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
 
 **Release decision: development website live; paid sales and Play production release are blocked.** A working website, source tests or a debug APK do not establish reliable protection on customer phones.
 
 Legend: `[x]` verified complete, `[ ]` pending. “Prepared” means code/material exists but its live release check is still pending.
+
+## 12 October 2026 continuation (PR #9, branch loop/green-2026-10-12)
+
+Verified, with evidence in the PR:
+- Repo gate `safenest/scripts/gate.sh` (web, edge-function, intelligence, Python, Java core checks) passes; a weekly scheduled run keeps it green and opens a PR only when a fix was needed.
+- Website launch pass: canonical/OG/Twitter meta, social preview, robots, sitemap, manifest, custom 404, cookies/storage notice, build-time link check, 8.4 MB -> 1.1 MB assets. All 13 pages pass WCAG AA text contrast and have no horizontal overflow at 375 px (headless Chromium, light and dark).
+- Security audit (17 points): no secrets in website, APK, CI or git history; gateway callbacks validated; identity from JWT; RLS on all 21 tables, now FORCEd; audit table trigger-only; catalogue key header-only; payment customer fields whitelisted; `npm audit` clean; Dependabot on.
+- Android (Android Studio, JDK 21, AGP 8.13, on the owner's PC): unit tests 47 x 5 variants green; lintPlayDebug/lintDirectDebug/lintLabDebug 0 errors (53 warnings, style); assembleDebug for play/direct/lab; bundlePlay release bundle; backup/data-extraction rules; broadcast receiver action check.
+
+Still pending and who owns it:
+- [ ] Owner: merge PR #9 (applies migration 20261012010000_force_rls_audit_lock via the Supabase integration; run one sandbox payment afterwards).
+- [ ] Owner, GitHub: protect `main` (require status checks `web-and-security` and `android`, block force-push and deletion). Enable MFA on GitHub, Supabase, domain, email and Play Console accounts.
+- [ ] Owner, Supabase dashboard: leaked-password protection (Pro plan), Auth sign-in rate limits, TOTP enabled, `verify_jwt` per payment-* function matching `config.toml`.
+- [ ] Owner, host: force HTTPS; optional Cloudflare Web Analytics token as `CF_ANALYTICS_TOKEN`.
+- [ ] Engineering: MFA enrol/step-up UI for the admin console and support desk, then move `supabase/pending-migrations/20261012020000_admin_operator_mfa.sql` into `migrations/`.
+- [ ] Engineering: `connectedLabDebugAndroidTest` fails on an Android 17 (API 37) emulator at the Accessibility "Use SafeNest Test app guard" toggle; passes on CI's API 36 image. Check Android 17 Settings before claiming support.
+- [ ] Physical-device QA, Play Console declarations, merchant account, business/legal identity, pricing and refund policy: unchanged from the sections below.
 
 ## 1. Source, hosting and release ownership
 
