@@ -5,13 +5,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Instant
 
+/** A sign-in or access-check failure with a reason key from [AccessErrors]. */
+class AccessException(val reason: String) : Exception(reason)
+
 data class AccessCheck(val userId: String, val checkedId: String?, val serverNow: Long, val window: PaidWindow?)
 
 /** Auth credentials are sent only to the configured Supabase HTTPS endpoint and never logged/saved. */
 object SubscriptionClient {
     fun verify(email: String, password: String): PaidWindow {
         return checkAccess(email, password).window
-            ?: error("No active trial or subscription. Access must be confirmed on the server.")
+            ?: error("This account has no active trial or subscription. Start the three-day trial below, or buy a plan on the SafeNest website.")
     }
     fun startTrial(email: String, password: String, plan: String): PaidWindow {
         require(plan in setOf("monthly", "quarterly", "annual"))
@@ -67,12 +70,15 @@ object SubscriptionClient {
                     check(out.size() + n <= 65536) { "Paid access reply was too large." }; out.write(buffer, 0, n)
                 }; out.toByteArray()
             } ?: byteArrayOf()
-            if (code !in 200..299) error(when (code) {
-                400, 401, 403 -> "Sign-in or access verification failed. Check your account and confirmed email."
-                429 -> "Too many attempts. Wait before retrying."
-                else -> "Paid access verification is unavailable. Try again when connected."
-            })
+            if (code !in 200..299) {
+                val reply = runCatching { JSONObject(String(bytes, Charsets.UTF_8)) }.getOrNull()
+                // Supabase Auth uses error_code (newer) or error (older); SafeNest functions use error.
+                val serverCode = reply?.let { r -> listOf("error_code", "error", "msg").map { r.optString(it) }.firstOrNull { it.isNotBlank() } }
+                throw AccessException(AccessErrors.reason(code, serverCode))
+            }
             return JSONObject(String(bytes, Charsets.UTF_8))
+        } catch (offline: java.io.IOException) {
+            throw AccessException(AccessErrors.OFFLINE)
         } finally { connection.disconnect() }
     }
 }

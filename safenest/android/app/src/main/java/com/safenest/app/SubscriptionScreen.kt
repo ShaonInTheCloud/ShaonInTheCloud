@@ -7,6 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +25,21 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
     val t = { en: String, bn: String -> if (language == "bn") bn else en }
     var email by remember { mutableStateOf("") }; var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }; var message by remember { mutableStateOf("") }
+    var messageAt by remember { mutableStateOf("verify") }; var running by remember { mutableStateOf("") }
+    // One readable sentence per failure, shown next to the button that was pressed.
+    fun explain(error: Exception, fallbackEn: String, fallbackBn: String): String = when ((error as? AccessException)?.reason) {
+        AccessErrors.WRONG_PASSWORD -> t("Email or password is incorrect. Check both and try again.", "ইমেইল বা পাসওয়ার্ড ভুল। দুটোই দেখে আবার চেষ্টা করুন।")
+        AccessErrors.EMAIL_NOT_CONFIRMED -> t("Confirm your email first: open the link SafeNest emailed you, then try again.", "আগে ইমেইল নিশ্চিত করুন: SafeNest-এর পাঠানো লিংক খুলে আবার চেষ্টা করুন।")
+        AccessErrors.TOO_MANY -> t("Too many attempts. Wait a minute, then try again.", "অনেকবার চেষ্টা হয়েছে। এক মিনিট অপেক্ষা করে আবার চেষ্টা করুন।")
+        AccessErrors.OFFLINE -> t("No connection to SafeNest. Check the internet and try again.", "SafeNest-এ সংযোগ নেই। ইন্টারনেট দেখে আবার চেষ্টা করুন।")
+        AccessErrors.SERVER -> t("SafeNest's server is unavailable right now. Try again shortly.", "SafeNest সার্ভার এখন পাওয়া যাচ্ছে না। একটু পরে চেষ্টা করুন।")
+        AccessErrors.INVALID_PLAN -> t("Choose a plan, then try again.", "একটি প্ল্যান বেছে আবার চেষ্টা করুন।")
+        AccessErrors.SIGN_IN_FAILED -> t("Sign-in failed. Check your email and password, and that your email is confirmed.", "লগইন হয়নি। ইমেইল, পাসওয়ার্ড ও ইমেইল নিশ্চিত হয়েছে কিনা দেখুন।")
+        else -> error.message?.takeIf { it.isNotBlank() } ?: t(fallbackEn, fallbackBn)
+    }
+    @Composable fun MessageHere(place: String) {
+        if (message.isNotBlank() && messageAt == place) Text(message, color = MaterialTheme.colorScheme.error)
+    }
     var trialPlan by remember { mutableStateOf("monthly") }
     var trialConsent by remember { mutableStateOf(false) }
     val committed = ProtectionCommitment.isActive(context)
@@ -36,10 +54,12 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
     }
     if (committed) Text(t("For technical support, you can check the server status of this period. Checking does not pause protection. Only a period ended or revoked by the server is released.",
         "প্রযুক্তিগত সহায়তার জন্য এই মেয়াদের সার্ভার অবস্থা যাচাই করতে পারেন। যাচাই করলে সুরক্ষা বন্ধ হয় না। সার্ভারে মেয়াদ শেষ বা অনুমতি প্রত্যাহার হলেই সুরক্ষা শেষ হয়।"))
-    OutlinedTextField(email, { email = it }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(password, { password = it }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(email, { email = it.trim(); message = "" }, label = { Text(t("Account email", "অ্যাকাউন্টের ইমেইল")) }, singleLine = true, enabled = !busy,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(password, { password = it; message = "" }, label = { Text(t("Password", "পাসওয়ার্ড")) }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth())
     Button(enabled = !busy && email.isNotBlank() && password.isNotEmpty(), onClick = {
-        busy = true; message = ""
+        busy = true; message = ""; messageAt = "verify"; running = "verify"
         scope.launch {
             try {
                 if (committed) {
@@ -55,10 +75,11 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
                 }
                 password = ""
             } catch (cancel: CancellationException) { throw cancel }
-            catch (error: Exception) { message = error.message ?: t("Verification failed.", "যাচাই হয়নি।") }
-            finally { busy = false; password = "" }
+            catch (error: Exception) { message = explain(error, "Verification failed.", "যাচাই হয়নি।") }
+            finally { busy = false; running = "" }
         }
-    }) { Text(if (busy) t("Verifying…", "যাচাই হচ্ছে…") else if (committed) t("Check account status", "অ্যাকাউন্টের অবস্থা যাচাই করুন") else t("Verify access", "মেয়াদ যাচাই করুন")) }
+    }) { Text(if (running == "verify") t("Verifying…", "যাচাই হচ্ছে…") else if (committed) t("Check account status", "অ্যাকাউন্টের অবস্থা যাচাই করুন") else t("Verify access", "মেয়াদ যাচাই করুন")) }
+    MessageHere("verify")
     if (!committed && !BuildConfig.LOCAL_TEST_BUILD) {
         Text(t("Three-day trial · one per confirmed account. Choose your intended plan. No charge or payment authorization is created by starting a trial.",
             "তিন দিনের ট্রায়াল · নিশ্চিত অ্যাকাউন্টে একবার। পরিকল্পিত প্ল্যান বেছে নিন। ট্রায়াল শুরু করলে চার্জ বা পেমেন্টের অনুমতি তৈরি হয় না।"))
@@ -70,22 +91,27 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
         Row { Checkbox(checked = trialConsent, enabled = !busy, onCheckedChange = { trialConsent = it });
             Text(t("Start my 72-hour trial now. It ends automatically; payment setup and automatic charging are not yet available.",
                 "এখন আমার ৭২ ঘণ্টার ট্রায়াল শুরু করুন। মেয়াদ শেষে স্বয়ংক্রিয়ভাবে বন্ধ হবে; পেমেন্ট সেটআপ ও স্বয়ংক্রিয় চার্জ এখনো চালু নয়।")) }
+        if (!busy && (email.isBlank() || password.isEmpty() || !trialConsent)) Text(
+            if (email.isBlank() || password.isEmpty()) t("Enter your account email and password above to start the trial.", "ট্রায়াল শুরু করতে ওপরে ইমেইল ও পাসওয়ার্ড দিন।")
+            else t("Tick the box above to start the trial.", "ট্রায়াল শুরু করতে ওপরের বক্সে টিক দিন।"),
+            style = MaterialTheme.typography.bodySmall)
         Button(enabled = !busy && trialConsent && email.isNotBlank() && password.isNotEmpty(), onClick = {
-            busy = true; message = ""
+            busy = true; message = ""; messageAt = "trial"; running = "trial"
             scope.launch {
                 try {
                     val window = withContext(Dispatchers.IO) { SubscriptionClient.startTrial(email, password, trialPlan) }
                     withContext(Dispatchers.IO) { ProtectionCommitment.cacheVerified(context, window) }
+                    password = ""
                     onVerified()
                 } catch (cancel: CancellationException) { throw cancel }
-                catch (error: Exception) { message = error.message ?: t("Trial unavailable.", "ট্রায়াল পাওয়া যাচ্ছে না।") }
-                finally { busy = false; password = "" }
+                catch (error: Exception) { message = explain(error, "Trial unavailable.", "ট্রায়াল পাওয়া যাচ্ছে না।") }
+                finally { busy = false; running = "" }
             }
-        }) { Text(t("Start three-day trial", "তিন দিনের ট্রায়াল শুরু করুন")) }
+        }) { Text(if (running == "trial") t("Starting trial…", "ট্রায়াল শুরু হচ্ছে…") else t("Start three-day trial", "তিন দিনের ট্রায়াল শুরু করুন")) }
+        MessageHere("trial")
     }
     if (!committed) Text(t(if (BuildConfig.ALLOW_SYSTEM_GUARD) "Purchasing and payment confirmation still require the website's billing integration. This app cannot create a paid entitlement." else "This Play build is for existing SafeNest accounts. In-app purchases are not available. A server-verified active entitlement is required.",
         if (BuildConfig.ALLOW_SYSTEM_GUARD) "কেনা ও পেমেন্ট নিশ্চিত করার জন্য ওয়েবসাইটের বিলিং সংযোগ প্রয়োজন। অ্যাপ নিজে পেইড অনুমতি তৈরি করতে পারে না।" else "এই Play সংস্করণ বিদ্যমান SafeNest অ্যাকাউন্টের জন্য। অ্যাপে কেনা যায় না। সার্ভারে যাচাইকৃত সক্রিয় অনুমতি দরকার।"))
-    if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.error)
     if (BuildConfig.ALLOW_SYSTEM_GUARD) TextButton(onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://mysafenestbd.com"))) } }) {
         Text(t("Open SafeNest website", "SafeNest ওয়েবসাইট খুলুন"))
     }
