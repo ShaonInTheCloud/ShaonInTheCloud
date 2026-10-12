@@ -1,0 +1,42 @@
+name: SafeNest deploy security headers (manual)
+# Puts the security-headers Worker in front of mysafenestbd.com, then runs the live header check.
+# Needs repository secrets CLOUDFLARE_API_TOKEN (Workers Scripts:Edit, Workers Routes:Edit, Zone:Read) and CLOUDFLARE_ACCOUNT_ID.
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Type "deploy" to publish the Worker; anything else only checks the live site'
+        required: false
+        default: 'check'
+permissions:
+  contents: read
+jobs:
+  headers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: safenest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: safenest/package-lock.json
+      - run: npm ci
+      - name: Build Worker
+        if: ${{ inputs.deploy == 'deploy' }}
+        run: npm run build
+      - name: Deploy Worker
+        if: ${{ inputs.deploy == 'deploy' }}
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets."; exit 1; }
+          npx --yes wrangler@4.149.0 deploy --config cloudflare/wrangler.toml
+      - name: Live header check
+        run: |
+          sleep 15
+          node scripts/check-live-security.mjs
