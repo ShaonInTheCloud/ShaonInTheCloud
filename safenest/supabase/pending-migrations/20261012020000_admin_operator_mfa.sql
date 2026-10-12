@@ -1,9 +1,10 @@
 -- STAGED, NOT APPLIED. Move into supabase/migrations/ only when:
 --   1. TOTP is enabled in the hosted dashboard (Authentication > MFA);
---   2. the admin console and support desk can enrol a factor and step the
---      session up (supabase.auth.mfa.enroll / challengeAndVerify), so a
---      signed-in admin can reach aal2;
---   3. every admin and operator has enrolled.
+--   2. (done) the admin console and support desk enrol a factor and step the
+--      session up through web/mfa-step-up.js; operators see a "Staff" link
+--      under Contact SafeNest, admins are prompted before the console loads;
+--   3. every admin and operator has enrolled (the support desk nudges
+--      operators at aal1 with "add an authenticator (required soon)").
 -- Deploying it earlier makes admin tables read as empty and turns operators
 -- into ordinary users, with no error shown.
 --

@@ -1,9 +1,14 @@
 import {createClient} from '@supabase/supabase-js';import {parse} from 'tldts';
+import {stepUp,domStepUpUi} from '../../web/mfa-step-up.js';
+const mfaHost=document.createElement('section');mfaHost.id='mfa';document.body.prepend(mfaHost);const mfaUi=domStepUpUi(mfaHost);
 const $=id=>document.getElementById(id),states=['CONFIRMED','HIGH','SUSPECTED','MIRROR','DEAD','FALSE_POSITIVE','REVIEW_REQUIRED'];let db,page=0,selected;
 const message=s=>$('notice').textContent=s;const run=f=>async()=>{try{await f();}catch(e){message(e.message||'Request failed');}};
 const check=async q=>{const r=await q;if(r.error)throw r.error;return r;};
 for(const id of ['state','decision'])for(const value of states){let option=document.createElement('option');option.value=option.textContent=value;$(id).append(option);}
-async function authorize(){const {data:{user},error}=await db.auth.getUser();if(error||!user){$('login').hidden=false;$('admin').hidden=true;return;}if(user.app_metadata?.safenest_admin!==true){$('admin').hidden=true;throw Error('This account is not an intelligence administrator.');}$('admin').hidden=false;$('connect').hidden=true;await load();}
+async function authorize(){const {data:{user},error}=await db.auth.getUser();if(error||!user){$('login').hidden=false;$('admin').hidden=true;return;}if(user.app_metadata?.safenest_admin!==true){$('admin').hidden=true;throw Error('This account is not an intelligence administrator.');}
+// Admin tables require an MFA-verified session (aal2): enrol or challenge before loading anything.
+const ok=await stepUp(db,mfaUi);if(!ok){$('admin').hidden=true;throw Error('Second-factor verification is required for administrator access.');}
+$('admin').hidden=false;$('connect').hidden=true;await load();}
 $('connectButton').onclick=run(async()=>{const key=$('key').value.trim();if(key.startsWith('sb_secret_'))throw Error('Use a public key only');if(key.split('.').length===3){try{const p=JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(p.role==='service_role')throw Error('Never use a service-role key in this page');}catch(e){throw Error('Use a valid public key, not a service-role key');}}db=createClient($('url').value.trim(),key);await authorize();});
 $('loginButton').onclick=run(async()=>{await check(db.auth.signInWithPassword({email:$('email').value,password:$('password').value}));$('password').value='';await authorize();});
 $('logout').onclick=run(async()=>{await db.auth.signOut();location.reload();});

@@ -21,7 +21,8 @@ Still pending and who owns it:
 - [ ] Owner, GitHub: protect `main` (require status checks `web-and-security` and `android`, block force-push and deletion). Enable MFA on GitHub, Supabase, domain, email and Play Console accounts.
 - [ ] Owner, Supabase dashboard: leaked-password protection (Pro plan), Auth sign-in rate limits, TOTP enabled, `verify_jwt` per payment-* function matching `config.toml`.
 - [ ] Owner, host: force HTTPS; optional Cloudflare Web Analytics token as `CF_ANALYTICS_TOKEN`.
-- [ ] Engineering: MFA enrol/step-up UI for the admin console and support desk, then move `supabase/pending-migrations/20261012020000_admin_operator_mfa.sql` into `migrations/`.
+- [x] Engineering: MFA enrol/step-up UI for the admin console and support desk (`web/mfa-step-up.js`, 12 October).
+- [ ] Owner: enable TOTP in the Supabase dashboard, have every admin/operator enrol via the Staff link, then move `supabase/pending-migrations/20261012020000_admin_operator_mfa.sql` into `migrations/`.
 - [ ] Engineering: `connectedLabDebugAndroidTest` fails on an Android 17 (API 37) emulator at the Accessibility "Use SafeNest Test app guard" toggle; passes on CI's API 36 image. Check Android 17 Settings before claiming support.
 - [ ] Physical-device QA, Play Console declarations, merchant account, business/legal identity, pricing and refund policy: unchanged from the sections below.
 
