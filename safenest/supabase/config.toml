@@ -37,3 +37,18 @@ verify_jwt = true
 # Preserve the live function's own authorization model.
 [functions.intelligence]
 verify_jwt = false
+
+# Payment callbacks come from the payment gateway or a scheduler and carry no Supabase user JWT.
+# Each handler authenticates itself: the gateway validation API, a constant-time reconcile key,
+# or (catalogue) no authentication at all because it returns only public prices.
+[functions.payment-notification]
+verify_jwt = false
+
+[functions.payment-return]
+verify_jwt = false
+
+[functions.payment-reconcile]
+verify_jwt = false
+
+[functions.payment-catalogue]
+verify_jwt = false
