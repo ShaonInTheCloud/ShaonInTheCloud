@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">SafeNest</string>
-    <string name="vpn_description">SafeNest checks DNS requests locally against the blocklists you choose. It does not send browsing history to a server.</string>
     <string name="device_admin_description">Optional SafeNest administrator activation adds an Android deactivation step before uninstall. It does not make this phone a fully managed device. SafeNest does not request camera, password, lock-screen or data-wipe policies.</string>
     <string name="accessibility_service_label">SafeNest app guard</string>
     <string name="accessibility_service_summary">Finite paid self-exclusion for blocked apps, supported blocked addresses and matched SafeNest controls.</string>
