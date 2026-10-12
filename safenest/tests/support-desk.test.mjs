@@ -16,8 +16,10 @@ test('support requests are private, retry-safe, bounded and require a live confi
    grant usage on schema auth,public to anon,authenticated;`);
   for(const id of sessions.keys()){await db.query('insert into auth.users values($1,$2,$3,false)',[id,id===operator?'operator@example.test':id+'@example.test',id===unconfirmed?null:new Date().toISOString()]);await db.query('insert into auth.sessions values($1,$2,null)',[sessions.get(id),id]);}
   await db.exec(await readFile(new URL('../supabase/migrations/20261007004620_support_desk.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261012010000_force_rls_audit_lock.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/pending-migrations/20261012020000_admin_operator_mfa.sql',import.meta.url),'utf8'));
   await db.exec("insert into supportdesk.operators values('operator@example.test')");
-  const as=async(id,role='authenticated')=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:id,session_id:sessions.get(id),user_metadata:{safenest_admin:true}})]);await db.exec('set role '+role);};
+  const as=async(id,role='authenticated',aal='aal2')=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:id,session_id:sessions.get(id),aal,user_metadata:{safenest_admin:true}})]);await db.exec('set role '+role);};
   const send=async(ticket=randomUUID(),message=randomUUID())=>(await db.query("select public.support_send($1,$2,$3,'app','DNS help') id",[message,ticket,'A normal website will not load.'])).rows[0].id;
   await as(a);const ticket=randomUUID(),message=randomUUID();assert.equal(await send(ticket,message),ticket);assert.equal(await send(ticket,message),ticket);
   assert.equal((await db.query('select * from public.support_messages')).rows.length,1);
@@ -28,6 +30,8 @@ test('support requests are private, retry-safe, bounded and require a live confi
   await as(b);assert.equal((await db.query('select * from public.support_tickets')).rows.length,0);assert.equal((await db.query('select * from public.support_messages')).rows.length,0);
   assert.equal((await db.query('select * from public.support_messages where ticket_id=$1',[ticket])).rows.length,0);
   await assert.rejects(send(ticket),/ticket_unavailable/);await assert.rejects(db.query("select public.support_set_status($1,'closed')",[ticket]),/operator_required/);
+  // An operator signed in without a second factor (aal1) is treated as a normal user.
+  await as(operator,'authenticated','aal1');assert.equal((await db.query('select public.support_is_operator() ok')).rows[0].ok,false);
   await as(operator);assert.equal((await db.query('select public.support_is_operator() ok')).rows[0].ok,true);assert.equal((await db.query('select * from public.support_tickets')).rows.length,1);
   await send(ticket);assert.equal((await db.query('select * from public.support_messages where is_support')).rows.length,1);
   await db.query("select public.support_set_status($1,'closed')",[ticket]);await as(a);await assert.rejects(send(ticket),/ticket_closed/);assert.equal(await send(ticket,message),ticket);

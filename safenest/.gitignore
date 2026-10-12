@@ -14,3 +14,7 @@ android/local.properties
 *.keystore
 *.apk
 *.aab
+*.p12
+*.pem
+*.pepk
+keystore.properties
