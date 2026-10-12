@@ -7,6 +7,8 @@ import java.util.concurrent.Executors
 
 enum class RuleCategory(val key: String, val label: String) { GAMBLING("gambling", "Gambling"), ADULT("adult", "Adult content"), PERSONAL("personal", "My list") }
 
+// Holds only the application context (set in attach), never an Activity; lint cannot see that.
+@android.annotation.SuppressLint("StaticFieldLeak")
 object RulesStore {
     private const val PREFS = "safenest_rules"
     private const val GAMBLING = "domains_gambling"

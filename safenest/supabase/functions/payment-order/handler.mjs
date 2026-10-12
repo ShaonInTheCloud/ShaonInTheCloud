@@ -40,8 +40,10 @@ export async function handleOrder(req, env, {fetcher = fetch, rpc = serviceRpc(e
     if (order.state !== 'pending' || Date.parse(order.expires_at) <= Date.now())
       throw new PaymentError('order_not_payable',409);
     // Adapter reuses the saved session; uncertain creation requires reconciliation.
-    const customer=body.customer && typeof body.customer==='object' && !Array.isArray(body.customer)
-      ? {...body.customer,email:user.email} : undefined;
+    // Only the fields the gateway form needs; nothing else from the client is forwarded.
+    const given=body.customer && typeof body.customer==='object' && !Array.isArray(body.customer) ? body.customer : null;
+    const field=(k,max)=>typeof given?.[k]==='string' && given[k].trim().length>0 && given[k].length<=max ? given[k].trim() : undefined;
+    const customer=given ? {name:field('name',100),phone:field('phone',30),address:field('address',200),city:field('city',100),email:user.email} : undefined;
     const session = await adapter.createHostedSession(order,customer);
     return json({order_id:order.id,checkout_url:checkoutUrl(adapter,session.url)});
   } catch (error) {

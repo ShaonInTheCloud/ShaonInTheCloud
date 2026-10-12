@@ -3,6 +3,8 @@ import {parse} from 'npm:tldts@7.0.25';
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'apikey, authorization, content-type','Access-Control-Allow-Methods':'GET, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store'};
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers});
 const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false,autoRefreshToken:false}});
+const enc=new TextEncoder();
+function timingSafeEqual(a:string,b:string){const x=enc.encode(a),y=enc.encode(b);let diff=x.length^y.length;for(let i=0;i<Math.max(x.length,y.length);i++)diff|=(x[i%x.length]??0)^(y[i%y.length]??0);return diff===0;}
 let cached:any=null;let cachedAt=0;let lookupMap=new Map<string,any>();
 async function latest(){if(cached&&Date.now()-cachedAt<60000)return cached;const {data,error}=await db.from('blocklist_versions').select('version,generated_at,expires_at,checksum,domains,envelope').order('version',{ascending:false}).limit(1).maybeSingle();if(error)throw Error('Unavailable');if(data){cached=data;lookupMap=new Map(data.domains.map((r:any)=>[r.domain,r]));cachedAt=Date.now();}return data;}
 Deno.serve(async req=>{
@@ -11,9 +13,10 @@ Deno.serve(async req=>{
  const url=new URL(req.url);
  // Public catalogue access key only; never accepts a service-role key from callers.
  // This is API key authentication, not an admin authorization mechanism.
- const provided=req.headers.get('apikey')||url.searchParams.get('key');
- const expected=Deno.env.get('SAFENEST_CATALOG_ACCESS_KEY')||Deno.env.get('SUPABASE_ANON_KEY');
- if(!expected||!provided||provided!==expected)return json({error:'Catalogue API key required'},401);
+ // Header only: a key in the query string lands in proxy and access logs.
+ const provided=req.headers.get('apikey')||'';
+ const expected=Deno.env.get('SAFENEST_CATALOG_ACCESS_KEY')||Deno.env.get('SUPABASE_ANON_KEY')||'';
+ if(!expected||!provided||!timingSafeEqual(provided,expected))return json({error:'Catalogue API key required'},401);
  try{
   const current=await latest();if(!current)return json({error:'No signed release has been published'},503);
   const action=url.pathname.split('/').filter(Boolean).pop();

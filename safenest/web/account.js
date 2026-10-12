@@ -91,7 +91,7 @@ async function start() {
     onPaid:()=>{if(state.user)void loadAccess(state.user.id,revision);}});
   installTrial(client,{identity:()=>state.view==='account'?state.user?.id:null,
     onStarted:()=>{if(state.user)void loadAccess(state.user.id,revision);},releaseReady:false});
-  const supportDesk=installSupportDesk(client,{identity:()=>state.view==='account'?state.user?.id:null});
+  const supportDesk=installSupportDesk(client,{identity:()=>state.view==='account'?state.user?.id:null,language:()=>language});
   const linkHasError = new URLSearchParams(location.hash.slice(1)).has('error');
 
   function chooseMode(mode) {

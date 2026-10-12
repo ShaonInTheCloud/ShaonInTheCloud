@@ -213,3 +213,18 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid #6a1b40; outl
   .liquid-background { transition: none; }
   .liquid-art-fallback::before { animation: none; }
 }
+
+/* Launch pass: legible link rows and buttons on generated service pages.
+   Stacked English + Bengali spans inside an inline, padded anchor split the
+   pill into fragments; make the pills inline-block and keep both languages
+   readable on dark buttons. */
+.page-body > p { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: center; color: #3f1830; }
+.page-body > p a { display: inline-block; line-height: 1.35; text-decoration: none; }
+.page-body > p a:not(.btn) { padding: 10px 16px; border-radius: 999px; background: #54112f; color: #ffe3ef; }
+.page-body > p a:not(.btn):hover, .page-body > p a:not(.btn):focus-visible { background: #3b0b21; }
+.page-body > p a .translation-bn { color: inherit; }
+.btn.dark .translation-bn, .btn.dark .translation-en { color: #fff; }
+.btn .translation-bn { color: inherit; }
+.eyebrow, .eyebrow .translation-en, .eyebrow .translation-bn { color: #7a2149; }
+nav[aria-label="Language"] button { color: #300c21; }
+nav[aria-label="Language"] button[aria-pressed=true] { color: #300c21; background: #efb4cf; border-color: #ffd4e6; }

@@ -515,6 +515,8 @@ object ManagedProtection {
 /** Serializes install handling with apply/release and preserves all previous journal entries. */
 class VpnPackageAddedReceiver : android.content.BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // Only the system sends these; ignore anything else that reaches the receiver.
+        if (intent.action != Intent.ACTION_PACKAGE_ADDED && intent.action != Intent.ACTION_PACKAGE_REPLACED) return
         val name = intent.data?.schemeSpecificPart ?: return
         val pendingResult = goAsync()
         Thread {

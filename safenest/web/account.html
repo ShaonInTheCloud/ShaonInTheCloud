@@ -13,7 +13,7 @@
 <link rel="icon" href="assets/brand/favicon.png" type="image/png"><link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png"><link rel="stylesheet" href="brand.css"></head>
 <body>
   <header>
-    <a class="brand" href="./"><img class="brand-mark" src="assets/brand/safenest-mark.webp" alt="" width="44" height="44"><img class="brand-wordmark" src="assets/brand/safenest-wordmark.webp" alt="SafeNest" width="880" height="190"></a>
+    <a class="brand" href="./"><img class="brand-mark" src="assets/brand/safenest-mark.webp" alt="" width="44" height="44"><img class="brand-wordmark" src="assets/brand/safenest-wordmark.webp" alt="SafeNest" width="366" height="79"></a>
     <nav aria-label="Language">
       <button type="button" data-language="en" aria-pressed="true">English + বাংলা</button>
       <button type="button" data-language="bn" aria-pressed="false" lang="bn">বাংলা</button>
@@ -36,15 +36,15 @@
         </div>
         <form id="login-form">
           <label><span data-en="Email" data-bn="ইমেইল">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
-          <label><span data-en="Password" data-bn="পাসওয়ার্ড">Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <label><span data-en="Password" data-bn="পাসওয়ার্ড">Password</span><input name="password" type="password" autocomplete="current-password" required maxlength="1024"></label>
           <div class="auth-captcha" data-auth-captcha hidden></div>
           <button class="primary" type="submit" data-en="Log in" data-bn="লগইন">Log in</button>
           <button class="text-button" type="button" data-mode="reset" data-en="Forgot your password?" data-bn="পাসওয়ার্ড ভুলে গেছেন?">Forgot your password?</button>
         </form>
         <form id="signup-form" hidden>
           <label><span data-en="Email" data-bn="ইমেইল">Email</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
-          <label><span data-en="Password · at least 10 characters" data-bn="পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">Password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
-          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10"></label>
+          <label><span data-en="Password · at least 10 characters" data-bn="পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">Password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="1024"></label>
+          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10" maxlength="1024"></label>
           <p class="note" data-en="We will email you a confirmation link. Creating an account does not activate device protection." data-bn="আমরা ইমেইলে একটি নিশ্চিতকরণ লিংক পাঠাব। অ্যাকাউন্ট খুললেই ডিভাইসে সুরক্ষা চালু হবে না।">We will email you a confirmation link. Creating an account does not activate device protection.</p>
           <div class="auth-captcha" data-auth-captcha hidden></div>
           <button class="primary" type="submit" data-en="Create account" data-bn="অ্যাকাউন্ট খুলুন">Create account</button>
@@ -78,7 +78,7 @@
           <p class="note" id="support-operator-note" hidden>Support inbox / সহায়তার ইনবক্স — All customer requests appear below. Replies are visible to the customer inside their account. / সব গ্রাহকের অনুরোধ নিচে আছে। উত্তর গ্রাহকের অ্যাকাউন্টে দেখা যাবে।</p>
           <p id="support-status" role="status" aria-live="polite"></p>
           <form id="support-form">
-            <label>Topic / বিষয়<select name="category"><option value="app">App help / অ্যাপ সহায়তা</option><option value="account">Account access / অ্যাকাউন্ট ব্যবহার</option><option value="billing">Billing & subscriptions / বিলিং ও সাবস্ক্রিপশন</option><option value="privacy">Privacy & deletion / গোপনীয়তা ও মুছে ফেলা</option><option value="business">Business enquiries / ব্যবসায়িক যোগাযোগ</option></select></label>
+            <label>Topic / বিষয়<select name="category" required><option value="app">App help / অ্যাপ সহায়তা</option><option value="account">Account access / অ্যাকাউন্ট ব্যবহার</option><option value="billing">Billing & subscriptions / বিলিং ও সাবস্ক্রিপশন</option><option value="privacy">Privacy & deletion / গোপনীয়তা ও মুছে ফেলা</option><option value="business">Business enquiries / ব্যবসায়িক যোগাযোগ</option></select></label>
             <label>Subject / শিরোনাম<input name="subject" required minlength="3" maxlength="120"></label>
             <label>Message / বার্তা<textarea name="message" required minlength="10" maxlength="4000" rows="5"></textarea></label>
             <p class="note" data-en="Messages are stored with your account so SafeNest can read and reply. Deleting your account removes these conversations from the live database. Final backup and log retention periods remain unconfirmed." data-bn="SafeNest পড়ে উত্তর দিতে পারে বলে বার্তা আপনার অ্যাকাউন্টের সঙ্গে থাকে। অ্যাকাউন্ট মুছলে বর্তমান ডেটাবেস থেকে কথোপকথন মুছে যায়। ব্যাকআপ ও লগের চূড়ান্ত সংরক্ষণের সময় এখনো নিশ্চিত নয়।">Messages are stored with your account so SafeNest can read and reply. Deleting your account removes these conversations from the live database. Final backup and log retention periods remain unconfirmed.</p>
@@ -103,7 +103,7 @@
           <h2 id="trial-title" data-en="Three-day trial" data-bn="তিন দিনের ট্রায়াল">Three-day trial</h2>
           <p data-en="One 72-hour trial per confirmed account. Your chosen paid plan is saved when you begin. A trial does not authorize a payment." data-bn="নিশ্চিত অ্যাকাউন্টে একবার ৭২ ঘণ্টার ট্রায়াল। শুরু করলে বেছে নেওয়া পেইড প্ল্যান সংরক্ষণ হয়। ট্রায়াল পেমেন্টের অনুমতি দেয় না।">One 72-hour trial per confirmed account. Your chosen paid plan is saved when you begin. A trial does not authorize a payment.</p>
           <form id="trial-form">
-            <label>Plan after trial / ট্রায়ালের পরের প্ল্যান<select name="plan_code"><option value="monthly">Monthly · ৳379 / 30 days</option><option value="quarterly">Three months · ৳999 / 90 days</option><option value="annual">Yearly · ৳3,799 / 365 days</option></select></label>
+            <label>Plan after trial / ট্রায়ালের পরের প্ল্যান<select name="plan_code" required><option value="monthly">Monthly · ৳379 / 30 days</option><option value="quarterly">Three months · ৳999 / 90 days</option><option value="annual">Yearly · ৳3,799 / 365 days</option></select></label>
             <label class="check"><input type="checkbox" name="consent" required><span data-en="Start my 72-hour trial now. I understand it will expire automatically and will not charge me." data-bn="এখন আমার ৭২ ঘণ্টার ট্রায়াল শুরু করুন। মেয়াদ শেষে এটি বন্ধ হবে এবং কোনো চার্জ নেওয়া হবে না।">Start my 72-hour trial now. I understand it will expire automatically and will not charge me.</span></label>
             <button class="primary" type="submit" disabled id="start-trial" data-en="Trial release testing pending" data-bn="ট্রায়াল সংস্করণের পরীক্ষা বাকি">Trial release testing pending</button>
           </form>
@@ -127,7 +127,7 @@
         <h2 id="profile-title" data-en="My profile" data-bn="আমার প্রোফাইল">My profile</h2>
         <form id="profile-form">
           <label><span data-en="Display name · optional" data-bn="নাম · ঐচ্ছিক">Display name · optional</span><input name="display_name" autocomplete="nickname" maxlength="80"></label>
-          <label><span data-en="Preferred language" data-bn="পছন্দের ভাষা">Preferred language</span><select name="language"><option value="en">English + বাংলা</option><option value="bn">বাংলা</option></select></label>
+          <label><span data-en="Preferred language" data-bn="পছন্দের ভাষা">Preferred language</span><select name="language" required><option value="en">English + বাংলা</option><option value="bn">বাংলা</option></select></label>
           <button class="primary" type="submit" data-en="Save profile" data-bn="প্রোফাইল সংরক্ষণ করুন">Save profile</button>
         </form>
         <a class="portal-link next-step" href="#app-download" data-en="Next: get the Android app" data-bn="পরবর্তী ধাপ: Android অ্যাপ নিন">Next: get the Android app</a>
@@ -169,8 +169,8 @@
       <div id="recovery" hidden>
         <form id="recovery-form">
           <h2 data-en="Choose a new password." data-bn="নতুন পাসওয়ার্ড দিন।">Choose a new password.</h2>
-          <label><span data-en="New password · at least 10 characters" data-bn="নতুন পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">New password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10"></label>
-          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10"></label>
+          <label><span data-en="New password · at least 10 characters" data-bn="নতুন পাসওয়ার্ড · কমপক্ষে ১০ অক্ষর">New password · at least 10 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="1024"></label>
+          <label><span data-en="Confirm password" data-bn="পাসওয়ার্ড আবার লিখুন">Confirm password</span><input name="confirmation" type="password" autocomplete="new-password" required minlength="10" maxlength="1024"></label>
           <button class="primary" type="submit" data-en="Save new password" data-bn="নতুন পাসওয়ার্ড সংরক্ষণ করুন">Save new password</button>
         </form>
         <button class="text-button" type="button" id="cancel-recovery" data-en="Cancel and log out" data-bn="বাতিল করে লগআউট করুন">Cancel and log out</button>

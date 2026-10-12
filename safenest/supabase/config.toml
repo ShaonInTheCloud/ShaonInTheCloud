@@ -37,3 +37,33 @@ verify_jwt = true
 # Preserve the live function's own authorization model.
 [functions.intelligence]
 verify_jwt = false
+
+# Signed-in callers: the gateway verifies the user JWT before the handler runs.
+[functions.payment-order]
+verify_jwt = true
+
+[functions.payment-status]
+verify_jwt = true
+
+[functions.payment-catalogue]
+verify_jwt = false
+
+# Gateway callbacks and the reconcile job carry no user JWT. Each is
+# authenticated in code: SSLCommerz validation API for notification/return,
+# SSLCOMMERZ_RECONCILE_KEY for reconcile. Verify these match the dashboard.
+[functions.payment-notification]
+verify_jwt = false
+
+[functions.payment-return]
+verify_jwt = false
+
+[functions.payment-reconcile]
+verify_jwt = false
+
+# TOTP is enabled so admins and operators can enrol. The policy that REQUIRES
+# an MFA-verified session (aal2) is staged in
+# supabase/pending-migrations/20261012020000_admin_operator_mfa.sql and ships
+# only with the enrol/step-up UI. Mirror this setting in the hosted dashboard.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

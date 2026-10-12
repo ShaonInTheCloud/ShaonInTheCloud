@@ -399,7 +399,7 @@ class SafeNestVpnService : VpnService() {
         return DnsPacketCodec.error(query, 2)
     }
 
-    @android.annotation.TargetApi(29)
+    @androidx.annotation.RequiresApi(29)
     private fun platformResolve(current: Session, query: DnsPacketCodec.Query, network: Network,
             deadline: DnsUpstreamTransport.Deadline): ByteArray? {
         val cancellation = CancellationSignal()

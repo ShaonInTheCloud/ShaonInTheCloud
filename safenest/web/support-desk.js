@@ -1,5 +1,6 @@
 // The database enforces confirmed identity, ownership, staff access and limits.
-export function installSupportDesk(client,{identity}) {
+import {stepUp,domStepUpUi} from './mfa-step-up.js';
+export function installSupportDesk(client,{identity,language=()=>'en'}) {
   const $=id=>document.getElementById(id), form=$('support-form'), reply=$('support-reply-form');
   const requestedTopic=new URLSearchParams(location.search).get('topic');
   if(['app','account','billing','privacy','business'].includes(requestedTopic))form.elements.category.value=requestedTopic;
@@ -38,12 +39,32 @@ export function installSupportDesk(client,{identity}) {
       $('support-change-status').textContent=t.status==='open'?'Close request / অনুরোধ বন্ধ করুন':'Reopen request / আবার খুলুন';
     }catch(error){if(valid(user,g)&&selected?.id===t.id)failed(error);}
   }
+  // Staff second factor. The operator check above only passes for an
+  // MFA-verified session once the aal2 policy ships; until then an operator at
+  // aal1 is nudged to enrol so nothing breaks on the day it does.
+  const note=$('support-operator-note');
+  const staffBox=document.createElement('div');staffBox.className='mfa-staff';staffBox.hidden=true;
+  const staffLink=document.createElement('button');staffLink.type='button';staffLink.className='textBtn';
+  staffBox.append(staffLink);note.after(staffBox);
+  const ui=domStepUpUi(staffBox,{language});
+  let aal='aal1';
+  async function staffAccess(user,g){
+    try{const {data}=await client.auth.mfa.getAuthenticatorAssuranceLevel();if(!valid(user,g))return;aal=data?.currentLevel||'aal1';}catch{aal='aal1';}
+    const bn=language()==='bn';
+    // Shown to every signed-in user as a small text link: harmless for customers, the only door for staff.
+    staffBox.hidden=false;
+    if(staff&&aal!=='aal2')staffLink.textContent=bn?'স্টাফ: অথেন্টিকেটর যোগ করুন (শীঘ্রই বাধ্যতামূলক)':'Staff: add an authenticator (required soon)';
+    else if(staff)staffLink.textContent=bn?'স্টাফ অ্যাক্সেস যাচাই হয়েছে':'Staff access verified';
+    else staffLink.textContent=bn?'স্টাফ সাইন-ইন: দ্বিতীয় ধাপ যাচাই':'Staff sign-in: verify second factor';
+    staffLink.disabled=staff&&aal==='aal2';
+  }
+  staffLink.addEventListener('click',async()=>{const user=identity();if(!user)return;staffLink.disabled=true;try{if(await stepUp(client,ui))await refresh();}finally{if(!(staff&&aal==='aal2'))staffLink.disabled=false;}});
   async function refresh(){
     const user=identity();
     if(user!==currentUser){generation++;currentUser=user;staff=false;selected=null;draft=null;replyDraft=null;form.reset();if(['app','account','billing','privacy','business'].includes(requestedTopic))form.elements.category.value=requestedTopic;reply.reset();$('support-list').replaceChildren();$('support-messages').replaceChildren();$('support-thread').hidden=true;$('support-more').hidden=true;$('support-operator-note').hidden=true;say('');}
     if(!user)return;
     const g=++generation;
-    try{const {data,error}=await client.rpc('support_is_operator').abortSignal(AbortSignal.timeout(12000));if(!valid(user,g))return;if(error)throw error;staff=data===true;$('support-operator-note').hidden=!staff;
+    try{const {data,error}=await client.rpc('support_is_operator').abortSignal(AbortSignal.timeout(12000));if(!valid(user,g))return;if(error)throw error;staff=data===true;$('support-operator-note').hidden=!staff;await staffAccess(user,g);
       await list();if(selected){const {data:t,error:e}=await client.from('support_tickets').select('id,category,subject,status').eq('id',selected.id).maybeSingle().abortSignal(AbortSignal.timeout(12000));if(!valid(user,g))return;if(e)throw e;if(t){selected=t;await thread();}else{selected=null;$('support-thread').hidden=true;}}
     }catch(error){if(valid(user,g))failed(error);}
   }
