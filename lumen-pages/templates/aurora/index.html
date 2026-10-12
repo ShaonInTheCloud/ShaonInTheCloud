@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northlight — meeting notes that stay on your Mac</title>
+<meta name="description" content="Northlight listens to your calls, transcribes them on the Neural Engine and drafts the notes before you have closed the window. Nothing is uploaded.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..600;1,400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --base:#0b1026;
+  --base-2:#101636;
+  --surface:#141b40;
+  --line:rgba(190,205,255,.14);
+  --text:#e9ecfb;
+  --text-2:#aab3d6;
+  --accent:#7ef2c3;
+  --accent-2:#b89bff;
+  --accent-ink:#06261b;
+  --aurora-a:150;
+  --aurora-b:200;
+  --aurora-c:275;
+  --display:"Fraunces",Georgia,serif;
+  --body:"Instrument Sans",system-ui,sans-serif;
+  --max:1120px;
+  --gutter:clamp(16px,4vw,48px);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--base);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:4px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:2px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(2.6rem,7.2vw,5.4rem);line-height:1.02;font-variation-settings:"opsz" 144,"SOFT" 40}
+h2{font-size:clamp(1.8rem,3.6vw,2.7rem);line-height:1.12;font-variation-settings:"opsz" 96,"SOFT" 30}
+h3{font-size:1.3rem;line-height:1.25;font-variation-settings:"opsz" 48}
+p{margin:0}
+.wrap{width:min(var(--max),100% - 2*var(--gutter));margin-inline:auto}
+.kicker{font-family:var(--display);font-style:italic;font-size:1.05rem;color:var(--accent);font-variation-settings:"opsz" 24,"SOFT" 60}
+.btn{display:inline-flex;align-items:center;gap:.55em;padding:.85em 1.35em;border-radius:999px;font-weight:600;font-size:.98rem;border:1px solid transparent;cursor:pointer;font-family:inherit;line-height:1}
+.btn:hover{text-decoration:none}
+.btn-fill{background:var(--accent);color:var(--accent-ink)}
+.btn-fill:hover{background:#9af7d3}
+.btn-ghost{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.03)}
+.btn-ghost:hover{border-color:rgba(190,205,255,.35)}
+.btn svg{width:1em;height:1em}
+
+/* nav */
+header{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(11,16,38,.6);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1.25rem;font-variation-settings:"opsz" 48,"SOFT" 20}
+.brand i{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0,var(--accent) 35%,var(--accent-2) 100%);box-shadow:0 0 18px rgba(126,242,195,.5)}
+.nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-size:.95rem;color:var(--text-2)}
+.nav ul a:hover{color:var(--text)}
+@media (max-width:720px){.nav ul{display:none}}
+
+/* hero */
+.hero{position:relative;min-height:min(92vh,880px);display:grid;align-items:end;padding:120px 0 72px;overflow:hidden;isolation:isolate}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2;filter:blur(14px) saturate(1.15)}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  radial-gradient(60% 40% at 50% 0%,rgba(255,255,255,.04),transparent 70%),
+  linear-gradient(180deg,rgba(11,16,38,0) 35%,rgba(11,16,38,.75) 72%,var(--base) 100%)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr);gap:48px;align-items:end}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr;gap:40px}}
+.hero h1 em{font-style:italic;color:var(--accent);font-variation-settings:"opsz" 144,"SOFT" 100}
+.lede{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--text-2);max-width:34ch;margin-top:22px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:34px}
+.cta small{color:var(--text-2);font-size:.9rem}
+.note{align-self:end;border:1px solid var(--line);border-radius:18px;background:rgba(16,22,54,.55);backdrop-filter:blur(10px);padding:20px 22px;font-size:.93rem;line-height:1.5}
+.note .meta{display:flex;justify-content:space-between;gap:12px;color:var(--text-2);font-size:.82rem;margin-bottom:12px}
+code{font-family:var(--body);font-size:.92em;background:rgba(255,255,255,.07);padding:.1em .4em;border-radius:4px;word-break:break-all}
+.note b{font-weight:600;color:var(--text)}
+.note ul{margin:10px 0 0;padding-left:18px;color:var(--text-2)}
+.note li+li{margin-top:5px}
+.note .tag{display:inline-block;font-size:.75rem;padding:.2em .6em;border-radius:999px;background:rgba(126,242,195,.12);color:var(--accent);margin-left:6px}
+
+/* proof */
+.proof{padding:72px 0 24px}
+.proof ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.proof li{padding:28px 20px 28px 0;border-bottom:1px solid var(--line)}
+.proof li+li{border-left:1px solid var(--line);padding-left:20px}
+.proof strong{display:block;font-family:var(--display);font-weight:300;font-size:clamp(2rem,3.4vw,2.9rem);line-height:1;font-variation-settings:"opsz" 96;color:var(--text)}
+.proof span{display:block;color:var(--text-2);margin-top:10px;font-size:.93rem;max-width:22ch}
+@media (max-width:860px){.proof ol{grid-template-columns:1fr 1fr}.proof li:nth-child(3){border-left:0;padding-left:0}}
+@media (max-width:480px){.proof ol{grid-template-columns:1fr}.proof li+li{border-left:0;padding-left:0}}
+
+/* how */
+.how{padding:96px 0}
+.how-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:end;margin-bottom:56px}
+.how-head p{color:var(--text-2);max-width:46ch}
+@media (max-width:760px){.how-head{grid-template-columns:1fr;gap:16px}}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+.step{padding:32px 28px 36px 0;position:relative}
+.step+.step{border-left:1px solid var(--line);padding-left:28px}
+.step .n{font-family:var(--display);font-style:italic;color:var(--accent-2);font-size:1.1rem;display:block;margin-bottom:18px}
+.step h3{margin-bottom:12px}
+.step p{color:var(--text-2);font-size:.97rem;max-width:34ch}
+.step .ui{margin-top:24px;border:1px solid var(--line);border-radius:12px;background:var(--base-2);padding:14px;font-size:.84rem;color:var(--text-2);line-height:1.5;overflow:hidden}
+.ui .row{display:flex;gap:10px;align-items:baseline}
+.ui .row+.row{margin-top:8px}
+.ui .who{color:var(--text);font-weight:600;min-width:52px}
+.ui .bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2));margin-top:10px}
+.ui .chk{display:flex;gap:8px;align-items:center}
+.ui .chk i{width:12px;height:12px;border-radius:3px;border:1px solid var(--accent);display:inline-block;flex:none;background:rgba(126,242,195,.2)}
+@media (max-width:860px){.steps{grid-template-columns:1fr}.step+.step{border-left:0;padding-left:0;border-top:1px solid var(--line)}.step{padding-right:0}}
+
+/* privacy strip */
+.privacy{padding:0 0 96px}
+.privacy .box{border:1px solid var(--line);border-radius:22px;padding:clamp(28px,5vw,52px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;background:linear-gradient(135deg,rgba(184,155,255,.07),rgba(126,242,195,.05))}
+.privacy p{color:var(--text-2);margin-top:14px;max-width:48ch}
+.privacy dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:12px 18px;font-size:.95rem;align-content:center}
+.privacy dt{color:var(--text-2)}
+.privacy dd{margin:0;color:var(--text)}
+@media (max-width:760px){.privacy .box{grid-template-columns:1fr;gap:28px}}
+
+/* pricing */
+.pricing{padding:0 0 96px}
+.pricing h2{margin-bottom:14px}
+.pricing .sub{color:var(--text-2);max-width:52ch;margin-bottom:44px}
+.plans{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:16px;align-items:stretch}
+.plan{border:1px solid var(--line);border-radius:20px;padding:28px 26px;display:flex;flex-direction:column;background:rgba(16,22,54,.35)}
+.plan.lead{background:var(--surface);border-color:rgba(126,242,195,.35);box-shadow:0 30px 80px -40px rgba(126,242,195,.35)}
+.plan h3{font-size:1.15rem;margin-bottom:6px}
+.plan .price{font-family:var(--display);font-size:2.6rem;font-weight:300;line-height:1;margin:14px 0 4px;font-variation-settings:"opsz" 96}
+.plan .price small{font-family:var(--body);font-size:.9rem;color:var(--text-2);margin-left:4px}
+.plan .for{color:var(--text-2);font-size:.92rem;min-height:2.8em}
+.plan ul{list-style:none;margin:22px 0 28px;padding:0;color:var(--text-2);font-size:.95rem;display:grid;gap:9px;flex:1}
+.plan li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:10px;vertical-align:middle}
+.plan .btn{align-self:flex-start}
+@media (max-width:860px){.plans{grid-template-columns:1fr}.plan.lead{order:-1}}
+
+/* final cta */
+.final{padding:0 0 110px;text-align:center}
+.final .glow{position:relative;border-radius:28px;padding:clamp(56px,9vw,110px) var(--gutter);overflow:hidden;background:var(--base-2);border:1px solid var(--line)}
+.final .glow::before{content:"";position:absolute;inset:-40% -10% auto;height:70%;background:radial-gradient(50% 60% at 50% 100%,hsla(var(--aurora-a),80%,65%,.28),transparent 70%),radial-gradient(40% 60% at 30% 100%,hsla(var(--aurora-c),80%,70%,.22),transparent 70%);pointer-events:none}
+.final h2{font-size:clamp(2rem,5vw,3.6rem);position:relative}
+.final p{color:var(--text-2);margin:16px auto 32px;max-width:40ch;position:relative}
+.final .cta{justify-content:center}
+
+footer{border-top:1px solid var(--line);padding:36px 0 44px;color:var(--text-2);font-size:.9rem}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px 32px;align-items:center}
+.foot ul{display:flex;flex-wrap:wrap;gap:20px;list-style:none;margin:0;padding:0}
+
+@media (prefers-reduced-motion:no-preference){
+  .hero h1,.hero .lede,.hero .cta{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+  .hero .lede{animation-delay:.12s}.hero .cta{animation-delay:.22s}
+  .hero .note{animation:rise 1s .35s cubic-bezier(.2,.7,.2,1) both}
+  .brand i{animation:pulse 4s ease-in-out infinite}
+}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{box-shadow:0 0 14px rgba(126,242,195,.35)}50%{box-shadow:0 0 26px rgba(184,155,255,.6)}}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap nav" aria-label="Primary">
+    <a class="brand" href="#top" aria-label="Northlight home"><i aria-hidden="true"></i>Northlight</a>
+    <ul>
+      <li><a href="#how">How it listens</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#changelog">Changelog</a></li>
+    </ul>
+    <a class="btn btn-ghost" href="#download">Download for Mac</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero" aria-labelledby="h1">
+  <canvas id="aurora" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker">On-device meeting notes for macOS</p>
+      <h1 id="h1">Notes that never <em>leave</em> your laptop.</h1>
+      <p class="lede">Northlight runs a 3-billion-parameter model on the Neural Engine. It hears the call, writes the summary, and keeps every word on your disk.</p>
+      <div class="cta">
+        <a class="btn btn-fill" href="#download" id="download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M6 10l6 6 6-6M4 21h16"/></svg>
+          Download for macOS 14+
+        </a>
+        <small>Free for 20 meetings a month. No account needed.</small>
+      </div>
+    </div>
+    <aside class="note" aria-label="Example of a finished note">
+      <div class="meta"><span>Thu 09:30 · Roadmap sync</span><span>41 min · 4 speakers</span></div>
+      <b>Decisions</b><span class="tag">drafted in 1.9 s</span>
+      <ul>
+        <li>Ship the offline export in 2.4, not 2.5. Owner: Mira.</li>
+        <li>Drop the Teams plugin until the SDK stabilises.</li>
+        <li>Next sync moves to Tuesdays.</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<section class="proof wrap" aria-label="Key figures">
+  <ol>
+    <li><strong>0 bytes</strong><span>uploaded, ever. The app has no server to talk to.</span></li>
+    <li><strong>1.9 s</strong><span>from “end call” to a drafted summary of a 45-minute meeting on an M2 Air.</span></li>
+    <li><strong>38</strong><span>spoken languages transcribed, with speaker names kept across them.</span></li>
+    <li><strong>Any call</strong><span>Zoom, Meet, Teams, FaceTime, or the microphone in a real room.</span></li>
+  </ol>
+</section>
+
+<section class="how wrap" id="how" aria-labelledby="how-h">
+  <div class="how-head">
+    <h2 id="how-h">Three things happen, all of them on your machine.</h2>
+    <p>There is no “processing” spinner because there is no round trip. The model is already in memory before the meeting starts.</p>
+  </div>
+  <div class="steps">
+    <article class="step">
+      <span class="n">first</span>
+      <h3>Quiet capture</h3>
+      <p>Northlight attaches to the system audio of whichever call app is in front. It never joins as a bot, so nobody sees a “recorder” tile.</p>
+      <div class="ui" aria-hidden="true">
+        <div class="row"><span class="who">Mira</span><span>— we could push export to 2.4 if the diff is small</span></div>
+        <div class="row"><span class="who">Tomás</span><span>— it is, two files and a flag</span></div>
+        <div class="bar" style="width:62%"></div>
+      </div>
+    </article>
+    <article class="step">
+      <span class="n">then</span>
+      <h3>Speaker threads</h3>
+      <p>Voices are separated locally and named once. From then on the transcript reads like a script, not a wall of text.</p>
+      <div class="ui" aria-hidden="true">
+        <div class="row"><span class="who">Jun</span><span>— the SDK changed the auth flow again</span></div>
+        <div class="row"><span class="who">Mira</span><span>— then we pause the Teams plugin</span></div>
+        <div class="row"><span class="who">Priya</span><span>— agreed, revisit in March</span></div>
+      </div>
+    </article>
+    <article class="step">
+      <span class="n">finally</span>
+      <h3>Action ledger</h3>
+      <p>Decisions, owners and dates are lifted out into a checklist you can push to Reminders, Things, or a plain Markdown file.</p>
+      <div class="ui" aria-hidden="true">
+        <div class="chk"><i></i><span>Offline export moves to 2.4 · Mira · 14 Nov</span></div>
+        <div class="chk" style="margin-top:8px"><i></i><span>Pause Teams plugin · Jun</span></div>
+        <div class="chk" style="margin-top:8px"><i></i><span>Sync moves to Tuesdays · everyone</span></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="privacy wrap" id="privacy" aria-labelledby="priv-h">
+  <div class="box">
+    <div>
+      <p class="kicker">What “on-device” actually means</p>
+      <h2 id="priv-h">Unplug the Wi-Fi mid-meeting. Nothing changes.</h2>
+      <p>The transcript, the summary and the search index live in <code>~/Library/Application Support/Northlight</code>, encrypted with a key held in the Secure Enclave. Delete the folder and the meeting is gone. There is no copy anywhere else, because we never had one.</p>
+    </div>
+    <dl>
+      <dt>Model</dt><dd>Northlight Ear 3B, quantised to 4-bit, 1.7 GB on disk</dd>
+      <dt>Hardware</dt><dd>Apple silicon, M1 or later, 8 GB RAM minimum</dd>
+      <dt>Network use</dt><dd>Update check once a week. That is the whole list.</dd>
+      <dt>Audit</dt><dd>Open-source network layer, reproducible build</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="pricing wrap" id="pricing" aria-labelledby="price-h">
+  <h2 id="price-h">Pay for the app, not for your minutes.</h2>
+  <p class="sub">Every plan runs the same model with the same privacy. Paid plans add workflow features, not “better AI”.</p>
+  <div class="plans">
+    <article class="plan">
+      <h3>Personal</h3>
+      <p class="for">For your own calls, a few times a week.</p>
+      <p class="price">€0</p>
+      <ul>
+        <li>20 meetings a month</li>
+        <li>Transcript, summary, action ledger</li>
+        <li>Markdown export</li>
+        <li>Search across the last 90 days</li>
+      </ul>
+      <a class="btn btn-ghost" href="#download">Download</a>
+    </article>
+    <article class="plan lead">
+      <h3>Pro</h3>
+      <p class="for">For people who are in meetings more than they would like.</p>
+      <p class="price">€9<small>per month, or €84 a year</small></p>
+      <ul>
+        <li>Unlimited meetings</li>
+        <li>“Ask the meeting” — questions answered from the transcript</li>
+        <li>Reminders, Things, Obsidian and Notion sync</li>
+        <li>Search across everything, forever</li>
+        <li>Custom vocabulary for names and product terms</li>
+      </ul>
+      <a class="btn btn-fill" href="#download">Start a 14-day trial</a>
+    </article>
+    <article class="plan">
+      <h3>Team</h3>
+      <p class="for">For companies that need an invoice and a policy.</p>
+      <p class="price">€14<small>per seat, per month</small></p>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Shared vocabulary and note templates</li>
+        <li>Managed deployment via MDM</li>
+        <li>Priority support with a named engineer</li>
+      </ul>
+      <a class="btn btn-ghost" href="#contact">Talk to us</a>
+    </article>
+  </div>
+</section>
+
+<section class="final wrap" aria-labelledby="final-h">
+  <div class="glow">
+    <h2 id="final-h">Your next meeting could write itself up.</h2>
+    <p>Twelve-megabyte download, one permission prompt, and the model is ready before you join.</p>
+    <div class="cta">
+      <a class="btn btn-fill" href="#download">Download Northlight 2.3</a>
+      <a class="btn btn-ghost" href="#changelog" id="changelog">Read the changelog</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>© 2026 Northlight Software Oy · Helsinki</span>
+    <ul>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#changelog">Changelog</a></li>
+      <li><a href="mailto:hello@northlight.app" id="contact">hello@northlight.app</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var c=document.getElementById('aurora'),x=c.getContext('2d');
+  var rs=getComputedStyle(document.documentElement);
+  var hues=[+rs.getPropertyValue('--aurora-a')||150,+rs.getPropertyValue('--aurora-b')||200,+rs.getPropertyValue('--aurora-c')||275];
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DPR=Math.min(window.devicePixelRatio||1,1.5),W=0,H=0,t=0,raf=0,visible=true;
+  var px=.5,py=.45,tx=.5,ty=.45; /* smoothed pointer vs. target */
+  var bands=[
+    {h:hues[0],s:85,l:62,a:.50,f:.0011,o:0.0,amp:.16,base:.26},
+    {h:hues[1],s:90,l:60,a:.38,f:.0008,o:2.1,amp:.20,base:.34},
+    {h:hues[2],s:80,l:66,a:.32,f:.0014,o:4.2,amp:.13,base:.20}
+  ];
+  function size(){
+    W=c.clientWidth;H=c.clientHeight;
+    c.width=Math.round(W*DPR);c.height=Math.round(H*DPR);
+    x.setTransform(DPR,0,0,DPR,0,0);
+  }
+  function frame(){
+    px+=(tx-px)*.045;py+=(ty-py)*.045;
+    x.clearRect(0,0,W,H);
+    x.globalCompositeOperation='lighter';
+    var step=W<600?7:5;
+    for(var b=0;b<bands.length;b++){
+      var B=bands[b],ph=t*B.f;
+      for(var i=0;i<=W;i+=step){
+        var u=i/W,du=u-px;
+        var near=Math.exp(-du*du*14);                    /* pointer proximity 0..1 */
+        var wave=Math.sin(u*5.3+ph*7+B.o)*.5+Math.sin(u*11.7-ph*3+B.o*2)*.25+Math.sin(u*2.2+ph*5)*.35;
+        var top=H*(B.base+B.amp*wave-near*.08+(py-.45)*.12);
+        var len=H*(.30+.12*Math.sin(u*7.1+ph*4+B.o)+near*.16);
+        var g=x.createLinearGradient(0,top,0,top+len);
+        var l=B.l+near*16,al=B.a+near*.28;
+        g.addColorStop(0,'hsla('+B.h+','+B.s+'%,'+l+'%,0)');
+        g.addColorStop(.28,'hsla('+B.h+','+B.s+'%,'+l+'%,'+al+')');
+        g.addColorStop(.62,'hsla('+(B.h+18)+','+B.s+'%,'+(l-10)+'%,'+(al*.55)+')');
+        g.addColorStop(1,'hsla('+(B.h+30)+','+B.s+'%,'+(l-20)+'%,0)');
+        x.fillStyle=g;x.fillRect(i,top,step+1,len);
+      }
+    }
+    t+=1;
+    if(!reduce&&visible)raf=requestAnimationFrame(frame);
+  }
+  function start(){if(!raf&&!reduce){raf=requestAnimationFrame(frame)}}
+  function stop(){cancelAnimationFrame(raf);raf=0}
+  size();
+  if(reduce){t=140;frame()}else{start()}
+  addEventListener('resize',function(){size();if(reduce)frame()});
+  c.parentNode.addEventListener('pointermove',function(e){
+    var r=c.getBoundingClientRect();
+    tx=(e.clientX-r.left)/r.width;ty=(e.clientY-r.top)/r.height;
+  });
+  c.parentNode.addEventListener('pointerleave',function(){tx=.5;ty=.45});
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(en){visible=en[0].isIntersecting;visible?start():stop()}).observe(c);
+  }
+  document.addEventListener('visibilitychange',function(){document.hidden?stop():(visible&&start())});
+})();
+</script>
+</body>
+</html>

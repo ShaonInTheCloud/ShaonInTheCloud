@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern &amp; Keel — seven rooms over Norrvik harbour</title>
+<meta name="description" content="A seven-room harbour inn with its own ketch. Rooms over the water, supper from the day's catch, and a sail at first light.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a1726;          /* page base: deep sea-blue ink */
+  --ink-2:#0e1f33;        /* raised surface */
+  --ink-3:#132a44;        /* sky near horizon, borders of panels */
+  --line:rgba(190,205,225,.16);
+  --text:#e7edf4;
+  --muted:#aebbcb;
+  --lamp:#f2b56b;         /* warm quay lamp */
+  --lamp-deep:#d9923f;
+  --lamp-ink:#1a1206;     /* text on lamp */
+  --cool:#d7e2f7;         /* the one cold lamp */
+  --sky-top-rgb:10,23,38;
+  --sky-hz-rgb:22,44,72;
+  --sea-rgb:8,19,32;
+  --quay-rgb:6,13,22;
+  --lamp-rgb:255,186,110;
+  --cool-rgb:215,226,247;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Alegreya Sans","Gill Sans","Segoe UI",system-ui,sans-serif;
+  --gutter:clamp(16px,4vw,40px);
+  --measure:60ch;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--sans);font-size:1.0625rem;line-height:1.55;font-variant-numeric:tabular-nums;overflow-x:hidden}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;margin:0;letter-spacing:-.005em}
+h2{font-size:clamp(2rem,4.2vw,3.1rem)}
+h3{font-size:clamp(1.45rem,2.4vw,1.85rem)}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:3px;border-radius:2px}
+.wrap{width:min(1120px,100% - 2*var(--gutter));margin-inline:auto}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--lamp);color:var(--lamp-ink);font-weight:700;font-size:1rem;letter-spacing:.01em;padding:.8rem 1.35rem;border:0;border-radius:3px;text-decoration:none;cursor:pointer;transition:background .2s,transform .2s}
+.btn:hover{background:#ffc98a}
+.btn:active{transform:translateY(1px)}
+.ghost{background:transparent;color:var(--text);border:1px solid var(--line);padding:.55rem 1rem;border-radius:3px;text-decoration:none;font-weight:500}
+.ghost:hover{border-color:var(--lamp);color:var(--lamp)}
+.kicker{font-family:var(--serif);font-style:italic;font-size:1.3rem;color:var(--lamp)}
+.lede{color:var(--muted);font-size:1.15rem;max-width:var(--measure)}
+
+/* ---------- nav ---------- */
+header{position:absolute;inset:0 0 auto 0;z-index:5}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 0}
+.brand{font-family:var(--serif);font-size:1.5rem;text-decoration:none;display:flex;align-items:center;gap:.6rem;font-weight:600}
+.brand svg{width:26px;height:26px}
+.links{display:flex;gap:1.6rem;list-style:none;margin:0;padding:0}
+.links a{text-decoration:none;color:var(--muted);font-weight:500}
+.links a:hover{color:var(--text)}
+@media (max-width:760px){.links{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding-top:6.5rem;overflow:hidden;isolation:isolate}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1;display:block}
+.hero-copy{padding-bottom:clamp(6rem,19vh,12rem)}
+.hero h1{font-size:clamp(2.55rem,5.6vw,4.3rem);max-width:19ch;text-shadow:0 2px 24px rgba(6,13,22,.7)}
+.hero h1 em{font-style:italic;color:var(--lamp);font-weight:500}
+.hero .lede{margin-top:1rem;text-shadow:0 1px 14px rgba(6,13,22,.8)}
+
+/* booking panel */
+.book{margin-bottom:clamp(1.5rem,5vh,3.5rem);background:rgba(10,23,38,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-top:2px solid var(--lamp);border-radius:4px;padding:1.1rem}
+.book form{display:grid;grid-template-columns:1fr;gap:.9rem}
+.book label{display:grid;gap:.3rem;font-size:.95rem;color:var(--muted);font-weight:500}
+.book input,.book select{font:inherit;color:var(--text);background:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:.6rem .7rem;min-width:0;width:100%;color-scheme:dark}
+.book input:focus,.book select:focus{border-color:var(--lamp);outline:none;box-shadow:0 0 0 3px rgba(242,181,107,.22)}
+.book .btn{align-self:end;justify-content:center;height:2.9rem}
+.book-note{grid-column:1 / -1;font-size:.95rem;color:var(--muted);min-height:1.4em}
+.book-note strong{color:var(--lamp);font-weight:500}
+@media (min-width:640px){.book form{grid-template-columns:1fr 1fr}.book .btn{grid-column:1 / -1}}
+@media (min-width:980px){.book form{grid-template-columns:1.1fr 1.1fr .8fr 1.2fr auto}.book .btn{grid-column:auto}}
+
+/* ---------- notices (tide table) ---------- */
+.notices{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ink-2)}
+.notices dl{display:grid;grid-template-columns:1fr 1fr;margin:0;padding:1.4rem 0}
+.notices div{padding:.9rem 1rem .9rem 0;border-top:1px solid var(--line)}
+.notices div:nth-child(-n+2){border-top:0}
+.notices dt{font-size:.95rem;color:var(--muted)}
+.notices dd{margin:.15rem 0 0;font-family:var(--serif);font-size:1.55rem;line-height:1.1}
+.notices dd small{font-family:var(--sans);font-size:.9rem;color:var(--muted);margin-left:.35rem}
+@media (min-width:860px){.notices dl{grid-template-columns:repeat(5,1fr);padding:1.6rem 0}.notices div{border-top:0;border-left:1px solid var(--line);padding:.2rem 1.2rem}.notices div:first-child{border-left:0;padding-left:0}}
+
+/* ---------- sections ---------- */
+section{padding:clamp(4rem,9vw,7.5rem) 0}
+.head{display:grid;gap:1rem;max-width:40ch;margin-bottom:clamp(2rem,5vw,3.5rem)}
+.rooms-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.rooms-list li{display:grid;grid-template-columns:1fr;gap:.6rem 2rem;padding:1.5rem 0;border-bottom:1px solid var(--line)}
+.rooms-list h3{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap}
+.rooms-list h3 span{font-family:var(--sans);font-size:.95rem;color:var(--muted);font-weight:400}
+.rooms-list p{color:var(--muted);max-width:var(--measure)}
+.price{font-family:var(--serif);font-size:1.55rem;white-space:nowrap}
+.price small{font-family:var(--sans);font-size:.9rem;color:var(--muted)}
+@media (min-width:760px){.rooms-list li{grid-template-columns:16rem 1fr auto;align-items:start}.rooms-list h3{flex-direction:column;gap:.2rem}}
+
+/* the sail */
+.sail{background:var(--ink-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sail .grid{display:grid;gap:3rem}
+@media (min-width:900px){.sail .grid{grid-template-columns:1.1fr .9fr;align-items:start}}
+.log{list-style:none;margin:0;padding:0;position:relative}
+.log::before{content:"";position:absolute;left:4.1rem;top:.6rem;bottom:.6rem;width:1px;background:var(--line)}
+.log li{display:grid;grid-template-columns:3.4rem 1fr;gap:1.4rem;padding:.75rem 0;position:relative}
+.log time{font-family:var(--serif);font-size:1.35rem;color:var(--lamp);line-height:1.3}
+.log li::after{content:"";position:absolute;left:calc(4.1rem - 4px);top:1.35rem;width:9px;height:9px;border-radius:50%;background:var(--ink-2);border:1px solid var(--lamp)}
+.log p{color:var(--muted)}
+.log strong{color:var(--text);font-weight:500;display:block}
+.bring{border:1px solid var(--line);border-radius:4px;padding:1.4rem 1.5rem;background:var(--ink)}
+.bring ul{margin:.8rem 0 0;padding-left:1.1rem;color:var(--muted)}
+.bring li{margin:.3rem 0}
+.bring li::marker{color:var(--lamp)}
+
+/* rates + story */
+.rates .grid{display:grid;gap:3rem}
+@media (min-width:900px){.rates .grid{grid-template-columns:.9fr 1.1fr;align-items:start}}
+.rate-card{border:1px solid var(--line);border-left:3px solid var(--lamp);padding:1.5rem 1.6rem;border-radius:0 4px 4px 0}
+.rate-card table{width:100%;border-collapse:collapse;margin-top:1rem}
+.rate-card th{text-align:left;font-weight:500;color:var(--muted);font-size:.95rem;padding:.45rem 0;border-bottom:1px solid var(--line)}
+.rate-card th:last-child,.rate-card td:last-child{text-align:right}
+.rate-card td{padding:.65rem 0;border-bottom:1px solid var(--line)}
+.rate-card tr:last-child td{border-bottom:0}
+.rate-card td:last-child{font-family:var(--serif);font-size:1.3rem}
+.rate-card .fine{margin-top:1rem;font-size:.95rem;color:var(--muted)}
+.story{font-family:var(--serif);font-size:clamp(1.35rem,2.2vw,1.75rem);line-height:1.35;max-width:32ch}
+.story footer{font-family:var(--sans);font-size:1rem;color:var(--muted);margin-top:1.2rem}
+.story footer::before{content:"";display:inline-block;width:1.6rem;height:1px;background:var(--lamp);vertical-align:middle;margin-right:.7rem}
+
+/* final */
+.final{position:relative;text-align:center;overflow:hidden;border-top:1px solid var(--line)}
+.final::before{content:"";position:absolute;left:50%;bottom:-40%;width:60rem;height:30rem;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(242,181,107,.18),transparent 70%);pointer-events:none}
+.final .wrap{position:relative;display:grid;justify-items:center;gap:1.4rem}
+.final p{max-width:38ch;color:var(--muted)}
+
+/* footer */
+.foot{border-top:1px solid var(--line);padding:2.5rem 0 3rem;color:var(--muted);font-size:.95rem}
+.foot .wrap{display:grid;gap:1.5rem}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;gap:1.3rem;flex-wrap:wrap}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--lamp)}
+@media (min-width:760px){.foot .wrap{grid-template-columns:1fr auto;align-items:end}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Lantern and Keel, home">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 2v16M6 18h14l-2 4H8zM13 4c5 2 7 7 7 12M13 4C8 6 6 11 6 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Lantern &amp; Keel
+    </a>
+    <nav aria-label="Primary">
+      <ul class="links">
+        <li><a href="#rooms">Rooms</a></li>
+        <li><a href="#sail">The sail</a></li>
+        <li><a href="#rates">Rates</a></li>
+        <li><a href="#story">Our story</a></li>
+      </ul>
+    </nav>
+    <a class="ghost" href="#book">Book a stay</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="h1">
+    <canvas id="harbour" aria-hidden="true"></canvas>
+    <div class="wrap hero-copy">
+      <p class="kicker">Norrvik harbour, west pier</p>
+      <h1 id="h1">Seven rooms over the water, and a ketch that leaves <em>at first light.</em></h1>
+      <p class="lede">A small inn in a former chandlery. You sleep above the quay, eat what the boats brought in, and if the wind is kind you are out past the mole before breakfast.</p>
+    </div>
+    <div class="wrap">
+      <div class="book" id="book">
+        <form action="#book" method="get" id="bookform" novalidate>
+          <label>Arrive <input type="date" name="arrive" id="arrive" required></label>
+          <label>Leave <input type="date" name="leave" id="leave" required></label>
+          <label>Guests
+            <select name="guests" id="guests"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select>
+          </label>
+          <label>Room
+            <select name="room"><option value="any">Whatever is free</option><option value="lamp">Lamp room</option><option value="loft">Keel loft</option><option value="corner">The quay corner</option></select>
+          </label>
+          <button class="btn" type="submit">Find a room</button>
+          <p class="book-note" id="booknote" aria-live="polite">Breakfast and a place on the morning sail are included in every stay.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div class="notices" aria-label="Harbour notices for today">
+    <dl class="wrap">
+      <div><dt>High water</dt><dd>06:12 <small>and 18:41</small></dd></div>
+      <div><dt>Marit sails</dt><dd>07:00 <small>wind permitting</small></dd></div>
+      <div><dt>Breakfast</dt><dd>07:30 <small>until 10:30</small></dd></div>
+      <div><dt>Kitchen</dt><dd>18:00 <small>last orders 21:30</small></dd></div>
+      <div><dt>Quay lamps</dt><dd>lit at dusk</dd></div>
+    </dl>
+  </div>
+
+  <section id="rooms" aria-labelledby="rooms-h">
+    <div class="wrap">
+      <div class="head">
+        <h2 id="rooms-h">Three kinds of room, one harbour to look at.</h2>
+        <p class="lede">The building was a ship's chandlery until 1991. We kept the beams, the brass, and the draught under the front door.</p>
+      </div>
+      <ul class="rooms-list">
+        <li>
+          <h3>Lamp rooms <span>four rooms, first floor</span></h3>
+          <p>Two sash windows onto the pier, a wide bed under the old loading beam, and the quay lamp directly outside. We give you a blind, but nobody has used it.</p>
+          <p class="price">€164 <small>a night</small></p>
+        </li>
+        <li>
+          <h3>Keel lofts <span>two rooms, second floor</span></h3>
+          <p>Up under the roof, where the sail loft was. A bath at the gable window, a reading chair, and the sound of halyards against masts when the wind backs north.</p>
+          <p class="price">€212 <small>a night</small></p>
+        </li>
+        <li>
+          <h3>The quay corner <span>one room, ground floor</span></h3>
+          <p>Its own door onto the cobbles, a small stove, and a window at water level. Come in wet from the dinghy and hang everything by the fire.</p>
+          <p class="price">€268 <small>a night</small></p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="sail" class="sail" aria-labelledby="sail-h">
+    <div class="wrap grid">
+      <div>
+        <div class="head">
+          <h2 id="sail-h">The morning on Marit</h2>
+          <p class="lede">Marit is a 42-foot wooden ketch built in 1964. She takes six guests and does not hurry. This is roughly how the morning goes.</p>
+        </div>
+        <ol class="log">
+          <li><time>06:15</time><p><strong>Coffee on the quay</strong>Thermos, oilskins if you need them, and a look at the sky with the skipper.</p></li>
+          <li><time>06:45</time><p><strong>Cast off</strong>We motor out between the moles while the town is still dark.</p></li>
+          <li><time>07:30</time><p><strong>Sails up</strong>Main and mizzen first, then the jib. You can haul, or you can hold your mug and watch.</p></li>
+          <li><time>08:45</time><p><strong>Breakfast on deck</strong>Bread from the inn, smoked fish, eggs done on the cabin stove.</p></li>
+          <li><time>10:30</time><p><strong>Alongside again</strong>Back at the west pier with the whole day still ahead of you.</p></li>
+        </ol>
+      </div>
+      <aside class="bring" aria-label="What to bring on the sail">
+        <h3>Bring</h3>
+        <ul>
+          <li>Shoes with soft soles. Boots and heels mark the deck.</li>
+          <li>A warm layer even in July. It is cooler past the mole.</li>
+          <li>Nothing else. Lifejackets, oilskins and breakfast are on board.</li>
+        </ul>
+        <p style="margin-top:1rem;color:var(--muted)">If the wind is above 25 knots we stay in and do breakfast by the stove instead. You will know the evening before.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="rates" class="rates" aria-labelledby="rates-h">
+    <div class="wrap grid">
+      <div class="rate-card">
+        <h2 id="rates-h" style="font-size:clamp(1.6rem,2.6vw,2.1rem)">Winter rates</h2>
+        <p class="lede" style="font-size:1rem;margin-top:.4rem">November to March, Sunday to Thursday nights.</p>
+        <table>
+          <thead><tr><th>Room</th><th>Per night</th></tr></thead>
+          <tbody>
+            <tr><td>Lamp room</td><td>€138</td></tr>
+            <tr><td>Keel loft</td><td>€176</td></tr>
+            <tr><td>The quay corner</td><td>€224</td></tr>
+          </tbody>
+        </table>
+        <p class="fine">Includes breakfast, the sail, and a three-course supper on your first night. Two-night minimum. Marit is out of the water for maintenance for three weeks in February, and we will tell you if your dates fall in them.</p>
+        <p style="margin-top:1.2rem"><a class="btn" href="#book">Check winter dates</a></p>
+      </div>
+      <figure class="story" id="story" style="margin:0">
+        <blockquote style="margin:0">
+          <p>We bought the boat before we bought the building. For two summers we slept on her and rowed over to look at the chandlery every evening, until the owner got tired of us and named a price.</p>
+        </blockquote>
+        <footer>Ilse and Tomas Rinne, who run the inn and skipper Marit</footer>
+      </figure>
+    </div>
+  </section>
+
+  <section class="final" aria-labelledby="final-h">
+    <div class="wrap">
+      <h2 id="final-h">We will leave the quay lamp on.</h2>
+      <p>Seven rooms, so the inn fills quickly in summer. Winter is quieter, darker and in some ways better.</p>
+      <a class="btn" href="#book">Book a stay</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <p><strong style="font-family:var(--serif);font-size:1.2rem;color:var(--text);font-weight:500">Lantern &amp; Keel</strong></p>
+      <p>Kajgatan 3, west pier, Norrvik. Phone 046 221 7140, or write to stay@lanternandkeel.example.</p>
+    </div>
+    <ul>
+      <li><a href="#rooms">Rooms</a></li>
+      <li><a href="#sail">The sail</a></li>
+      <li><a href="#rates">Rates</a></li>
+      <li><a href="#story">Our story</a></li>
+      <li><a href="#book">Book</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var c=document.getElementById('harbour');if(!c)return;
+  var x=c.getContext('2d');
+  var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cs=getComputedStyle(document.documentElement);
+  var tok=function(n){return cs.getPropertyValue(n).trim();};
+  var SKY=tok('--sky-top-rgb'),HZ=tok('--sky-hz-rgb'),SEA=tok('--sea-rgb'),QUAY=tok('--quay-rgb'),LAMP=tok('--lamp-rgb'),COOL=tok('--cool-rgb');
+  /* lamps: [x fraction, height above horizon, rgb, size, phase] */
+  var lamps=[[0.08,20,LAMP,2.6,0],[0.21,34,LAMP,2.2,1.7],[0.36,16,LAMP,1.9,3.1],[0.52,40,COOL,1.7,0.9],[0.66,24,LAMP,2.8,2.4],[0.8,30,LAMP,2.1,4.2],[0.93,18,LAMP,2.4,5.5]];
+  var W,H,hz,dpr,raf=null,t0=performance.now(),seen=true,blocks=[],led=document.querySelector('.hero .lede');
+  function build(){
+    blocks=[];var n=Math.max(9,Math.round(W/90)),s=7;
+    for(var i=0;i<n;i++){s=(s*9301+49297)%233280;var r=s/233280;var w=W/n*(0.6+r*0.6);var h=10+r*40;blocks.push([i*W/n-w*0.15,w,h]);}
+    blocks.push([W*0.3,2,70,1]);blocks.push([W*0.44,2,96,1]);blocks.push([W*0.72,2,80,1]);
+  }
+  function size(){
+    dpr=Math.min(window.devicePixelRatio||1,1.5);W=c.clientWidth;H=c.clientHeight;
+    c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);x.setTransform(dpr,0,0,dpr,0,0);
+    var lb=led?led.getBoundingClientRect().bottom-c.getBoundingClientRect().top+14:H*0.55;hz=Math.round(Math.min(Math.max(lb,H*0.3),H*0.8));build();draw(rm?6:(performance.now()-t0)/1000);
+  }
+  function draw(t){
+    var g=x.createLinearGradient(0,0,0,hz);g.addColorStop(0,'rgb('+SKY+')');g.addColorStop(1,'rgb('+HZ+')');
+    x.globalCompositeOperation='source-over';x.fillStyle=g;x.fillRect(0,0,W,hz);
+    /* sky glow from the town, warm and low */
+    var sg=x.createRadialGradient(W*0.55,hz,0,W*0.55,hz,W*0.7);sg.addColorStop(0,'rgba('+LAMP+',.13)');sg.addColorStop(1,'rgba('+LAMP+',0)');x.fillStyle=sg;x.fillRect(0,0,W,hz);
+    /* town and masts */
+    x.fillStyle='rgb('+QUAY+')';
+    for(var i=0;i<blocks.length;i++){var b=blocks[i];x.fillRect(b[0],hz-b[2],b[1],b[2]);}
+    x.fillRect(0,hz-5,W,5);
+    /* water */
+    var wg=x.createLinearGradient(0,hz,0,H);wg.addColorStop(0,'rgb('+HZ+')');wg.addColorStop(.18,'rgb('+SEA+')');wg.addColorStop(1,'rgb('+SKY+')');
+    x.fillStyle=wg;x.fillRect(0,hz,W,H-hz);
+    x.globalCompositeOperation='lighter';
+    /* lamps */
+    for(i=0;i<lamps.length;i++){
+      var L=lamps[i],px=W*L[0],py=hz-L[1],s=L[3];
+      var fl=0.86+0.14*Math.sin(t*2.3+L[4])*Math.sin(t*0.9+L[4]*2);
+      var rg=x.createRadialGradient(px,py,0,px,py,s*14);rg.addColorStop(0,'rgba('+L[2]+','+(0.38*fl)+')');rg.addColorStop(1,'rgba('+L[2]+',0)');
+      x.fillStyle=rg;x.fillRect(px-s*14,py-s*14,s*28,s*28);
+      x.fillStyle='rgba('+L[2]+','+fl+')';x.beginPath();x.arc(px,py,s,0,6.2832);x.fill();
+      /* lamp post */
+      x.fillStyle='rgba('+L[2]+',.16)';x.fillRect(px-0.5,py+s,1,L[1]-s);
+    }
+    /* reflections: two layers per lamp, rows spaced wider towards the viewer */
+    var rows=W<700?84:124,span=H-hz;
+    for(var r=0;r<rows;r++){
+      var tt=r/rows,y=hz+(tt*tt*0.65+tt*0.35)*span,fall=Math.pow(1-tt,1.4);
+      var rh=1+tt*1.1;
+      for(i=0;i<lamps.length;i++){
+        L=lamps[i];px=W*L[0];s=L[3];
+        var sway=Math.sin(y*0.05+t*1.35+L[4])*(1+tt*5)+Math.sin(y*0.019-t*0.55+L[4]*1.3)*(tt*12);
+        var gap=Math.sin(y*0.31+t*2.1+L[4]*3)*Math.sin(y*0.07-t*0.8+L[4]);
+        var flick=0.62+0.38*Math.sin(t*2.6+y*0.23+L[4])*Math.sin(t*1.4-y*0.11+L[4]*0.7);
+        var w=s*(2+tt*26)*(0.35+0.65*(0.5+0.5*Math.sin(y*0.085+t*0.8+L[4])*Math.sin(y*0.023-t*0.5+L[4]*2)));
+        var a=fall*0.5*flick;
+        x.fillStyle='rgba('+L[2]+','+(a*0.22).toFixed(3)+')';x.fillRect(px+sway*0.5-w*0.95,y,w*1.9,rh+2);
+        if(gap>-0.3){x.fillStyle='rgba('+L[2]+','+a.toFixed(3)+')';x.fillRect(px+sway-w/2,y,w,rh);}
+      }
+      /* faint sky-glow slivers across the whole surface */
+      if(r%3===0){var sx=(Math.sin(r*12.9898+t*0.3)*0.5+0.5)*W,sw=40+tt*140;x.fillStyle='rgba('+COOL+','+(fall*0.035).toFixed(3)+')';x.fillRect(sx-sw/2+Math.sin(y*0.03+t)*8,y,sw,1);}
+    }
+    x.globalCompositeOperation='source-over';
+  }
+  function frame(now){draw((now-t0)/1000);raf=requestAnimationFrame(frame);}
+  function run(){if(rm||raf!==null||!seen||document.hidden)return;raf=requestAnimationFrame(frame);}
+  function stop(){if(raf!==null){cancelAnimationFrame(raf);raf=null;}}
+  size();run();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(size);
+  var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(size,120);});
+  if('IntersectionObserver' in window){new IntersectionObserver(function(e){seen=e[0].isIntersecting;seen?run():stop();}).observe(c);}
+  document.addEventListener('visibilitychange',function(){document.hidden?stop():run();});
+})();
+
+/* booking form: sensible minimum dates, and a demo response in place of a backend */
+(function(){
+  var f=document.getElementById('bookform'),a=document.getElementById('arrive'),l=document.getElementById('leave'),g=document.getElementById('guests'),note=document.getElementById('booknote');
+  if(!f)return;
+  function iso(d){return d.toISOString().slice(0,10);}
+  var today=new Date();today.setHours(12,0,0,0);
+  var tmr=new Date(today);tmr.setDate(tmr.getDate()+1);
+  a.min=iso(today);l.min=iso(tmr);
+  a.addEventListener('change',function(){if(!a.value)return;var d=new Date(a.value);d.setDate(d.getDate()+1);l.min=iso(d);if(l.value&&l.value<l.min)l.value=l.min;});
+  var fmt=function(s){var d=new Date(s+'T12:00:00');return d.toLocaleDateString(undefined,{day:'numeric',month:'short'});};
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(!a.value||!l.value||l.value<=a.value){note.innerHTML='Pick an arrival date and a later departure, and we will look at what is free.';(!a.value?a:l).focus();return;}
+    var n=Math.round((new Date(l.value)-new Date(a.value))/864e5);
+    note.innerHTML='Looking at <strong>'+fmt(a.value)+' to '+fmt(l.value)+'</strong>, '+n+(n===1?' night':' nights')+' for '+g.value+(g.value==='1'?' guest':' guests')+'. This demo does not take bookings; point the form at your own endpoint.';
+  });
+})();
+</script>
+</body>
+</html>

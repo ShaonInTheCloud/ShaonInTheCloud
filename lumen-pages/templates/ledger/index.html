@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quay — treasury for small exporters</title>
+<meta name="description" content="Quay locks the exchange rate on the day you invoice, collects in your buyer's currency and settles to your account the next business day. Built for exporters with 2 to 40 staff.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,88..125,300..700;1,88..125,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --base:#0a1a21;
+  --base-2:#0e2229;
+  --surface:#122b33;
+  --surface-2:#173640;
+  --line:rgba(170,215,205,.14);
+  --line-2:rgba(170,215,205,.28);
+  --text:#e4efec;
+  --text-2:#a4bcb6;
+  --accent:#e8c170;      /* brass */
+  --accent-ink:#1d1708;
+  --mint:#8fe0c0;
+  --red:#f09a8a;
+  --display:"Archivo",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --max:1120px;
+  --gutter:clamp(16px,4vw,48px);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--base);color:var(--text);font-family:var(--display);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;font-feature-settings:"tnum" 1}
+a{color:inherit;text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:4px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:2px}
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.02em;line-height:1.05}
+h1{font-size:clamp(2.4rem,6.4vw,4.6rem);font-variation-settings:"wdth" 92}
+h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-variation-settings:"wdth" 94}
+h3{font-size:1.2rem;letter-spacing:-.01em}
+p{margin:0}
+.wrap{width:min(var(--max),100% - 2*var(--gutter));margin-inline:auto}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:0}
+.lab{font-size:.84rem;color:var(--text-2)}
+.btn{display:inline-flex;align-items:center;gap:.5em;padding:.8em 1.25em;border-radius:8px;font-weight:600;font-size:.96rem;border:1px solid transparent;cursor:pointer;font-family:inherit;line-height:1}
+.btn:hover{text-decoration:none}
+.btn-fill{background:var(--accent);color:var(--accent-ink)}
+.btn-fill:hover{background:#f2d08b}
+.btn-ghost{border-color:var(--line-2);color:var(--text)}
+.btn-ghost:hover{background:rgba(170,215,205,.06)}
+
+/* nav */
+header{position:sticky;top:0;z-index:5;background:rgba(10,26,33,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:1.15rem;letter-spacing:-.01em}
+.brand svg{width:22px;height:22px}
+.nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0;font-size:.94rem;color:var(--text-2)}
+.nav ul a:hover{color:var(--text)}
+@media (max-width:720px){.nav ul{display:none}}
+
+/* hero */
+.hero{padding:88px 0 80px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 50% at 80% 10%,rgba(232,193,112,.08),transparent 60%);pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:56px;align-items:center;position:relative}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+.hero h1 b{font-weight:500;color:var(--accent)}
+.lede{color:var(--text-2);font-size:clamp(1.02rem,1.5vw,1.2rem);max-width:36ch;margin-top:22px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:32px}
+.cta small{color:var(--text-2);font-size:.88rem}
+
+/* the ledger */
+.ledger{border:1px solid var(--line-2);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--base-2));box-shadow:0 40px 90px -50px rgba(0,0,0,.9);overflow:hidden}
+.ledger .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--line)}
+.ledger .top strong{font-weight:500;font-size:.95rem}
+.ledger .top .lab{font-size:.8rem}
+.ledger table{width:100%;border-collapse:collapse;font-size:.9rem}
+.ledger th{font-weight:500;text-align:left;color:var(--text-2);font-size:.76rem;padding:10px 20px 8px;border-bottom:1px solid var(--line)}
+.ledger td{padding:11px 20px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ledger th.r,.ledger td.r{text-align:right}
+.ledger td.r{font-family:var(--mono);font-size:.88rem}
+.ledger .ccy{color:var(--text-2);margin-right:.5em;font-size:.78rem}
+.ledger tr.row{opacity:0;transform:translateY(6px)}
+.ledger.on tr.row{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
+.ledger.on tr.row:nth-child(1){transition-delay:.05s}.ledger.on tr.row:nth-child(2){transition-delay:.17s}.ledger.on tr.row:nth-child(3){transition-delay:.29s}.ledger.on tr.row:nth-child(4){transition-delay:.41s}.ledger.on tr.row:nth-child(5){transition-delay:.53s}
+.ledger tfoot td{border-bottom:0;background:rgba(232,193,112,.06);padding-top:14px;padding-bottom:14px}
+.ledger tfoot td:first-child{color:var(--text-2)}
+.ledger tfoot .r{font-size:1.02rem;color:var(--accent)}
+.ledger .co{display:block;color:var(--text-2);font-size:.78rem;margin-top:1px}
+@media (max-width:480px){.ledger th:nth-child(2),.ledger td:nth-child(2){display:none}.ledger th,.ledger td{padding-inline:12px}.ledger td.r{font-size:.8rem}.ledger .ccy{margin-right:.3em}}
+.curve{padding:14px 20px 18px;border-top:1px solid var(--line)}
+.curve .lab{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+.curve svg{display:block;width:100%;height:auto;overflow:visible}
+.curve .line{fill:none;stroke:var(--mint);stroke-width:1.6;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.curve .ref{fill:none;stroke:var(--line-2);stroke-width:1;stroke-dasharray:3 4}
+.curve .fill{fill:url(#cg);opacity:0}
+.curve .dot{fill:var(--mint);opacity:0}
+.ledger.on .line{transition:stroke-dashoffset 1.8s .35s cubic-bezier(.4,0,.2,1);stroke-dashoffset:0}
+.ledger.on .fill{transition:opacity .8s 1.6s ease;opacity:1}
+.ledger.on .dot{transition:opacity .4s 2.1s ease;opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .ledger tr.row,.ledger.on tr.row{opacity:1;transform:none;transition:none}
+  .curve .line{stroke-dashoffset:0;transition:none}.curve .fill{opacity:1;transition:none}.curve .dot{opacity:1;transition:none}
+}
+
+/* proof band */
+.proof{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--base-2)}
+.proof .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+.proof div{padding:30px 24px 30px 0}
+.proof div+div{border-left:1px solid var(--line);padding-left:24px}
+.proof strong{display:block;font-family:var(--mono);font-weight:500;font-size:clamp(1.7rem,2.8vw,2.3rem);line-height:1.1;color:var(--text)}
+.proof strong i{font-style:normal;color:var(--accent)}
+.proof span{display:block;color:var(--text-2);font-size:.92rem;margin-top:8px;max-width:24ch}
+@media (max-width:860px){.proof .wrap{grid-template-columns:1fr 1fr}.proof div:nth-child(3){border-left:0;padding-left:0}.proof div:nth-child(n+3){border-top:1px solid var(--line)}}
+@media (max-width:480px){.proof .wrap{grid-template-columns:1fr}.proof div+div{border-left:0;padding-left:0;border-top:1px solid var(--line)}}
+
+/* how */
+.how{padding:96px 0 80px}
+.how-head{max-width:60ch;margin-bottom:52px}
+.how-head p{color:var(--text-2);margin-top:14px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative}
+.flow::before{content:"";position:absolute;left:0;right:0;top:11px;height:1px;background:var(--line-2)}
+.stage{position:relative;padding-top:30px}
+.stage::before{content:"";position:absolute;top:6px;left:0;width:11px;height:11px;border-radius:50%;background:var(--base);border:2px solid var(--accent)}
+.stage .day{font-family:var(--mono);font-size:.78rem;color:var(--accent);display:block;margin-bottom:10px}
+.stage h3{margin-bottom:8px}
+.stage p{color:var(--text-2);font-size:.95rem}
+@media (max-width:860px){.flow{grid-template-columns:1fr;gap:30px;padding-left:22px}.flow::before{top:0;bottom:0;left:5px;width:1px;height:auto;right:auto}.stage{padding-top:0}.stage::before{left:-22px;top:7px}}
+
+/* features */
+.feat{padding:0 0 96px}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px 64px}
+.feat article{border-top:1px solid var(--line);padding-top:20px}
+.feat h3{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.feat h3 .num{font-size:.8rem;color:var(--text-2);font-weight:400}
+.feat p{color:var(--text-2);font-size:.96rem;max-width:44ch}
+@media (max-width:720px){.feat-grid{grid-template-columns:1fr;gap:28px}}
+
+/* pricing */
+.pricing{padding:0 0 96px}
+.pricing h2{margin-bottom:12px}
+.pricing .sub{color:var(--text-2);max-width:56ch;margin-bottom:40px}
+.tiers{border:1px solid var(--line-2);border-radius:14px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr 1fr}
+.tier{padding:28px 26px 30px;display:flex;flex-direction:column;gap:6px}
+.tier+.tier{border-left:1px solid var(--line)}
+.tier.lead{background:var(--surface)}
+.tier h3{font-size:1.05rem}
+.tier .for{color:var(--text-2);font-size:.9rem;min-height:2.7em}
+.tier .price{font-family:var(--mono);font-size:2.1rem;font-weight:500;line-height:1;margin-top:14px}
+.tier .price small{font-family:var(--display);font-size:.85rem;color:var(--text-2);margin-left:6px;font-weight:400}
+.tier .fx{font-family:var(--mono);font-size:.9rem;color:var(--mint);margin-bottom:12px}
+.tier ul{list-style:none;margin:8px 0 24px;padding:0;color:var(--text-2);font-size:.93rem;display:grid;gap:8px;flex:1}
+.tier li{padding-left:16px;position:relative}
+.tier li::before{content:"";position:absolute;left:0;top:.65em;width:7px;height:1px;background:var(--accent)}
+.tier .btn{align-self:flex-start}
+@media (max-width:860px){.tiers{grid-template-columns:1fr}.tier+.tier{border-left:0;border-top:1px solid var(--line)}}
+
+/* final */
+.final{padding:0 0 100px}
+.final .box{border:1px solid var(--line-2);border-radius:16px;padding:clamp(40px,7vw,80px) clamp(24px,6vw,72px);display:grid;grid-template-columns:minmax(0,1.3fr) auto;gap:32px;align-items:center;background:linear-gradient(120deg,var(--surface) 0%,var(--base-2) 60%,rgba(232,193,112,.08) 100%)}
+.final p{color:var(--text-2);margin-top:12px;max-width:44ch}
+@media (max-width:760px){.final .box{grid-template-columns:1fr}}
+
+footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--text-2);font-size:.88rem}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px 32px;align-items:flex-start}
+.foot ul{display:flex;flex-wrap:wrap;gap:20px;list-style:none;margin:0;padding:0}
+.foot .reg{max-width:52ch;line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap nav" aria-label="Primary">
+    <a class="brand" href="#top" aria-label="Quay home">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17h18M5 17V9l7-5 7 5v8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 17v-4h6v4" stroke="#e8c170" stroke-width="1.8"/></svg>
+      Quay
+    </a>
+    <ul>
+      <li><a href="#how">How it settles</a></li>
+      <li><a href="#features">Product</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#docs">Docs</a></li>
+    </ul>
+    <a class="btn btn-ghost" href="#open">Open an account</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero" aria-labelledby="h1">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="lab">Treasury for exporters with 2 to 40 staff</p>
+      <h1 id="h1" style="margin-top:14px">Know what an invoice is worth <b>today</b>, not in sixty days.</h1>
+      <p class="lede">Quay locks the exchange rate the moment you send the invoice, collects in your buyer’s currency, and settles to your bank the next business day.</p>
+      <div class="cta">
+        <a class="btn btn-fill" href="#open" id="open">Open an account</a>
+        <small>Approved in two business days. No minimum volume.</small>
+      </div>
+    </div>
+
+    <div class="ledger" id="ledger" aria-label="Example ledger: receivables locked this week">
+      <div class="top">
+        <strong>Receivables locked, week 41</strong>
+        <span class="lab">Base currency EUR</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th scope="col">Invoice</th><th scope="col">Buyer</th><th scope="col" class="r">Amount</th><th scope="col" class="r">Locked EUR</th></tr>
+        </thead>
+        <tbody>
+          <tr class="row"><td class="num">#2041</td><td>Haldane Timber<span class="co">Portland, US</span></td><td class="r"><span class="ccy">USD</span><span data-n="48250" data-d="2">0.00</span></td><td class="r"><span data-n="44187.63" data-d="2">0.00</span></td></tr>
+          <tr class="row"><td class="num">#2042</td><td>Ōtsuka Marine<span class="co">Kobe, JP</span></td><td class="r"><span class="ccy">JPY</span><span data-n="3120000" data-d="0">0</span></td><td class="r"><span data-n="19031.70" data-d="2">0.00</span></td></tr>
+          <tr class="row"><td class="num">#2043</td><td>Brightwater Foods<span class="co">Leeds, UK</span></td><td class="r"><span class="ccy">GBP</span><span data-n="17900" data-d="2">0.00</span></td><td class="r"><span data-n="20808.94" data-d="2">0.00</span></td></tr>
+          <tr class="row"><td class="num">#2044</td><td>Sørlie Bygg<span class="co">Bergen, NO</span></td><td class="r"><span class="ccy">NOK</span><span data-n="262400" data-d="0">0</span></td><td class="r"><span data-n="22546.12" data-d="2">0.00</span></td></tr>
+          <tr class="row"><td class="num">#2045</td><td>Cairn Optics<span class="co">Zürich, CH</span></td><td class="r"><span class="ccy">CHF</span><span data-n="9600" data-d="2">0.00</span></td><td class="r"><span data-n="10217.35" data-d="2">0.00</span></td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="3">Total locked, settles Tue–Fri</td><td class="r"><span data-n="116791.74" data-d="2" data-delay="700">0.00</span></td></tr>
+        </tfoot>
+      </table>
+      <div class="curve">
+        <div class="lab"><span>Hedged balance vs. unhedged, last 90 days</span><span class="num">+€4,312</span></div>
+        <svg viewBox="0 0 520 110" role="img" aria-label="Line chart: the hedged balance rises steadily while the unhedged reference line drifts down">
+          <defs>
+            <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#8fe0c0" stop-opacity=".22"/>
+              <stop offset="1" stop-color="#8fe0c0" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path class="ref" d="M0,62 C60,66 110,58 170,72 S290,80 350,70 S460,92 520,84"/>
+          <path class="fill" d="M0,78 C40,74 70,70 110,66 S180,62 220,56 S300,50 350,40 S430,30 470,22 S505,16 520,14 V110 H0 Z"/>
+          <path class="line" pathLength="1" d="M0,78 C40,74 70,70 110,66 S180,62 220,56 S300,50 350,40 S430,30 470,22 S505,16 520,14"/>
+          <circle class="dot" cx="520" cy="14" r="3.5"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="proof" aria-label="Key figures">
+  <div class="wrap">
+    <div><strong><i>0.18</i>%</strong><span>FX spread over the mid-market rate on the Growth plan.</span></div>
+    <div><strong>31</strong><span>currencies you can invoice and collect in, with local account details in 14.</span></div>
+    <div><strong>T+1</strong><span>settlement to your own bank once the buyer pays.</span></div>
+    <div><strong>1,400</strong><span>exporters across 12 countries, from sawmills to lens makers.</span></div>
+  </div>
+</section>
+
+<section class="how wrap" id="how" aria-labelledby="how-h">
+  <div class="how-head">
+    <h2 id="how-h">From invoice to money in the bank, in four dated steps.</h2>
+    <p>The timeline below is what a real invoice looks like inside Quay. Every step has a date and a rate attached, so your accountant never has to ask.</p>
+  </div>
+  <div class="flow">
+    <article class="stage">
+      <span class="day">Day 0</span>
+      <h3>You invoice</h3>
+      <p>Send the invoice from Quay or forward the PDF. We read the amount, currency and due date.</p>
+    </article>
+    <article class="stage">
+      <span class="day">Day 0, same minute</span>
+      <h3>Rate lock</h3>
+      <p>The EUR value is fixed at the mid-market rate plus your plan’s spread. It will not move, whatever the dollar does.</p>
+    </article>
+    <article class="stage">
+      <span class="day">Day 1 to 60</span>
+      <h3>Buyer pays locally</h3>
+      <p>Your buyer pays a domestic account in their own currency, so there is no wire fee and no excuse for a late payment.</p>
+    </article>
+    <article class="stage">
+      <span class="day">Next business day</span>
+      <h3>Settlement</h3>
+      <p>The locked EUR amount lands in your bank. The ledger entry, rate and reference are exported to your books.</p>
+    </article>
+  </div>
+</section>
+
+<section class="feat wrap" id="features" aria-labelledby="feat-h">
+  <h2 id="feat-h" style="margin-bottom:40px">Four things you will use every week.</h2>
+  <div class="feat-grid">
+    <article>
+      <h3>Rate lock <span class="num">up to 180 days</span></h3>
+      <p>Lock at invoice, or set a trigger rate and let Quay lock when the market touches it. Partial locks are fine for staged deliveries.</p>
+    </article>
+    <article>
+      <h3>Local collection accounts <span class="num">14 currencies</span></h3>
+      <p>A US routing number, a UK sort code, a Japanese branch account, all in your company name. Buyers see a domestic payee.</p>
+    </article>
+    <article>
+      <h3>Runway view <span class="num">90-day</span></h3>
+      <p>Open receivables, locked value, and expected settlement dates on one screen, netted against the supplier invoices you still owe.</p>
+    </article>
+    <article>
+      <h3>Books export <span class="num">nightly</span></h3>
+      <p>Netvisor, Xero, Fortnox and QuickBooks. One journal line per settlement, with the realised rate and our fee as separate lines.</p>
+    </article>
+  </div>
+</section>
+
+<section class="pricing wrap" id="pricing" aria-labelledby="price-h">
+  <h2 id="price-h">A flat fee and a spread you can read.</h2>
+  <p class="sub">No account fees, no minimums, no inactivity charges. The spread is the whole cost of a conversion, and it is printed on every ledger line.</p>
+  <div class="tiers">
+    <article class="tier">
+      <h3>Starter</h3>
+      <p class="for">For a first export customer or two.</p>
+      <p class="price">€0<small>per month</small></p>
+      <p class="fx">0.35% FX spread</p>
+      <ul>
+        <li>Rate lock up to 60 days</li>
+        <li>Collection accounts in USD, GBP, EUR</li>
+        <li>Books export, CSV</li>
+        <li>Email support, next business day</li>
+      </ul>
+      <a class="btn btn-ghost" href="#open">Open an account</a>
+    </article>
+    <article class="tier lead">
+      <h3>Growth</h3>
+      <p class="for">For companies invoicing more than €50k a month abroad.</p>
+      <p class="price">€49<small>per month</small></p>
+      <p class="fx">0.18% FX spread</p>
+      <ul>
+        <li>Rate lock up to 180 days, trigger rates</li>
+        <li>Collection accounts in all 14 currencies</li>
+        <li>Runway view with supplier netting</li>
+        <li>Netvisor, Xero, Fortnox, QuickBooks sync</li>
+        <li>Chat support within the hour, 07–19 EET</li>
+      </ul>
+      <a class="btn btn-fill" href="#open">Start on Growth</a>
+    </article>
+    <article class="tier">
+      <h3>Scale</h3>
+      <p class="for">For €1M+ a month, or more than one legal entity.</p>
+      <p class="price">Quoted<small>yearly</small></p>
+      <p class="fx">from 0.09% FX spread</p>
+      <ul>
+        <li>Multi-entity ledger</li>
+        <li>Forward contracts up to 12 months</li>
+        <li>API access and webhooks</li>
+        <li>Named treasury contact</li>
+      </ul>
+      <a class="btn btn-ghost" href="#contact">Talk to treasury</a>
+    </article>
+  </div>
+</section>
+
+<section class="final wrap" aria-labelledby="final-h">
+  <div class="box">
+    <div>
+      <h2 id="final-h">Lock your next invoice before the rate moves.</h2>
+      <p>Two business days to approval. Bring your trade register extract and your last three export invoices, and we will set up the first collection account on the call.</p>
+    </div>
+    <a class="btn btn-fill" href="#open">Open an account</a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <p class="reg">© 2026 Quay Treasury Oy, Turku. Payment institution licence 2024-07-FIN-0442, supervised by the Finnish Financial Supervisory Authority. Client funds are held in segregated accounts.</p>
+    <ul>
+      <li><a href="#docs" id="docs">Docs</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#how">Security</a></li>
+      <li><a href="mailto:treasury@quay.fi" id="contact">treasury@quay.fi</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var box=document.getElementById('ledger');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cells=[].slice.call(box.querySelectorAll('[data-n]'));
+  var fmt={};
+  function f(v,d){
+    fmt[d]=fmt[d]||new Intl.NumberFormat('en-IE',{minimumFractionDigits:d,maximumFractionDigits:d});
+    return fmt[d].format(v);
+  }
+  function settle(){
+    cells.forEach(function(el){el.textContent=f(+el.dataset.n,+el.dataset.d)});
+  }
+  function count(){
+    var t0=performance.now(),DUR=1500;
+    cells.forEach(function(el,i){
+      el._s=t0+(+el.dataset.delay||0)+i*110;   /* staggered start */
+    });
+    function tick(now){
+      var done=true;
+      cells.forEach(function(el){
+        var p=(now-el._s)/DUR;
+        if(p<0){p=0;done=false}else if(p<1){done=false}else p=1;
+        var e=1-Math.pow(1-p,3);
+        el.textContent=f(+el.dataset.n*e,+el.dataset.d);
+      });
+      if(!done)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  if(reduce||!('IntersectionObserver' in window)){settle();box.classList.add('on');return}
+  var io=new IntersectionObserver(function(en){
+    if(en[0].isIntersecting){box.classList.add('on');count();io.disconnect()}
+  },{threshold:.35});
+  io.observe(box);
+})();
+</script>
+</body>
+</html>

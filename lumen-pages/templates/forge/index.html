@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge — rehearse database migrations before production sees them</title>
+<meta name="description" content="Forge runs every schema migration on a local snapshot of your own data first, measures the lock, proves the rollback, then ships it to staging and production in order.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1917;        /* graphite, warm */
+  --bg-2:#201f1c;      /* raised surface */
+  --bg-term:#121211;   /* terminal well */
+  --line:#2f2d28;
+  --line-2:#403d36;
+  --ink:#ece7dd;
+  --ink-2:#aaa497;
+  --ink-3:#8c8778;
+  --phos:#ffb15c;      /* warm phosphor */
+  --phos-2:#ffd59b;
+  --phos-dim:rgba(255,177,92,.14);
+  --sans:"Alegreya Sans",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --gutter:clamp(16px,4vw,48px);
+  --max:1120px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:1.0625rem;line-height:1.5;overflow-x:hidden}
+img,svg{display:block}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+code,kbd,pre{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--phos);outline-offset:3px;border-radius:2px}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* nav */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:1.5rem;height:60px}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;font-weight:700;font-size:1.2rem;letter-spacing:.01em}
+.brand i{width:22px;height:22px;border:2px solid var(--phos);border-radius:3px 3px 8px 3px;position:relative}
+.brand i::after{content:"";position:absolute;left:5px;top:5px;width:8px;height:8px;background:var(--phos);border-radius:1px}
+.nav nav{display:none;gap:1.4rem;margin-left:1rem}
+.nav nav a{text-decoration:none;color:var(--ink-2)}
+.nav nav a:hover{color:var(--ink)}
+.nav .act{margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.05rem;border-radius:6px;border:1px solid var(--line-2);background:var(--bg-2);color:var(--ink);text-decoration:none;font-weight:500;font-size:1rem;cursor:pointer;font-family:var(--sans);transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--phos)}
+.btn.primary{background:var(--phos);border-color:var(--phos);color:#1a1200;font-weight:700}
+.btn.primary:hover{background:var(--phos-2);border-color:var(--phos-2)}
+.btn code{font-size:.9em}
+@media(min-width:800px){.nav nav{display:flex}}
+
+/* hero */
+.hero{padding:clamp(2.5rem,6vw,4rem) 0 clamp(2.5rem,6vw,4.5rem);position:relative}
+.hero h1{font-size:clamp(2.1rem,5.6vw,3.9rem);line-height:1.05;font-weight:700;letter-spacing:-.015em;max-width:19ch}
+.hero h1 em{font-style:italic;font-weight:400;color:var(--phos-2)}
+.hero .lede{margin-top:1.1rem;max-width:52ch;color:var(--ink-2);font-size:1.15rem}
+.hero .cta{display:flex;flex-wrap:wrap;gap:.9rem 1.4rem;align-items:center;margin-top:1.6rem}
+.hero .cta a.text{color:var(--ink-2);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line-2)}
+.hero .cta a.text:hover{color:var(--ink)}
+.stage{display:grid;gap:1.5rem;margin-top:2.2rem;align-items:start}
+@media(min-width:900px){.stage{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2.5rem}}
+
+/* terminal */
+.term{background:var(--bg-term);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 0 0 1px #000 inset,0 30px 80px -30px rgba(255,177,92,.25),0 0 120px -40px var(--phos);position:relative;overflow:hidden}
+.term::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 30% 0%,var(--phos-dim),transparent 70%);pointer-events:none}
+.term-bar{display:flex;align-items:center;gap:.6rem;padding:.65rem .9rem;border-bottom:1px solid var(--line);font:500 .8rem/1 var(--mono);color:var(--ink-3)}
+.term-bar b{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+.term-bar b:first-child{background:var(--phos);box-shadow:0 0 10px var(--phos)}
+.term-bar span{margin-left:.3rem}
+.term-bar button{margin-left:auto;background:none;border:1px solid var(--line-2);color:var(--ink-2);font:inherit;padding:.3rem .55rem;border-radius:4px;cursor:pointer}
+.term-bar button:hover{color:var(--phos);border-color:var(--phos)}
+.term-body{height:21rem;overflow-y:auto;padding:1rem .95rem 1.2rem;font:400 .86rem/1.65 var(--mono);color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere;position:relative;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+@media(min-width:900px){.term-body{height:23rem;font-size:.9rem}}
+.ln{display:block;min-height:1.65em}
+.ln.cmd{color:var(--ink)}
+.ln.cmd::before{content:"$ ";color:var(--phos)}
+.ln.out{color:var(--ink-2);padding-left:1.1em}
+.ln.ok{color:var(--phos-2);padding-left:1.1em}
+.ln.ok::before{content:"✓ ";color:var(--phos)}
+.ln.spin::after{content:"";animation:dots 1s steps(4) infinite}
+.cursor{display:inline-block;width:.6em;height:1.1em;background:var(--phos);vertical-align:-.2em;margin-left:1px;animation:blink 1s steps(2) infinite;box-shadow:0 0 8px var(--phos)}
+@keyframes blink{50%{opacity:0}}
+@keyframes dots{to{content:"..."}}
+.ghost{position:fixed;z-index:30;pointer-events:none;font:400 .9rem/1.65 var(--mono);color:var(--phos-2);white-space:nowrap}
+.ghost::before{content:"✓ ";color:var(--phos)}
+
+/* feature slots that the output lines land on */
+.feats{display:grid;gap:0;border-top:1px solid var(--line)}
+.feat{padding:1.05rem 0 1.15rem;border-bottom:1px solid var(--line);position:relative}
+.feat .slot{font:400 .8rem/1.5 var(--mono);color:var(--ink-3);display:block}
+.feat h3{font-size:1.18rem;font-weight:700;line-height:1.25;margin-top:.2rem;opacity:0;transform:translateY(4px);transition:opacity .4s ease,transform .4s ease}
+.feat p{color:var(--ink-2);margin-top:.35rem;font-size:1rem;opacity:0;transition:opacity .5s ease .15s}
+.feat.on .slot{color:var(--phos)}
+.feat.on h3,.feat.on p{opacity:1;transform:none}
+.feat.on::before{content:"";position:absolute;left:-1.2rem;top:1.3rem;width:6px;height:6px;border-radius:50%;background:var(--phos);box-shadow:0 0 12px var(--phos)}
+@media(max-width:899px){.feat.on::before{display:none}}
+
+/* proof band */
+.proof{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-2)}
+.proof .wrap{display:grid;grid-template-columns:1fr 1fr}
+.proof div{padding:1.4rem 1rem 1.4rem 0;border-bottom:1px solid var(--line)}
+.proof div:nth-child(odd){border-right:1px solid var(--line);padding-right:1rem}
+.proof div:nth-child(even){padding-left:1rem}
+.proof b{display:block;font:600 clamp(1.6rem,3.6vw,2.4rem)/1 var(--mono);color:var(--phos-2);letter-spacing:-.02em}
+.proof span{display:block;color:var(--ink-2);margin-top:.5rem;font-size:.98rem}
+@media(min-width:800px){.proof .wrap{grid-template-columns:repeat(4,1fr)}.proof div{border-bottom:0;padding:2rem 1.4rem}.proof div:nth-child(odd),.proof div:nth-child(even){border-right:1px solid var(--line);padding-left:1.4rem}.proof div:first-child{padding-left:0}.proof div:last-child{border-right:0}}
+
+/* sections */
+section.block{padding:clamp(3.5rem,8vw,6.5rem) 0}
+.block h2{font-size:clamp(1.7rem,3.6vw,2.5rem);line-height:1.12;font-weight:700;letter-spacing:-.01em;max-width:24ch}
+.block .sub{color:var(--ink-2);max-width:56ch;margin-top:.8rem;font-size:1.1rem}
+.head{display:grid;gap:.5rem 3rem;align-items:end}
+@media(min-width:800px){.head{grid-template-columns:1fr 1fr}.head .sub{margin-top:0}}
+
+/* install */
+.install{display:grid;gap:.7rem;margin-top:2.2rem}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.5rem;background:var(--bg-term);border:1px solid var(--line);border-radius:8px;padding:.55rem .55rem .55rem .95rem}
+.row small{grid-column:1/-1;font-family:var(--sans);color:var(--ink-3);font-size:.9rem;padding-top:.1rem}
+.row code{font-size:.86rem;color:var(--ink);overflow-wrap:anywhere;line-height:1.5}
+.row code .k{color:var(--phos)}
+.copy{font:500 .8rem/1 var(--mono);color:var(--ink-2);background:var(--bg-2);border:1px solid var(--line-2);border-radius:5px;padding:.55rem .7rem;cursor:pointer;min-width:5.2rem;transition:color .15s,border-color .15s}
+.copy:hover{color:var(--phos);border-color:var(--phos)}
+.copy.done{color:#1a1200;background:var(--phos);border-color:var(--phos)}
+@media(min-width:700px){.row{grid-template-columns:auto 1fr auto}.row small{grid-column:auto;min-width:7rem;padding:0}}
+
+/* how it works */
+.steps{margin-top:2.4rem;border-top:1px solid var(--line)}
+.step{display:grid;gap:1rem;padding:1.6rem 0;border-bottom:1px solid var(--line)}
+.step .n{font:600 .85rem/1 var(--mono);color:var(--phos);padding-top:.35rem}
+.step h3{font-size:1.35rem;font-weight:700;line-height:1.2}
+.step p{color:var(--ink-2);margin-top:.5rem;max-width:48ch}
+.step pre{margin:0;background:var(--bg-term);border:1px solid var(--line);border-radius:8px;padding:.9rem 1rem;font-size:.8rem;line-height:1.6;color:var(--ink-2);overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.step pre b{color:var(--phos-2);font-weight:400}
+.step pre i{color:var(--ink-3);font-style:normal}
+@media(min-width:800px){.step{grid-template-columns:3rem 1.1fr 1fr;gap:1.5rem 2rem;padding:2.2rem 0}}
+
+/* pricing */
+.plans{margin-top:2.4rem;border-top:1px solid var(--line)}
+.plan{display:grid;gap:.8rem;padding:1.6rem 0 1.8rem;border-bottom:1px solid var(--line);position:relative}
+.plan h3{font-size:1.3rem;font-weight:700}
+.plan .price{font:600 1.9rem/1 var(--mono);letter-spacing:-.02em}
+.plan .price small{font:400 .95rem var(--sans);color:var(--ink-2);margin-left:.3rem}
+.plan ul{list-style:none;margin:0;padding:0;color:var(--ink-2);display:grid;gap:.35rem}
+.plan ul li::before{content:"–";color:var(--phos);margin-right:.5rem}
+.plan.lead{padding-left:1.2rem}
+.plan.lead::before{content:"";position:absolute;left:0;top:1.2rem;bottom:1.2rem;width:3px;background:var(--phos);box-shadow:0 0 14px var(--phos)}
+.plan .btn{justify-self:start;margin-top:.4rem}
+@media(min-width:800px){.plan{grid-template-columns:1.1fr 1fr 1.4fr auto;align-items:start;gap:2rem;padding:2rem 0}.plan .btn{margin-top:0;justify-self:end}.plan.lead{padding-left:1.6rem}}
+
+/* final cta */
+.final{padding:clamp(4rem,10vw,8rem) 0;position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.final::before{content:"";position:absolute;left:50%;bottom:-40%;width:70vw;height:70vw;max-width:800px;max-height:800px;transform:translateX(-50%);background:radial-gradient(closest-side,var(--phos-dim),transparent);pointer-events:none}
+.final .wrap{position:relative;text-align:center;display:grid;justify-items:center;gap:1.2rem}
+.final h2{font-size:clamp(1.9rem,4.5vw,3.2rem);line-height:1.08;max-width:18ch}
+.final p{color:var(--ink-2);max-width:44ch;font-size:1.1rem}
+.final code{display:inline-block;margin-top:.4rem;font-size:.85rem;color:var(--ink-3)}
+
+footer{border-top:1px solid var(--line);padding:2rem 0 2.5rem;color:var(--ink-3);font-size:.95rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:.8rem 2rem;align-items:center}
+footer nav{display:flex;flex-wrap:wrap;gap:1.2rem}
+footer a{text-decoration:none;color:var(--ink-2)}
+footer a:hover{color:var(--ink)}
+footer .right{margin-left:auto}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .cursor,.ln.spin::after{animation:none}
+  .cursor{display:none}
+  .feat h3,.feat p{opacity:1;transform:none;transition:none}
+  .feat .slot{color:var(--phos)}
+  .feat::before{display:none}
+  .btn,.copy{transition:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Forge home"><i aria-hidden="true"></i>Forge</a>
+    <nav aria-label="Primary">
+      <a href="#install">Install</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#changelog">Changelog</a>
+    </nav>
+    <a class="btn act" href="#install"><code>forge init</code></a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <h1>Rehearse the migration <em>before</em> production ever feels it.</h1>
+      <p class="lede">Forge takes a snapshot of your database onto your laptop, runs the migration there with a stopwatch on every lock, replays the rollback, and only then lets you ship it. The output below is a real session.</p>
+      <div class="cta">
+        <a class="btn primary" href="#install">Install Forge, it's free for one database</a>
+        <a class="text" href="#how">See what a rehearsal checks</a>
+      </div>
+
+      <div class="stage">
+        <div class="term" aria-label="Terminal session demonstrating Forge">
+          <div class="term-bar"><b></b><b></b><b></b><span>shop — zsh — forge 1.8.2</span><button type="button" id="replay" aria-label="Replay the terminal session">replay</button></div>
+          <div class="term-body" id="term" aria-live="off"></div>
+        </div>
+
+        <div class="feats" id="feats" aria-label="What the session proved">
+          <div class="feat" data-f="0">
+            <span class="slot">waiting for rehearsal</span>
+            <h3>The lock time you see is the one production will feel</h3>
+            <p>Every plan runs on a snapshot of your own schema and a sampled slice of real rows, so lock durations come from measurement, not from reading the docs.</p>
+          </div>
+          <div class="feat" data-f="1">
+            <span class="slot">waiting for rehearsal</span>
+            <h3>No silent table rewrites</h3>
+            <p>Forge inspects the plan the engine will actually execute. If a column change would rewrite the table, the plan stops and tells you which statement caused it.</p>
+          </div>
+          <div class="feat" data-f="2">
+            <span class="slot">waiting for rehearsal</span>
+            <h3>Rollback proven before you need it</h3>
+            <p>The down migration is replayed on the same snapshot. If the schema does not come back identical, the plan fails on your laptop instead of at 3 a.m.</p>
+          </div>
+          <div class="feat" data-f="3">
+            <span class="slot">waiting for ship</span>
+            <h3>Walks your environments in order</h3>
+            <p><code>forge ship</code> applies to staging, waits for the health check you define, then prod. It refuses to continue if production drifted since the snapshot.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof" aria-label="Figures">
+    <div class="wrap">
+      <div><b>0.3 s</b><span>Longest lock Forge lets through by default. Raise it per table if you mean it.</span></div>
+      <div><b>9 s</b><span>To snapshot a 2.1 GB Postgres schema with a 50k-row sample per table.</span></div>
+      <div><b>6</b><span>Engines: Postgres, MySQL, MariaDB, SQLite, CockroachDB and Timescale.</span></div>
+      <div><b>1,900</b><span>Teams rehearsing on Forge. Four of them have more than a thousand tables.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="install">
+    <div class="wrap">
+      <div class="head">
+        <h2>Install in one line, snapshot in the next.</h2>
+        <p class="sub">A single static binary, about 14 MB. It never phones home; snapshots stay in <code>~/.forge</code> on your machine unless your team turns on sharing.</p>
+      </div>
+      <div class="install">
+        <div class="row"><small>macOS / Linux</small><code><span class="k">curl</span> -fsSL https://forge.sh/install | sh</code><button class="copy" type="button" data-copy="curl -fsSL https://forge.sh/install | sh">copy</button></div>
+        <div class="row"><small>Homebrew</small><code><span class="k">brew</span> install forge-sh/tap/forge</code><button class="copy" type="button" data-copy="brew install forge-sh/tap/forge">copy</button></div>
+        <div class="row"><small>Cargo</small><code><span class="k">cargo</span> install forge-cli --locked</code><button class="copy" type="button" data-copy="cargo install forge-cli --locked">copy</button></div>
+        <div class="row"><small>CI (Docker)</small><code><span class="k">docker</span> run --rm -v "$PWD":/w ghcr.io/forge-sh/forge plan</code><button class="copy" type="button" data-copy='docker run --rm -v "$PWD":/w ghcr.io/forge-sh/forge plan'>copy</button></div>
+        <div class="row"><small>First run</small><code><span class="k">forge</span> init &amp;&amp; <span class="k">forge</span> plan add-column orders.fulfilled_at timestamptz</code><button class="copy" type="button" data-copy="forge init && forge plan add-column orders.fulfilled_at timestamptz">copy</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="how" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <h2>What a rehearsal actually does</h2>
+        <p class="sub">Three steps, always in this order. Each one can fail the plan, and a failed plan cannot be shipped without <code>--i-read-the-report</code>.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="n">1</span>
+          <div><h3>Snapshot</h3><p>Forge copies the schema, indexes, constraints and a sampled slice of rows from each table into a local engine of the same version. Sampling keeps the biggest tables honest without pulling terabytes.</p></div>
+          <pre><b>forge snapshot</b> --sample 50k
+<i>schema      41 tables, 118 indexes</i>
+<i>rows        orders 50k of 31M · events 50k of 410M</i>
+<i>engine      postgres 16.3 (matches prod)</i></pre>
+        </div>
+        <div class="step">
+          <span class="n">2</span>
+          <div><h3>Rehearse</h3><p>The migration runs against the snapshot with a stopwatch on every lock. Forge reads the engine's execution plan to catch table rewrites, full index builds without <code>CONCURRENTLY</code>, and defaults that touch every row.</p></div>
+          <pre><b>forge plan</b> 0042_orders_fulfilled_at
+<i>lock        AccessExclusive on orders  0.3 s</i>
+<i>rewrite     none (nullable, no default)</i>
+<i>rollback    replayed · schema hash matches</i></pre>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <div><h3>Gate and ship</h3><p>Before touching an environment, Forge hashes its live schema and compares it with the snapshot. Drift stops the ship. Otherwise it applies to each environment in the order you declared, waiting for your health check between them.</p></div>
+          <pre><b>forge ship</b> --to staging,prod
+<i>staging     hash ok · applied 0.4 s · health 200</i>
+<i>prod        hash ok · applied 0.6 s</i>
+<i>report      forge.sh/r/8f21c (kept 90 days)</i></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="pricing" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <h2>Free while it's just you</h2>
+        <p class="sub">Pay when a team needs to share snapshots and reports. Self-host if the snapshot can't leave the building.</p>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <h3>Solo</h3>
+          <div class="price">$0<small>one database, forever</small></div>
+          <ul><li>Unlimited rehearsals and ships</li><li>Snapshots stay on your machine</li><li>Reports kept for 7 days</li></ul>
+          <a class="btn" href="#install">Install</a>
+        </div>
+        <div class="plan lead">
+          <h3>Team</h3>
+          <div class="price">$14<small>per engineer per month</small></div>
+          <ul><li>Shared snapshots, refreshed nightly</li><li>Ship gates as GitHub and GitLab checks</li><li>Reports kept for 90 days, Slack digest</li></ul>
+          <a class="btn primary" href="#install">Start a 30-day trial</a>
+        </div>
+        <div class="plan">
+          <h3>Self-hosted</h3>
+          <div class="price">$1,200<small>per year, any team size</small></div>
+          <ul><li>Runs air-gapped on your own runners</li><li>SSO, audit log, signed binaries</li><li>Support with a human on the other end</li></ul>
+          <a class="btn" href="#changelog">Talk to us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="changelog">
+    <div class="wrap">
+      <h2>Your next migration deserves a dress rehearsal.</h2>
+      <p>Install Forge, point it at a database, and watch the first plan report come back in under a minute.</p>
+      <a class="btn primary" href="#install">Install Forge</a>
+      <code>v1.8.2 · released 9 October · changelog at forge.sh/changes</code>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Forge Software Oy, Helsinki</span>
+    <nav aria-label="Footer">
+      <a href="#how">Docs</a><a href="#changelog">Changelog</a><a href="#pricing">Pricing</a><a href="#top">Status</a><a href="#top">Privacy</a>
+    </nav>
+    <span class="right">Made for people who ship on Fridays anyway.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var term=document.getElementById('term');
+  var feats=document.querySelectorAll('#feats .feat');
+  var reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* t: cmd | out | ok | spin   f: feature slot this line becomes   d: pause after (ms) */
+  var SCRIPT=[
+    {t:'cmd',s:'curl -fsSL https://forge.sh/install | sh'},
+    {t:'out',s:'forge 1.8.2 (darwin-arm64) installed to ~/.forge/bin',d:500},
+    {t:'cmd',s:'forge init'},
+    {t:'out',s:'found postgres://localhost:5432/shop  (16.3)'},
+    {t:'out',s:'snapshot shop@10-12 taken · 41 tables · 2.1 GB · 9 s',d:700},
+    {t:'cmd',s:'forge plan add-column orders.fulfilled_at timestamptz'},
+    {t:'spin',s:'rehearsing on local snapshot',d:1100},
+    {t:'ok',s:'longest lock 0.3 s (AccessExclusive on orders)',f:0},
+    {t:'ok',s:'no table rewrite',f:1},
+    {t:'ok',s:'rollback replayed, schema hash matches',f:2},
+    {t:'out',s:'wrote migrations/0042_orders_fulfilled_at.sql',d:900},
+    {t:'cmd',s:'forge ship --to staging,prod'},
+    {t:'ok',s:'staging  hash ok · applied 0.4 s · health 200'},
+    {t:'ok',s:'prod     hash ok · applied 0.6 s',f:3},
+    {t:'out',s:'report kept 90 days: forge.sh/r/8f21c'}
+  ];
+
+  var timer=null, run=0;
+  function clear(){ if(timer){clearTimeout(timer);timer=null;} term.textContent=''; feats.forEach(function(f){f.classList.remove('on');}); document.querySelectorAll('.ghost').forEach(function(g){g.remove();}); }
+  function line(cls,text){ var el=document.createElement('span'); el.className='ln '+cls; el.textContent=text; term.appendChild(el); term.scrollTop=term.scrollHeight; return el; }
+  function cursor(){ var c=document.createElement('span'); c.className='cursor'; c.setAttribute('aria-hidden','true'); return c; }
+
+  function fly(lineEl,idx){
+    var feat=feats[idx]; if(!feat) return;
+    var h=feat.querySelector('h3');
+    var a=lineEl.getBoundingClientRect(), b=h.getBoundingClientRect();
+    var g=document.createElement('div'); g.className='ghost'; g.textContent=lineEl.textContent;
+    g.style.left=a.left+'px'; g.style.top=a.top+'px'; g.style.maxWidth=a.width+'px'; g.style.overflow='hidden';
+    document.body.appendChild(g);
+    var anim=g.animate(
+      [{transform:'translate(0,0)',opacity:1},{transform:'translate('+(b.left-a.left)+'px,'+(b.top-a.top)+'px)',opacity:.1}],
+      {duration:620,easing:'cubic-bezier(.2,.7,.15,1)',fill:'forwards'});
+    anim.onfinish=function(){ g.remove(); feat.classList.add('on'); feat.querySelector('.slot').textContent='proved in this session'; };
+  }
+
+  function instant(){
+    clear();
+    SCRIPT.forEach(function(it){ line(it.t==='spin'?'out':it.t,it.s+(it.t==='spin'?'...':'')); });
+    feats.forEach(function(f){ f.classList.add('on'); f.querySelector('.slot').textContent='proved in this session'; });
+  }
+
+  function play(){
+    clear(); var my=++run, i=0;
+    function next(){
+      if(my!==run) return;
+      if(i>=SCRIPT.length){ line('cmd','').appendChild(cursor()); return; }
+      var it=SCRIPT[i++];
+      if(it.t==='cmd'){
+        var el=line('cmd',''); var c=cursor(); el.appendChild(c); var k=0;
+        (function type(){
+          if(my!==run) return;
+          if(k<it.s.length){ el.insertBefore(document.createTextNode(it.s.charAt(k++)),c); term.scrollTop=term.scrollHeight; timer=setTimeout(type, 16+Math.random()*26); }
+          else { timer=setTimeout(function(){ c.remove(); next(); }, 300); }
+        })();
+      } else if(it.t==='spin'){
+        var sp=line('out spin',it.s);
+        timer=setTimeout(function(){ sp.classList.remove('spin'); sp.textContent=it.s+' done'; next(); }, it.d||1200);
+      } else {
+        var o=line(it.t,it.s);
+        if(it.f!==undefined){ setTimeout(function(){ if(my===run) fly(o,it.f); },260); }
+        timer=setTimeout(next,(it.d||140)+(it.t==='ok'?220:0));
+      }
+    }
+    timer=setTimeout(next,500);
+  }
+
+  if(reduced){ instant(); } else { play(); }
+  document.getElementById('replay').addEventListener('click',function(){ reduced? instant() : play(); });
+
+  /* copy buttons */
+  function copyText(t){
+    if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+    return new Promise(function(res,rej){
+      var ta=document.createElement('textarea'); ta.value=t; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); res(); }catch(e){ rej(e); } ta.remove();
+    });
+  }
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      copyText(btn.getAttribute('data-copy')).then(function(){
+        btn.textContent='copied'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent='copy'; btn.classList.remove('done'); },1600);
+      },function(){ btn.textContent='select it'; setTimeout(function(){ btn.textContent='copy'; },1600); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "slug": "pulse",
+  "name": "Pulse",
+  "category": "Health / Science",
+  "tone": "dark",
+  "free": false,
+  "tagline": "An ECG trace that draws itself in SVG and then keeps a calm live rhythm over a breathing particle field, for a wearable sensor or lab instrument.",
+  "sections": [
+    "Nav with brand, four links and a ghost request action",
+    "Hero with self-drawing ECG trace, live bpm readout, particle canvas and one CTA",
+    "Study figures band with four mono numerals and their caveats",
+    "How it works as a three-day step list beside a mock report excerpt",
+    "Specifications table in tabular figures with a sticky heading",
+    "Evaluation kit offer beside a clinician quote",
+    "Final call to action with a mint radial glow",
+    "Footer with regulatory note"
+  ],
+  "fonts": ["Manrope", "IBM Plex Mono"]
+}

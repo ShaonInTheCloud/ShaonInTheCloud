@@ -1,0 +1,20 @@
+{
+  "slug": "orbit",
+  "name": "Orbit",
+  "category": "E-commerce",
+  "tone": "dark",
+  "free": false,
+  "tagline": "A ring lamp drawn in layered SVG that tilts with the pointer and recolours live across three finishes, with a real buy form in the hero and a sticky add-to-cart bar, for a single-product pre-order launch.",
+  "sections": [
+    "Sticky nav with ring wordmark, four links and a pill pre-order action",
+    "Hero with the layered lamp, finish switcher, quantity and a real add-to-cart form",
+    "Proof band of four Syne figures (lumens, pre-orders, returns, warranty)",
+    "Three parts: exploded SVG diagram beside a ruled spec list",
+    "Finishes as three large selectable chips that drive the hero lamp",
+    "Delivery definition list with a founder quote",
+    "Final call to action with a radial light wash",
+    "Sticky add-to-cart bar that appears once the form scrolls away",
+    "Footer"
+  ],
+  "fonts": ["Syne", "Archivo"]
+}

@@ -1,0 +1,19 @@
+{
+  "slug": "atelier",
+  "name": "Atelier",
+  "category": "Agency / Studio",
+  "tone": "light",
+  "free": false,
+  "tagline": "A plaster-toned studio page whose oversized Bodoni headline is lit letter by letter by a slow diagonal sweep, above a pointer-draggable strip of CSS-drawn case studies.",
+  "sections": [
+    "Nav with brand, four links and an outlined action",
+    "Hero with the light-swept display headline, a 30-ch lede, one filled CTA and an availability note",
+    "Selected work strip: six case studies with CSS-drawn plates, scroll-snap and mouse drag",
+    "Process as a four-stage ruled calendar (Weeks 1–2 to Week 10)",
+    "Studio statement: client quote beside a definition list of studio facts",
+    "Three engagement formats as ruled rows with price, duration and a button",
+    "Final call to action on ink with a mailto",
+    "Footer"
+  ],
+  "fonts": ["Bodoni Moda", "Hanken Grotesk"]
+}

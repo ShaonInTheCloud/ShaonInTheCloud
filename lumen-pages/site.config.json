@@ -1,0 +1,16 @@
+{
+  "name": "Lumen Pages",
+  "url": "https://lumenpages.dev",
+  "tagline": "Cinematic website templates you can rebuild in any stack.",
+  "description": "Original, motion-led landing page templates with the prompt to recreate each one in React, Astro or plain HTML. Two are free. The rest come with Pro.",
+  "contact": "hello@lumenpages.dev",
+  "owner": "Md Humaun Kabir (sole trader, Finland)",
+  "pro": {
+    "price": "€59",
+    "period": "one-time",
+    "checkoutUrl": "",
+    "note": "Set checkoutUrl to your Lemon Squeezy or Paddle checkout link to turn buying on. Until then Pro buttons open the waitlist form."
+  },
+  "waitlistUrl": "mailto:hello@lumenpages.dev?subject=Lumen%20Pages%20Pro",
+  "analyticsToken": ""
+}

@@ -1,0 +1,19 @@
+{
+  "slug": "aurora",
+  "name": "Aurora",
+  "category": "AI / Tech",
+  "tone": "dark",
+  "free": true,
+  "tagline": "A canvas-drawn light curtain that drifts across the hero and leans toward the cursor, for an on-device AI product.",
+  "sections": [
+    "Nav with brand, four links and a ghost action",
+    "Hero with aurora canvas, italic kicker, one CTA and a finished-note glass card",
+    "Proof band of four ruled figures",
+    "How it works in three sequenced columns with fake-UI snippets",
+    "Privacy strip with definition list",
+    "Pricing with three plans and a wider lead plan",
+    "Final call to action with a radial glow",
+    "Footer"
+  ],
+  "fonts": ["Fraunces", "Instrument Sans"]
+}

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jonas Weir — 3D artist, Rotterdam</title>
+<meta name="description" content="Jonas Weir renders still, heavy objects for product launches, galleries and film. Stills, loops and full sequences, built in Houdini and Blender, delivered on a fixed calendar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..900;1,62..125,300..900&display=swap" rel="stylesheet">
+<style>
+@property --rx{syntax:"<angle>";inherits:false;initial-value:-4deg}
+@property --ry{syntax:"<angle>";inherits:false;initial-value:22deg}
+@property --hx{syntax:"<percentage>";inherits:true;initial-value:34%}
+:root{
+  --base:#1a1614;
+  --base-2:#201b18;
+  --surface:#2a2420;
+  --line:rgba(255,226,196,.13);
+  --text:#f1e9e0;
+  --text-2:#b5a99c;
+  --brass:#e0b27c;
+  --brass-ink:#241a10;
+  --face:#2b2521;
+  --face-side:#1e1917;
+  --face-top:#3a322c;
+  --spec:255,232,200;
+  --font:"Archivo",system-ui,sans-serif;
+  --max:1200px;
+  --gutter:clamp(16px,4.5vw,56px);
+  --w:clamp(150px,22vw,250px);
+  --h:clamp(300px,44vw,500px);
+  --d:clamp(54px,8vw,92px);
+}
+*{box-sizing:border-box}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--base);color:var(--text);font-family:var(--font);font-size:1.0625rem;line-height:1.55;overflow-x:hidden;font-variation-settings:"wdth" 100}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:4px}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.02em;line-height:1}
+h2{font-size:clamp(2rem,4.6vw,3.6rem);font-variation-settings:"wdth" 112}
+p{margin:0}
+.wrap{width:min(var(--max),100% - 2*var(--gutter));margin-inline:auto}
+.btn{display:inline-flex;align-items:center;padding:.85em 1.5em;border:1px solid var(--text);border-radius:2px;font:inherit;font-weight:600;text-decoration:none;color:var(--text);background:transparent;cursor:pointer;transition:background .2s,color .2s}
+.btn:hover{background:var(--text);color:var(--base)}
+.btn.fill{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.btn.fill:hover{background:#f0c893;border-color:#f0c893}
+
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--base) 80%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:1rem}
+.brand{text-decoration:none;font-weight:800;font-variation-settings:"wdth" 125;letter-spacing:-.02em;font-size:1.1rem}
+.brand span{font-weight:400;font-variation-settings:"wdth" 100;color:var(--text-2);margin-left:.6em;letter-spacing:0}
+nav ul{list-style:none;margin:0;padding:0;display:flex;gap:2rem}
+nav ul a{text-decoration:none;color:var(--text-2);font-weight:500}
+nav ul a:hover{color:var(--text)}
+@media(max-width:760px){nav ul,.brand span{display:none}}
+
+/* hero */
+.hero{position:relative;min-height:min(92vh,900px);display:grid;align-items:center;overflow:hidden;padding:clamp(2rem,6vh,4rem) 0}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:2rem;align-items:center;position:relative;z-index:1}
+.hero h1{font-size:clamp(2.9rem,8.6vw,8.2rem);font-weight:800;font-variation-settings:"wdth" 125;letter-spacing:-.035em;line-height:.9;text-wrap:balance;max-width:7.2em}
+.hero h1 b{font-weight:300;font-variation-settings:"wdth" 125}
+.hero .lede{margin-top:1.6rem;color:var(--text-2);max-width:34ch;font-size:clamp(1.05rem,1.4vw,1.2rem)}
+.hero .cta{margin-top:2rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+.hero .cta small{color:var(--text-2);max-width:20ch;line-height:1.35}
+.stage{height:calc(var(--h) + 120px);display:grid;place-items:center;perspective:1500px;perspective-origin:50% 40%;touch-action:pan-y}
+.mono{position:relative;width:var(--w);height:var(--h);transform-style:preserve-3d;transform:rotateX(var(--rx,-4deg)) rotateY(var(--ry,22deg));will-change:transform}
+.f{position:absolute;left:50%;top:50%;width:var(--w);height:var(--h);translate:-50% -50%;background:var(--face);backface-visibility:hidden}
+.f.front{transform:translateZ(calc(var(--d)/2));overflow:hidden}
+.f.back{transform:rotateY(180deg) translateZ(calc(var(--d)/2));background:var(--face-side)}
+.f.left,.f.right{width:var(--d);background:var(--face-side)}
+.f.left{transform:rotateY(-90deg) translateZ(calc(var(--w)/2))}
+.f.right{transform:rotateY(90deg) translateZ(calc(var(--w)/2));background:linear-gradient(180deg,#2a2420,#171311)}
+.f.top,.f.bottom{height:var(--d);background:var(--face-top)}
+.f.top{transform:rotateX(90deg) translateZ(calc(var(--h)/2))}
+.f.bottom{transform:rotateX(-90deg) translateZ(calc(var(--h)/2));background:#141110}
+.f.front::before{content:"";position:absolute;inset:0;background:
+  linear-gradient(160deg,rgba(255,255,255,.05),transparent 40%),
+  repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.08) 3px 4px)}
+.f.front::after{content:"";position:absolute;inset:-40%;background:radial-gradient(42% 64% at var(--hx,34%) var(--hy,28%),rgba(var(--spec),.6) 0,rgba(var(--spec),.14) 30%,transparent 70%);mix-blend-mode:screen}
+.f.left::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(var(--spec),.22),transparent 60%);opacity:var(--edge,.6)}
+.floor{position:absolute;left:50%;bottom:0;width:140%;height:120px;translate:-50% 0;background:radial-gradient(50% 100% at var(--hx,34%) 0,rgba(var(--spec),.16),transparent 70%);filter:blur(14px);pointer-events:none}
+.hero-bg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 70% 50%,rgba(var(--spec),.07),transparent 70%)}
+@media(prefers-reduced-motion:no-preference){
+  .mono:not(.live){animation:idle 14s ease-in-out infinite alternate}
+  @keyframes idle{from{--rx:-4deg;--ry:12deg;--hx:26%}to{--rx:2deg;--ry:34deg;--hx:48%}}
+  .hero h1,.hero .lede,.hero .cta{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+  .hero .lede{animation-delay:.12s}.hero .cta{animation-delay:.22s}
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+}
+@media(max-width:860px){
+  .hero .wrap{grid-template-columns:1fr;gap:0}
+  .stage{order:-1;height:calc(var(--h) + 60px);margin-bottom:1rem}
+  :root{--w:clamp(120px,36vw,170px);--h:clamp(220px,66vw,320px);--d:clamp(44px,12vw,60px)}
+}
+
+/* work list */
+.works{padding:clamp(3rem,7vw,6rem) 0;border-top:1px solid var(--line)}
+.works-head{display:flex;justify-content:space-between;align-items:end;gap:2rem;margin-bottom:2rem}
+.works-head p{color:var(--text-2);max-width:40ch}
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--text)}
+.list li{position:relative}
+.list a{display:grid;grid-template-columns:minmax(0,1.6fr) 1fr .7fr auto;gap:1.5rem;align-items:baseline;padding:1.5rem 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text-2);transition:color .2s,padding-left .3s cubic-bezier(.2,.7,.2,1)}
+.list a:hover,.list a:focus-visible{color:var(--text);padding-left:.6rem}
+.list h3{font-size:clamp(1.5rem,3.4vw,2.6rem);font-weight:700;font-variation-settings:"wdth" 112;letter-spacing:-.025em;color:var(--text)}
+.list time{font-variant-numeric:tabular-nums}
+.list .k{font-size:.95rem}
+.pv{position:absolute;right:4%;top:50%;width:min(300px,28vw);aspect-ratio:4/3;translate:0 -50%;background:var(--surface);border:1px solid var(--line);opacity:0;scale:.96;pointer-events:none;overflow:hidden;z-index:3;transition:opacity .3s,scale .4s cubic-bezier(.2,.7,.2,1)}
+.list li:hover .pv,.list li:focus-within .pv{opacity:1;scale:1}
+.pv::before,.pv::after{content:"";position:absolute}
+.pv-sphere::before{inset:14% 24%;aspect-ratio:1;width:auto;height:72%;left:50%;translate:-50% 0;border-radius:50%;background:radial-gradient(circle at 34% 30%,#5b4e45,#1b1613 70%)}
+.pv-sphere::after{left:50%;bottom:8%;width:60%;height:10%;translate:-50% 0;border-radius:50%;background:radial-gradient(#000,transparent 70%);opacity:.7}
+.pv-slab::before{inset:22% 18%;background:linear-gradient(135deg,#4a4038,#221d1a 55%,#3a322c);box-shadow:-10px 10px 0 #15110f}
+.pv-slab::after{inset:22% 18%;background:linear-gradient(120deg,rgba(var(--spec),.25),transparent 45%)}
+.pv-ring::before{left:50%;top:50%;width:62%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;border:18px solid #3b3029;border-top-color:#6a5a4e;border-left-color:#4e4138;box-sizing:border-box}
+.pv-ring::after{left:50%;top:50%;width:62%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;box-shadow:inset 0 -12px 20px rgba(0,0,0,.6)}
+.pv-cyl::before{left:50%;top:14%;width:34%;height:72%;translate:-50% 0;background:linear-gradient(90deg,#1b1613,#4f433a 35%,#6f5e51 48%,#2c241f 80%,#15110f)}
+.pv-cyl::after{left:50%;top:14%;width:34%;height:12%;translate:-50% -50%;border-radius:50%;background:#5a4d42}
+.pv-folds::before{inset:0;background:repeating-linear-gradient(100deg,#1b1613 0 18px,#3d332c 18px 24px,#6a5a4e 24px 26px,#2a2420 26px 40px)}
+.pv-folds::after{inset:0;background:linear-gradient(180deg,transparent 40%,var(--surface))}
+.pv-glass::before{inset:18% 30%;border:1px solid rgba(var(--spec),.4);background:linear-gradient(170deg,rgba(var(--spec),.14),transparent 50%,rgba(var(--spec),.06))}
+.pv-glass::after{inset:18% 30%;background:linear-gradient(90deg,transparent 48%,rgba(var(--spec),.45) 50%,transparent 52%);filter:blur(1px)}
+@media(max-width:760px){.pv{display:none}.list a{grid-template-columns:1fr auto;gap:.3rem 1rem}.list .k{grid-column:1/-1}.works-head{flex-direction:column;align-items:start}}
+
+/* process */
+.process{padding:clamp(3rem,7vw,6rem) 0;background:var(--base-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.process .wrap{display:grid;grid-template-columns:1fr 1.3fr;gap:3rem}
+.process p.intro{color:var(--text-2);margin-top:1rem;max-width:36ch}
+.stages{list-style:none;margin:0;padding:0;border-top:1px solid var(--text)}
+.stages li{display:grid;grid-template-columns:7rem 1fr;gap:1.5rem;padding:1.3rem 0;border-bottom:1px solid var(--line)}
+.stages time{color:var(--brass);font-weight:600;font-variation-settings:"wdth" 112}
+.stages h3{font-size:1.35rem;font-weight:600;margin-bottom:.4rem;font-variation-settings:"wdth" 108}
+.stages p{color:var(--text-2);max-width:40ch;font-size:1rem}
+@media(max-width:860px){.process .wrap{grid-template-columns:1fr;gap:2rem}}
+@media(max-width:480px){.stages li{grid-template-columns:1fr;gap:.3rem}}
+
+/* rates */
+.rates{padding:clamp(3rem,7vw,6rem) 0}
+.rates-head{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem}
+.rates-head p{color:var(--text-2);max-width:40ch;align-self:end}
+.rate-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
+.rate{padding:1.8rem;border-right:1px solid var(--line)}
+.rate:last-child{border-right:0}
+.rate .n{font-size:clamp(2.2rem,4vw,3.4rem);font-weight:300;font-variation-settings:"wdth" 118;letter-spacing:-.03em;line-height:1}
+.rate .n small{font-size:1rem;font-weight:500;color:var(--text-2);display:block;margin-top:.4rem;letter-spacing:0;font-variation-settings:"wdth" 100}
+.rate h3{font-size:1.25rem;font-weight:600;margin:1.4rem 0 .5rem}
+.rate p{color:var(--text-2);font-size:1rem}
+.rate.lead{background:var(--surface)}
+@media(max-width:860px){.rate-grid{grid-template-columns:1fr}.rate{border-right:0;border-bottom:1px solid var(--line)}.rate:last-child{border-bottom:0}}
+@media(max-width:760px){.rates-head{grid-template-columns:1fr}}
+
+/* clients */
+.clients{padding:0 0 clamp(3rem,7vw,6rem);color:var(--text-2)}
+.clients .wrap{display:flex;gap:2rem;flex-wrap:wrap;align-items:baseline;border-top:1px solid var(--line);padding-top:1.5rem}
+.clients strong{color:var(--text);font-weight:600}
+.clients ul{list-style:none;margin:0;padding:0;display:flex;gap:1.5rem 2rem;flex-wrap:wrap}
+
+/* final */
+.final{padding:clamp(3rem,8vw,7rem) 0;position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.final::before{content:"";position:absolute;left:50%;top:-20%;width:60%;height:80%;translate:-50% 0;background:radial-gradient(50% 50% at 50% 0,rgba(var(--spec),.14),transparent 70%);pointer-events:none}
+.final .wrap{position:relative;display:grid;grid-template-columns:1.3fr 1fr;gap:2rem;align-items:end}
+.final h2{font-size:clamp(2.4rem,6vw,5.4rem);font-variation-settings:"wdth" 125;letter-spacing:-.035em;line-height:.95}
+.final p{color:var(--text-2);margin-top:1rem;max-width:36ch}
+.final .btns{display:flex;gap:1rem;flex-wrap:wrap;justify-self:end}
+@media(max-width:760px){.final .wrap{grid-template-columns:1fr}.final .btns{justify-self:start}}
+
+footer.site{padding:1.5rem 0;color:var(--text-2);font-size:.95rem;border-top:1px solid var(--line)}
+footer.site .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+footer.site ul{list-style:none;margin:0;padding:0;display:flex;gap:1.5rem;flex-wrap:wrap}
+footer.site a{text-decoration:none}
+footer.site a:hover{color:var(--text);text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <nav class="wrap" aria-label="Primary">
+    <a class="brand" href="#top">Jonas Weir<span>3D artist, Rotterdam</span></a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#rates">Rates</a></li>
+    </ul>
+    <a class="btn" href="#book">Book a slot</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="wrap">
+      <div>
+        <h1>Heavy objects, <b>rendered still.</b></h1>
+        <p class="lede">I make product stills, loops and launch films for things that are meant to feel dense: furniture, audio, tools, stone. Built in Houdini and Blender, lit like a photograph, delivered on a date we agree in advance.</p>
+        <div class="cta">
+          <a class="btn fill" href="#book">Book a slot</a>
+          <small>Next opening: week of 9 February.</small>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="mono" id="mono" aria-hidden="true">
+          <div class="f front"></div>
+          <div class="f back"></div>
+          <div class="f left"></div>
+          <div class="f right"></div>
+          <div class="f top"></div>
+          <div class="f bottom"></div>
+        </div>
+        <div class="floor" id="floor"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="works" id="work" aria-labelledby="work-h">
+    <div class="wrap">
+      <div class="works-head">
+        <h2 id="work-h">Selected work, 2022 to now</h2>
+        <p>Hover a row for a sketch of the piece. Full reels go out on request, with the client's permission.</p>
+      </div>
+      <ol class="list">
+        <li><a href="#work"><h3>Basalt speaker launch</h3><span>Fjell Audio</span><time>2026</time><span class="k">Six stills, 20 s loop</span></a><div class="pv pv-sphere" aria-hidden="true"></div></li>
+        <li><a href="#work"><h3>Quarry table</h3><span>Morten &amp; Søn</span><time>2025</time><span class="k">Catalogue, 24 stills</span></a><div class="pv pv-slab" aria-hidden="true"></div></li>
+        <li><a href="#work"><h3>Signet ring, cast in motion</h3><span>Halde Jewellers</span><time>2025</time><span class="k">45 s film</span></a><div class="pv pv-ring" aria-hidden="true"></div></li>
+        <li><a href="#work"><h3>Pressure vessel study</h3><span>Rotterdam Maritime Museum</span><time>2024</time><span class="k">Exhibition wall, 8 m</span></a><div class="pv pv-cyl" aria-hidden="true"></div></li>
+        <li><a href="#work"><h3>Folded steel, forty ways</h3><span>Self-initiated</span><time>2023</time><span class="k">Print series</span></a><div class="pv pv-folds" aria-hidden="true"></div></li>
+        <li><a href="#work"><h3>Glass carafe</h3><span>Studio Vrie</span><time>2022</time><span class="k">Packaging renders</span></a><div class="pv pv-glass" aria-hidden="true"></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="process" id="process" aria-labelledby="process-h">
+    <div class="wrap">
+      <div>
+        <h2 id="process-h">Four weeks from brief to master file</h2>
+        <p class="intro">Most jobs run on the same calendar. You see something every Friday, and the thing you see is the thing you get, one stage further on.</p>
+      </div>
+      <ol class="stages">
+        <li><time>Week 1</time><div><h3>Blockout</h3><p>Grey geometry, camera angles, the one lighting idea. Enough to argue about composition before anyone spends money on materials.</p></div></li>
+        <li><time>Week 2</time><div><h3>Material and light</h3><p>Surfaces built from reference you send me, or from the actual object posted to the studio. Light set up like a product shoot: one key, one fill, one edge.</p></div></li>
+        <li><time>Week 3</time><div><h3>Motion, if any</h3><p>Loops are timed to the beat of wherever they will play. Nothing moves that would not move in real life.</p></div></li>
+        <li><time>Week 4</time><div><h3>Render and grade</h3><p>Final frames at delivery size plus one size up. Graded in ACES, delivered with the scene file so your next studio can pick it up.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="rates" id="rates" aria-labelledby="rates-h">
+    <div class="wrap">
+      <div class="rates-head">
+        <h2 id="rates-h">Rates</h2>
+        <p>Quoted per job, not per hour, so the number you see first is the number on the invoice. Render farm time is included up to 4K.</p>
+      </div>
+      <div class="rate-grid">
+        <article class="rate">
+          <div class="n">€3,800<small>per still, from</small></div>
+          <h3>Single still</h3>
+          <p>One object, one camera, one finished frame at any size. Extra angles of the same set-up are €900 each.</p>
+        </article>
+        <article class="rate lead">
+          <div class="n">€7,500<small>per loop, from</small></div>
+          <h3>Loop</h3>
+          <p>Up to 20 seconds, seamless, in three aspect ratios. The usual choice for a launch page and a shop screen.</p>
+        </article>
+        <article class="rate">
+          <div class="n">€1,100<small>per day</small></div>
+          <h3>Studio day</h3>
+          <p>For agencies with their own pipeline. Minimum three days, scene files stay with you.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="clients" aria-label="Clients">
+    <div class="wrap">
+      <strong>Worked with</strong>
+      <ul>
+        <li>Fjell Audio</li><li>Morten &amp; Søn</li><li>Halde Jewellers</li><li>Rotterdam Maritime Museum</li><li>Studio Vrie</li><li>Kaai Architecten</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="final" id="book" aria-labelledby="book-h">
+    <div class="wrap">
+      <div>
+        <h2 id="book-h">Send the object.</h2>
+        <p>A photo, a CAD file or the thing itself in a box. I reply within two working days with a date and a number.</p>
+      </div>
+      <div class="btns">
+        <a class="btn fill" href="mailto:studio@jonasweir.nl?subject=A%20render">studio@jonasweir.nl</a>
+        <a class="btn" href="#work">See the work again</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Jonas Weir. Keileweg, Rotterdam. KvK 00000000.</span>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#rates">Rates</a></li>
+      <li><a href="#">Are.na</a></li>
+      <li><a href="#">Instagram</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mono=document.getElementById('mono'),hero=document.querySelector('.hero'),floor=document.getElementById('floor');
+  if(!mono||reduce)return;
+  // yaw/pitch in degrees, hx/hy = highlight centre in % of the front face. t* are targets, the rest are smoothed.
+  var tYaw=22,tPitch=-4,tHx=34,tHy=28,yaw=22,pitch=-4,hx=34,hy=28,raf=null,live=false,idleT;
+  function num(v,f){var n=parseFloat(v);return isNaN(n)?f:n}
+  function frame(){
+    yaw+=(tYaw-yaw)*.08;pitch+=(tPitch-pitch)*.08;hx+=(tHx-hx)*.1;hy+=(tHy-hy)*.1;
+    mono.style.setProperty('--ry',yaw.toFixed(2)+'deg');
+    mono.style.setProperty('--rx',pitch.toFixed(2)+'deg');
+    mono.style.setProperty('--hx',hx.toFixed(1)+'%');
+    mono.style.setProperty('--hy',hy.toFixed(1)+'%');
+    mono.style.setProperty('--edge',(0.3+Math.max(0,yaw)/60).toFixed(2));
+    floor.style.setProperty('--hx',(30+hx*.4).toFixed(1)+'%');
+    if(Math.abs(tYaw-yaw)>.05||Math.abs(tPitch-pitch)>.05||Math.abs(tHx-hx)>.1||Math.abs(tHy-hy)>.1){raf=requestAnimationFrame(frame)}else{raf=null}
+  }
+  function kick(){if(!raf)raf=requestAnimationFrame(frame)}
+  function takeover(){
+    if(live)return;
+    // Start from wherever the idle animation left the block so there is no jump.
+    var cs=getComputedStyle(mono);
+    yaw=num(cs.getPropertyValue('--ry'),yaw);pitch=num(cs.getPropertyValue('--rx'),pitch);hx=num(cs.getPropertyValue('--hx'),hx);
+    live=true;mono.classList.add('live');
+  }
+  hero.addEventListener('pointermove',function(e){
+    if(e.pointerType!=='mouse')return;
+    var r=hero.getBoundingClientRect();
+    var px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;
+    takeover();
+    tYaw=22+px*40;tPitch=-4-py*18;
+    tHx=50-px*90;tHy=40-py*70;
+    clearTimeout(idleT);idleT=setTimeout(rest,2600);
+    kick();
+  });
+  function rest(){tYaw=22;tPitch=-4;tHx=34;tHy=28;kick()}
+  hero.addEventListener('pointerleave',rest);
+  // Touch: a light tilt from the device, when the browser exposes it without a permission prompt.
+  if('DeviceOrientationEvent' in window&&!('requestPermission' in DeviceOrientationEvent)){
+    addEventListener('deviceorientation',function(e){
+      if(e.gamma==null)return;
+      takeover();
+      tYaw=22+Math.max(-30,Math.min(30,e.gamma))*.6;tPitch=-4-Math.max(-20,Math.min(20,(e.beta||45)-45))*.4;
+      tHx=50-e.gamma;kick();
+    },{passive:true});
+  }
+})();
+</script>
+</body>
+</html>

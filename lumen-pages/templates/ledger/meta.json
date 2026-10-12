@@ -1,0 +1,19 @@
+{
+  "slug": "ledger",
+  "name": "Ledger",
+  "category": "Fintech",
+  "tone": "dark",
+  "free": false,
+  "tagline": "A live receivables ledger whose tabular figures count into place while a mint balance curve draws itself, for a treasury tool.",
+  "sections": [
+    "Nav with brand mark, four links and a ghost action",
+    "Hero with headline, one CTA and the animated ledger panel with SVG balance curve",
+    "Proof band of four ruled figures",
+    "How it settles: dated four-stage timeline",
+    "Product: four features with monospace qualifiers",
+    "Pricing: three tiers in one ruled panel",
+    "Final call to action",
+    "Footer with regulatory line"
+  ],
+  "fonts": ["Archivo", "JetBrains Mono"]
+}

@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tern C-14 — fourteen-day wearable ECG</title>
+<meta name="description" content="Tern C-14 is a single-lead ECG patch worn for fourteen days. It flags arrhythmia on the patch itself and hands your cardiologists a report they can act on.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --base:#061417;         /* deep teal-black */
+  --surface:#0a1d21;
+  --surface-2:#0f262b;
+  --line:rgba(160,205,205,.14);
+  --text:#e2eeef;
+  --muted:#9db5b7;
+  --mint:#6fe3cf;         /* the trace */
+  --mint-deep:#2fb9a3;
+  --mint-ink:#04201b;     /* text on mint */
+  --amber:#f0c27a;        /* flagged episodes */
+  --mint-rgb:111,227,207;
+  --sans:"Manrope","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --gutter:clamp(16px,4vw,40px);
+  --beat:1.07s;           /* 56 beats a minute */
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--base);color:var(--text);font-family:var(--sans);font-size:1.0625rem;line-height:1.55;font-variant-numeric:tabular-nums;overflow-x:hidden}
+h1,h2,h3{font-weight:700;line-height:1.1;margin:0;letter-spacing:-.02em}
+h2{font-size:clamp(1.9rem,3.8vw,2.8rem)}
+h3{font-size:1.25rem;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--mint);outline-offset:3px;border-radius:3px}
+.wrap{width:min(1140px,100% - 2*var(--gutter));margin-inline:auto}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--mint);color:var(--mint-ink);font-weight:700;font-size:1rem;padding:.8rem 1.3rem;border:0;border-radius:6px;text-decoration:none;cursor:pointer;transition:background .2s,transform .2s}
+.btn:hover{background:#8af0de}
+.btn:active{transform:translateY(1px)}
+.ghost{background:transparent;color:var(--text);border:1px solid var(--line);padding:.55rem 1rem;border-radius:6px;text-decoration:none;font-weight:600}
+.ghost:hover{border-color:var(--mint);color:var(--mint)}
+.quiet{color:var(--muted);text-decoration:none;font-weight:600;border-bottom:1px solid var(--line);padding-bottom:.1rem}
+.quiet:hover{color:var(--mint);border-color:var(--mint)}
+.kicker{font-family:var(--mono);font-size:.95rem;color:var(--mint)}
+.lede{color:var(--muted);font-size:1.15rem;max-width:58ch}
+
+/* ---------- nav ---------- */
+header{position:absolute;inset:0 0 auto 0;z-index:5}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 0}
+.brand{font-weight:800;font-size:1.2rem;text-decoration:none;display:flex;align-items:center;gap:.55rem;letter-spacing:-.01em}
+.brand svg{width:24px;height:24px}
+.links{display:flex;gap:1.5rem;list-style:none;margin:0;padding:0}
+.links a{text-decoration:none;color:var(--muted);font-weight:600}
+.links a:hover{color:var(--text)}
+@media (max-width:760px){.links{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:grid;grid-template-rows:1fr auto;padding-top:6.5rem;overflow:hidden;isolation:isolate}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1;display:block}
+.hero-copy{display:grid;gap:1.2rem;align-content:center;padding:2rem 0 3rem}
+.hero h1{font-size:clamp(2.4rem,5.6vw,4.4rem);max-width:17ch;font-weight:800}
+.hero h1 span{color:var(--mint)}
+.cta{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;margin-top:.6rem}
+
+/* the trace */
+.monitor{position:relative;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(6,20,23,.2),rgba(6,20,23,.75))}
+.monitor svg{display:block;width:100%;height:190px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 100%);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 100%)}
+.trace{fill:none;stroke:var(--mint);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(111,227,207,.55))}
+.baseline{stroke:rgba(111,227,207,.14);stroke-width:1}
+.trace.drawing{animation:draw 3s cubic-bezier(.45,0,.2,1) forwards}
+.live .roll{animation:roll var(--beat) linear infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes roll{to{transform:translateX(-300px)}}
+.readout{position:absolute;right:var(--gutter);top:1rem;display:flex;align-items:center;gap:.9rem;font-family:var(--mono);font-size:.95rem;color:var(--muted);background:rgba(6,20,23,.7);padding:.45rem .8rem;border:1px solid var(--line);border-radius:6px}
+.readout b{color:var(--mint);font-weight:500;font-size:1.5rem;line-height:1}
+.readout .dot{width:9px;height:9px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
+.live .readout .dot{animation:beat var(--beat) ease-out infinite}
+@keyframes beat{0%{transform:scale(1.5);opacity:1}40%{transform:scale(1);opacity:.55}100%{transform:scale(1);opacity:.55}}
+@media (max-width:640px){.readout span.lbl{display:none}}
+
+/* ---------- study figures ---------- */
+.figures{padding:clamp(3rem,7vw,5rem) 0;border-bottom:1px solid var(--line)}
+.figures .row{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem 2rem;margin-top:2rem}
+.figures .row div{border-left:2px solid var(--mint-deep);padding-left:1rem}
+.figures b{display:block;font-family:var(--mono);font-size:clamp(2rem,4vw,2.9rem);font-weight:500;line-height:1;letter-spacing:-.03em}
+.figures b small{font-size:.5em;color:var(--muted);margin-left:.2em}
+.figures p{color:var(--muted);margin-top:.5rem;font-size:1rem}
+.figures .fine{margin-top:2rem;font-size:.95rem;color:var(--muted);max-width:70ch}
+@media (min-width:860px){.figures .row{grid-template-columns:repeat(4,1fr)}}
+
+/* ---------- sections ---------- */
+section{padding:clamp(4rem,9vw,7.5rem) 0}
+.head{display:grid;gap:1rem;max-width:44ch;margin-bottom:clamp(2rem,5vw,3.2rem)}
+.how .grid{display:grid;gap:3rem}
+@media (min-width:920px){.how .grid{grid-template-columns:1fr 1.1fr;align-items:center}}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{display:grid;grid-template-columns:3rem 1fr;gap:1rem;padding:1.3rem 0;border-top:1px solid var(--line)}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+.steps li::before{counter-increment:s;content:"Day " counter(s);font-family:var(--mono);font-size:.85rem;color:var(--mint);padding-top:.35rem}
+.steps li:nth-child(2)::before{content:"Day 1–14"}
+.steps li:nth-child(3)::before{content:"Day 15"}
+.steps p{color:var(--muted);margin-top:.3rem}
+@media (min-width:460px){.steps li{grid-template-columns:5.5rem 1fr}}
+
+/* mock report */
+.report{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.2rem;font-family:var(--mono);font-size:.9rem;color:var(--muted)}
+.report .top{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding-bottom:.9rem;border-bottom:1px solid var(--line)}
+.report .top b{color:var(--text);font-weight:500}
+.report svg{display:block;width:100%;height:auto;margin:1rem 0}
+.report .ep{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem 1rem;align-items:center;padding:.55rem 0;border-top:1px solid var(--line)}
+.report .ep i{width:8px;height:8px;border-radius:50%;background:var(--amber);display:block}
+.report .ep i.ok{background:var(--mint-deep)}
+.report .ep span:last-child{color:var(--text)}
+
+/* specs */
+.specs{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.specs .grid{display:grid;gap:2.5rem}
+@media (min-width:920px){.specs .grid{grid-template-columns:.75fr 1.25fr;align-items:start}.specs .head{position:sticky;top:2rem}}
+table.spec{width:100%;border-collapse:collapse;font-size:1rem}
+.spec caption{text-align:left;font-family:var(--mono);font-size:.85rem;color:var(--muted);padding-bottom:.8rem}
+.spec th,.spec td{text-align:left;vertical-align:top;padding:.75rem 0;border-top:1px solid var(--line)}
+.spec th{font-weight:600;color:var(--muted);width:38%;padding-right:1rem}
+.spec td{font-family:var(--mono);color:var(--text)}
+.spec tbody+tbody th:first-child,.spec tbody+tbody td{border-top:2px solid var(--line)}
+.spec td small{display:block;color:var(--muted);font-size:.85em;margin-top:.1rem}
+
+/* offer + quote */
+.offer .grid{display:grid;gap:3rem}
+@media (min-width:920px){.offer .grid{grid-template-columns:1fr 1fr;align-items:start}}
+.kit{border:1px solid var(--line);border-radius:10px;padding:1.6rem;background:linear-gradient(160deg,var(--surface-2),var(--surface))}
+.kit ul{margin:1rem 0 1.4rem;padding:0;list-style:none}
+.kit li{padding:.5rem 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:1rem}
+.kit li span:last-child{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+.kit .price{font-family:var(--mono);font-size:1.6rem;font-weight:500}
+.kit .price small{font-family:var(--sans);font-size:.95rem;color:var(--muted);font-weight:400;margin-left:.4rem}
+.quote{font-size:clamp(1.3rem,2.1vw,1.6rem);line-height:1.4;font-weight:500;letter-spacing:-.01em;max-width:34ch;margin:0}
+.quote footer{font-size:1rem;color:var(--muted);margin-top:1.2rem;font-weight:400}
+.quote footer::before{content:"";display:inline-block;width:1.6rem;height:2px;background:var(--mint-deep);vertical-align:middle;margin-right:.7rem}
+
+/* final */
+.final{text-align:center;position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.final::before{content:"";position:absolute;inset:auto 0 -50% 0;height:30rem;background:radial-gradient(closest-side at 50% 100%,rgba(111,227,207,.16),transparent 70%);pointer-events:none}
+.final .wrap{position:relative;display:grid;justify-items:center;gap:1.3rem}
+.final p{max-width:44ch;color:var(--muted)}
+
+/* footer */
+.foot{border-top:1px solid var(--line);padding:2.5rem 0 3rem;color:var(--muted);font-size:.95rem}
+.foot .wrap{display:grid;gap:1.4rem}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;gap:1.3rem;flex-wrap:wrap}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--mint)}
+.foot .legal{max-width:70ch;font-size:.9rem}
+@media (min-width:760px){.foot .wrap{grid-template-columns:1fr auto;align-items:start}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.trace{stroke-dashoffset:0!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Tern Cardiac, home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 13h5l2-6 3 11 3-9 2 4h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      Tern Cardiac
+    </a>
+    <nav aria-label="Primary">
+      <ul class="links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#evidence">Evidence</a></li>
+        <li><a href="#specs">Specifications</a></li>
+        <li><a href="#kit">Evaluation kit</a></li>
+      </ul>
+    </nav>
+    <a class="ghost" href="#kit">Request a kit</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="h1">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="wrap hero-copy">
+      <p class="kicker">Tern C-14 · single-lead ECG patch · 14-day wear</p>
+      <h1 id="h1">Fourteen days of rhythm, <span>read by the people who need it.</span></h1>
+      <p class="lede">A patch the size of a plaster that records a clean single-lead ECG for two weeks, flags the episodes that matter while it is still on the chest, and sends your cardiologists a report they can sign off in a morning.</p>
+      <div class="cta">
+        <a class="btn" href="#kit">Request an evaluation kit</a>
+        <a class="quiet" href="#specs">See the specifications</a>
+      </div>
+    </div>
+    <div class="monitor" id="monitor">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <line class="baseline" x1="0" y1="120" x2="1200" y2="120"/>
+        <g class="roll"><path class="trace" id="trace" d="M0 120H1500"/></g>
+      </svg>
+      <div class="readout" aria-live="off"><span class="dot" aria-hidden="true"></span><b id="bpm">56</b><span>bpm</span><span class="lbl">sinus rhythm · lead II</span></div>
+    </div>
+  </section>
+
+  <div class="figures" id="evidence">
+    <div class="wrap">
+      <h2>What the TERN-1 study found</h2>
+      <div class="row">
+        <div><b>97.8<small>%</small></b><p>Sensitivity for atrial fibrillation, episodes of 30 seconds or longer</p></div>
+        <div><b>96.1<small>%</small></b><p>Specificity against a 12-lead Holter read by two blinded cardiologists</p></div>
+        <div><b>13.6<small>days</small></b><p>Median wear time before the patch was removed</p></div>
+        <div><b>99.2<small>%</small></b><p>Of recorded time was analysable after the signal-quality pass</p></div>
+      </div>
+      <p class="fine">412 patients across three centres, enrolled 2024 to 2025. Figures are from the published primary analysis, not from marketing re-cuts. Full tables and the raw confusion matrices are in the clinician pack.</p>
+    </div>
+  </div>
+
+  <section id="how" class="how" aria-labelledby="how-h">
+    <div class="wrap grid">
+      <div>
+        <div class="head">
+          <h2 id="how-h">From the chest to the chart</h2>
+          <p class="lede">No wires, no diary, no charging. The patient puts it on and forgets about it, which is the point.</p>
+        </div>
+        <ol class="steps">
+          <li><div><h3>Apply</h3><p>Clean the skin, peel, press for ten seconds. The hydrocolloid adhesive holds through showers, sweat and sleep. Patients do it at home from the card in the box.</p></div></li>
+          <li><div><h3>Wear</h3><p>The patch samples at 512 Hz and classifies rhythm on its own processor. Each night the phone app pulls the day's data over Bluetooth. No phone? The patch keeps everything in memory for the cradle.</p></div></li>
+          <li><div><h3>Read</h3><p>Post the patch back in the prepaid sleeve. Within 24 hours of arrival your team has the report: every flagged episode with its full strip, burden by hour, and an export as PDF or FHIR.</p></div></li>
+        </ol>
+      </div>
+      <div class="report" aria-label="Example of a report excerpt">
+        <div class="top"><span>Patient 0412 · <b>day 9</b></span><span>AF burden <b>4.2%</b></span></div>
+        <svg viewBox="0 0 520 110" aria-hidden="true">
+          <rect x="300" y="0" width="150" height="110" fill="rgba(240,194,122,.08)"/>
+          <line x1="0" y1="70" x2="520" y2="70" stroke="rgba(160,205,205,.18)"/>
+          <path d="M0 70h30c4-10 10-10 14 0h20l4 4 6-40 6 56 4-20h18c6-14 18-14 24 0h40c4-10 10-10 14 0h20l4 4 6-40 6 56 4-20h18c6-14 18-14 24 0h26l3 3 4-28 5 40 3-15h6l3 3 5-34 4 44 3-13h10l4 3 3-24 5 36 3-15h12l3 3 5-32 3 42 4-13h8l3 3 4-30 5 40 3-13h14c6-14 18-14 24 0h12c4-10 10-10 14 0h18l4 4 6-40 6 56 4-20h18" fill="none" stroke="#6fe3cf" stroke-width="1.6" stroke-linejoin="round"/>
+          <text x="302" y="12" font-size="10" fill="#f0c27a" font-family="IBM Plex Mono,monospace">AF 03:14:08 – 03:21:40</text>
+        </svg>
+        <div class="ep"><i></i><span>Atrial fibrillation, 7 min 32 s, mean 128 bpm</span><span>03:14</span></div>
+        <div class="ep"><i></i><span>Pause 3.4 s</span><span>04:51</span></div>
+        <div class="ep"><i class="ok"></i><span>Sinus rhythm, 48–112 bpm, remainder of day</span><span>—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="specs" class="specs" aria-labelledby="specs-h">
+    <div class="wrap grid">
+      <div class="head">
+        <h2 id="specs-h">Specifications</h2>
+        <p class="lede">Everything the procurement form asks for, in one table. The clinician pack has the drawings.</p>
+      </div>
+      <table class="spec">
+        <caption>Tern C-14, hardware revision 2.1</caption>
+        <tbody>
+          <tr><th scope="row">Form factor</th><td>Flexible patch, 92 × 36 × 7.5 mm<small>single-use, no reusable parts</small></td></tr>
+          <tr><th scope="row">Mass</th><td>11 g</td></tr>
+          <tr><th scope="row">Wear time</th><td>14 days<small>rated for 16; battery limited</small></td></tr>
+          <tr><th scope="row">Placement</th><td>Left parasternal, modified lead II</td></tr>
+          <tr><th scope="row">Adhesive</th><td>Medical-grade hydrocolloid, acrylate-free</td></tr>
+          <tr><th scope="row">Water rating</th><td>IP57<small>showering yes, swimming no</small></td></tr>
+        </tbody>
+        <tbody>
+          <tr><th scope="row">Sampling rate</th><td>512 Hz</td></tr>
+          <tr><th scope="row">Resolution</th><td>16-bit, 0.6 µV/LSB</td></tr>
+          <tr><th scope="row">Bandwidth</th><td>0.05 – 150 Hz</td></tr>
+          <tr><th scope="row">Input noise</th><td>&lt; 8 µV peak-to-peak, 0.1 – 150 Hz</td></tr>
+          <tr><th scope="row">On-patch detection</th><td>AF, atrial flutter, SVT, VT ≥ 4 beats, pauses ≥ 3 s, bradycardia &lt; 40 bpm, tachycardia &gt; 150 bpm</td></tr>
+          <tr><th scope="row">Memory</th><td>128 MB<small>21 days of raw signal</small></td></tr>
+        </tbody>
+        <tbody>
+          <tr><th scope="row">Radio</th><td>Bluetooth 5.3 LE, 2.4 GHz, 0 dBm</td></tr>
+          <tr><th scope="row">Transfer</th><td>Nightly via phone app, or in full via the return cradle</td></tr>
+          <tr><th scope="row">Operating range</th><td>5 – 40 °C, 15 – 95 % RH non-condensing</td></tr>
+          <tr><th scope="row">Report turnaround</th><td>24 h from cradle read, 95th percentile</td></tr>
+          <tr><th scope="row">Export</th><td>PDF, HL7 FHIR R4, EDF+ raw signal</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="kit" class="offer" aria-labelledby="kit-h">
+    <div class="wrap grid">
+      <div class="kit">
+        <h2 id="kit-h" style="font-size:clamp(1.5rem,2.4vw,1.9rem)">The evaluation kit</h2>
+        <p class="lede" style="font-size:1rem;margin-top:.5rem">Enough to run the patch alongside whatever you use now and compare the reads yourself.</p>
+        <ul>
+          <li><span>C-14 patches</span><span>10</span></li>
+          <li><span>Return cradle</span><span>1</span></li>
+          <li><span>Reader seats for your team</span><span>5, 60 days</span></li>
+          <li><span>Prepaid return sleeves</span><span>10</span></li>
+          <li><span>Clinician pack and validation data</span><span>PDF</span></li>
+        </ul>
+        <p class="price">€0 <small>for clinics in the 2026 pilot, otherwise €480</small></p>
+        <p style="margin-top:.6rem;color:var(--muted);font-size:.95rem">After the evaluation, patches are €42 each at 200 units and the reader is billed per report, not per seat.</p>
+        <p style="margin-top:1.3rem"><a class="btn" href="mailto:clinics@terncardiac.example?subject=Evaluation%20kit">Request an evaluation kit</a></p>
+      </div>
+      <figure class="quote">
+        <blockquote style="margin:0"><p>We ran it against our existing 7-day patches on forty patients. The reads agreed where they should, and in three cases Tern caught paroxysmal AF after day eight that the shorter wear would have missed.</p></blockquote>
+        <footer>Dr Annika Hult, consultant cardiologist, Söderlund District Hospital</footer>
+      </figure>
+    </div>
+  </section>
+
+  <section class="final" aria-labelledby="final-h">
+    <div class="wrap">
+      <h2 id="final-h">Two weeks on the chest. One morning in the clinic.</h2>
+      <p>Request a kit, run it alongside what you already use, and decide with your own data.</p>
+      <a class="btn" href="#kit">Request an evaluation kit</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <p><strong style="color:var(--text)">Tern Cardiac</strong> · Laivurinkatu 11, Helsinki · clinics@terncardiac.example</p>
+      <p class="legal" style="margin-top:.8rem">The Tern C-14 is intended for use under the supervision of a clinician. On-patch flags support, and do not replace, a cardiologist's read of the full record. Study figures refer to the TERN-1 primary analysis.</p>
+    </div>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#specs">Specifications</a></li>
+      <li><a href="#kit">Evaluation kit</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+/* ---- ECG trace: one PQRST complex every 300 units, drawn once, then rolling ---- */
+(function(){
+  var p=document.getElementById('trace'),m=document.getElementById('monitor');if(!p)return;
+  var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var beat='h70c8-16 20-16 28 0h22l8 8 10-86 10 110 6-32h26c12-26 34-26 46 0h74';
+  var d='M0 120';for(var i=0;i<5;i++)d+=beat;
+  p.setAttribute('d',d);
+  if(rm){m.classList.add('live');return;}
+  var L=p.getTotalLength();
+  p.style.strokeDasharray=L;p.style.strokeDashoffset=L;
+  p.classList.add('drawing');
+  p.addEventListener('animationend',function(){p.style.strokeDasharray='';p.style.strokeDashoffset='';p.classList.remove('drawing');m.classList.add('live');});
+  /* a calm heart rate that wanders a little */
+  var b=document.getElementById('bpm'),v=56;
+  setInterval(function(){v=Math.max(54,Math.min(59,v+(Math.random()<.5?-1:1)));b.textContent=v;},4200);
+})();
+
+/* ---- particle field: soft dots that breathe behind the hero ---- */
+(function(){
+  var c=document.getElementById('field');if(!c)return;
+  var x=c.getContext('2d'),rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var RGB=getComputedStyle(document.documentElement).getPropertyValue('--mint-rgb').trim();
+  var W,H,dpr,dots=[],raf=null,seen=true,t0=performance.now();
+  var sp=document.createElement('canvas'),sx=sp.getContext('2d');sp.width=sp.height=64;
+  var g=sx.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba('+RGB+',1)');g.addColorStop(.35,'rgba('+RGB+',.35)');g.addColorStop(1,'rgba('+RGB+',0)');sx.fillStyle=g;sx.fillRect(0,0,64,64);
+  function seed(){
+    dots=[];var n=Math.round(W*H/14000);if(n>110)n=110;if(n<36)n=36;var s=11;
+    for(var i=0;i<n;i++){
+      var r=function(){s=(s*9301+49297)%233280;return s/233280;};
+      dots.push({x:r()*W,y:r()*H,r:6+r()*18,ph:r()*6.283,sp:.5+r()*.8,vx:(r()-.5)*4,vy:-2-r()*5,a:.08+r()*.2});
+    }
+  }
+  function size(){dpr=Math.min(window.devicePixelRatio||1,1.5);W=c.clientWidth;H=c.clientHeight;c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);x.setTransform(dpr,0,0,dpr,0,0);seed();draw(rm?3:(performance.now()-t0)/1000);}
+  function draw(t){
+    x.clearRect(0,0,W,H);
+    for(var i=0;i<dots.length;i++){
+      var d=dots[i],br=.5+.5*Math.sin(t*d.sp+d.ph);
+      var px=d.x+d.vx*t,py=d.y+d.vy*t;
+      px=((px%W)+W)%W;py=((py%H)+H)%H;
+      var r=d.r*(.7+.5*br);
+      x.globalAlpha=d.a*(.35+.65*br);
+      x.drawImage(sp,px-r,py-r,r*2,r*2);
+    }
+    x.globalAlpha=1;
+  }
+  function frame(now){draw((now-t0)/1000);raf=requestAnimationFrame(frame);}
+  function run(){if(rm||raf!==null||!seen||document.hidden)return;raf=requestAnimationFrame(frame);}
+  function stop(){if(raf!==null){cancelAnimationFrame(raf);raf=null;}}
+  size();run();
+  var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(size,120);});
+  if('IntersectionObserver' in window){new IntersectionObserver(function(e){seen=e[0].isIntersecting;seen?run():stop();}).observe(c);}
+  document.addEventListener('visibilitychange',function(){document.hidden?stop():run();});
+})();
+</script>
+</body>
+</html>

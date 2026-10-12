@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pell &amp; Marrow — a design studio in Porto</title>
+<meta name="description" content="Pell & Marrow is a four-person design studio in Porto. We build identities, packaging and wayfinding for companies that make physical things, and we stay around after launch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Hanken+Grotesk:ital,wght@0,400..600;1,400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#efe6d9;
+  --linen:#e6dac9;
+  --paper:#f6efe4;
+  --ink:#241f1a;
+  --ink-2:#5c5248;
+  --line:rgba(60,45,30,.16);
+  --rust:#9c3f28;
+  --rust-ink:#fbf3ea;
+  --glow:#b56d28;
+  --glow-2:#d9a35f;
+  --display:"Bodoni Moda",Didot,"Times New Roman",serif;
+  --body:"Hanken Grotesk",system-ui,sans-serif;
+  --max:1180px;
+  --gutter:clamp(16px,4.5vw,56px);
+}
+*{box-sizing:border-box}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--body);font-size:1.0625rem;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.55;background:
+  radial-gradient(60% 40% at 20% 0%,rgba(255,250,240,.9),transparent 70%),
+  radial-gradient(50% 50% at 100% 100%,rgba(190,150,110,.22),transparent 70%)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--rust);outline-offset:4px}
+h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;letter-spacing:-.01em}
+h2{font-size:clamp(2rem,4.2vw,3.4rem);line-height:1.05;font-variation-settings:"opsz" 72}
+h3{font-size:1.45rem;line-height:1.15}
+p{margin:0}
+.wrap{width:min(var(--max),100% - 2*var(--gutter));margin-inline:auto;position:relative;z-index:1}
+.btn{display:inline-flex;align-items:center;gap:.6em;padding:.85em 1.4em;border:1px solid var(--ink);border-radius:2px;font:inherit;font-weight:500;text-decoration:none;background:transparent;color:var(--ink);cursor:pointer;transition:background .2s,color .2s}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.fill{background:var(--rust);border-color:var(--rust);color:var(--rust-ink)}
+.btn.fill:hover{background:#8e3a26;border-color:#8e3a26}
+
+/* nav */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--plaster) 84%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav{display:flex;align-items:center;justify-content:space-between;height:68px;gap:1rem}
+.brand{font-family:var(--display);font-size:1.35rem;text-decoration:none;font-variation-settings:"opsz" 24;display:flex;align-items:baseline;gap:.35em}
+.brand i{font-style:italic;color:var(--rust)}
+nav ul{list-style:none;margin:0;padding:0;display:flex;gap:2rem}
+nav ul a{text-decoration:none;color:var(--ink-2);font-weight:500;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
+nav ul a:hover{color:var(--ink);border-color:var(--ink)}
+@media(max-width:760px){nav ul{display:none}}
+
+/* hero */
+.hero{padding:clamp(3rem,9vh,7rem) 0 clamp(2.5rem,6vh,4rem)}
+.hero .lux{font-size:clamp(3.5rem,12.4vw,11.6rem);line-height:.92;font-weight:500;font-variation-settings:"opsz" 96;color:var(--ink);margin-left:-.04em;max-width:9.2em}
+.lux .w{white-space:nowrap}
+.lux .ch{display:inline-block}
+.lux em{font-style:italic;font-weight:400}
+.lux em .ch{color:var(--rust)}
+.hero-row{display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:end;margin-top:clamp(1.8rem,4vw,3rem)}
+.hero-row p{font-size:clamp(1.1rem,1.6vw,1.3rem);max-width:30ch;color:var(--ink-2);text-wrap:pretty}
+.hero-cta{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-self:end}
+.hero-cta small{color:var(--ink-2);max-width:18ch;line-height:1.35}
+@media(max-width:760px){.hero-row{grid-template-columns:1fr;gap:1.5rem}.hero-cta{justify-self:start}}
+
+@media(prefers-reduced-motion:no-preference){
+  .lux .ch{background:linear-gradient(112deg,var(--ink) 0 38%,var(--glow-2) 46%,var(--glow) 50%,var(--glow-2) 54%,var(--ink) 62% 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sweep 7.5s linear infinite;animation-delay:calc((var(--n,24) - var(--i,0)) * -.13s)}
+  .lux em .ch{color:transparent;background-image:linear-gradient(112deg,var(--rust) 0 38%,var(--glow-2) 46%,var(--glow) 50%,var(--glow-2) 54%,var(--rust) 62% 100%)}
+  @keyframes sweep{from{background-position:100% 0}to{background-position:0% 0}}
+  .hero-row{animation:rise .9s cubic-bezier(.2,.7,.2,1) .25s both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+}
+
+/* work strip */
+.work{padding:clamp(2rem,5vw,4rem) 0 clamp(3rem,7vw,5rem);border-top:1px solid var(--line)}
+.work-head{display:flex;justify-content:space-between;align-items:end;gap:1rem;margin-bottom:1.6rem}
+.work-head p{color:var(--ink-2);max-width:36ch}
+.strip-ctl{display:flex;gap:.5rem}
+.strip-ctl button{width:44px;height:44px;border:1px solid var(--ink);background:transparent;border-radius:50%;cursor:pointer;color:var(--ink);font:inherit;display:grid;place-items:center;transition:background .15s,color .15s}
+.strip-ctl button:hover{background:var(--ink);color:var(--paper)}
+.strip-ctl svg{width:18px;height:18px}
+@media(max-width:760px){.strip-ctl{display:none}}
+.strip{display:flex;gap:clamp(.8rem,2vw,1.6rem);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:.5rem;cursor:grab;scrollbar-width:none;
+  width:calc(100% + var(--gutter));margin-right:calc(-1 * var(--gutter));padding-right:var(--gutter);scroll-padding-left:0}
+.strip::-webkit-scrollbar{display:none}
+.strip.drag{scroll-snap-type:none;cursor:grabbing;user-select:none}
+.case{flex:0 0 auto;width:min(78vw,420px);scroll-snap-align:start;text-decoration:none;display:block;position:relative}
+.case.wide{width:min(86vw,600px)}
+.plate{height:clamp(260px,34vw,380px);border:1px solid var(--line);background:var(--linen);position:relative;overflow:hidden;margin-bottom:.9rem}
+.case:hover .plate{background:var(--paper)}
+.plate::before,.plate::after{content:"";position:absolute;inset:0;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.case:hover .plate::before{transform:scale(1.03)}
+.p-rings::before{background:repeating-radial-gradient(circle at 50% 110%,var(--ink) 0 1px,transparent 1px 34px)}
+.p-rings::after{inset:auto 14% 0 14%;height:28%;background:var(--rust);border-radius:50% 50% 0 0/100% 100% 0 0}
+.p-planks::before{background:repeating-linear-gradient(90deg,transparent 0 44px,var(--ink) 44px 45px)}
+.p-planks::after{inset:30% 0 auto 0;height:1px;background:var(--rust);box-shadow:0 60px 0 var(--rust),0 120px 0 var(--rust)}
+.p-grain::before{background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.4px) 0 0/22px 22px}
+.p-grain::after{inset:auto 0 0 0;height:40%;background:linear-gradient(180deg,transparent,var(--linen) 70%)}
+.p-slant::before{background:linear-gradient(112deg,transparent 0 49.6%,var(--ink) 49.6% 50.4%,transparent 50.4%)}
+.p-slant::after{inset:auto auto 18% 22%;width:120px;height:120px;border:1px solid var(--rust);border-radius:50%}
+.p-shelf::before{background:repeating-linear-gradient(180deg,transparent 0 52px,var(--ink) 52px 53px)}
+.p-shelf::after{inset:auto auto 0 12%;width:16%;height:72%;background:var(--ink)}
+.p-grid::before{background:linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/40px 40px,linear-gradient(180deg,var(--line) 1px,transparent 1px) 0 0/40px 40px}
+.p-grid::after{inset:20% 20% 38% 55%;background:var(--rust)}
+.case h3{font-size:1.35rem;font-variation-settings:"opsz" 24}
+.case dl{display:flex;gap:1.2rem;margin:.3rem 0 0;color:var(--ink-2);font-size:.95rem}
+.case dt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.case dd{margin:0}
+
+/* process */
+.process{padding:clamp(3rem,7vw,6rem) 0;background:var(--linen);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.process-head{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:clamp(2rem,4vw,3.5rem)}
+.process-head p{color:var(--ink-2);max-width:42ch;align-self:end}
+.weeks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr)}
+.weeks li{padding:1.4rem 1.4rem 1.4rem 0;border-top:1px solid var(--ink);position:relative}
+.weeks li+li{padding-left:1.4rem}
+.weeks li+li::before{content:"";position:absolute;left:0;top:1.4rem;bottom:1.4rem;width:1px;background:var(--line)}
+.weeks time{font-family:var(--display);font-style:italic;font-size:1.2rem;color:var(--rust);display:block;margin-bottom:.6rem}
+.weeks h3{margin-bottom:.5rem}
+.weeks p{color:var(--ink-2);font-size:1rem;max-width:30ch}
+@media(max-width:900px){.weeks{grid-template-columns:1fr 1fr}.weeks li:nth-child(3){padding-left:0}.weeks li:nth-child(3)::before{display:none}}
+@media(max-width:760px){.process-head{grid-template-columns:1fr}}
+@media(max-width:520px){.weeks{grid-template-columns:1fr}.weeks li{padding-left:0!important}.weeks li::before{display:none!important}}
+
+/* studio statement */
+.studio{padding:clamp(3rem,7vw,6rem) 0;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.studio blockquote{margin:0;font-family:var(--display);font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.2;font-variation-settings:"opsz" 48;text-wrap:balance}
+.studio blockquote footer{font-family:var(--body);font-size:1rem;margin-top:1.2rem;color:var(--ink-2)}
+.facts{display:grid;gap:0;border-top:1px solid var(--ink)}
+.facts div{display:grid;grid-template-columns:1fr 1.6fr;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line)}
+.facts dt{color:var(--ink-2)}
+.facts dd{margin:0}
+@media(max-width:760px){.studio{grid-template-columns:1fr;gap:2rem}}
+
+/* formats */
+.formats{padding:0 0 clamp(3rem,7vw,6rem)}
+.formats h2{margin-bottom:2rem}
+.fmt{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:1.5rem;align-items:start;padding:1.6rem 0;border-top:1px solid var(--ink);text-decoration:none}
+.fmt:last-of-type{border-bottom:1px solid var(--ink)}
+.fmt h3{font-variation-settings:"opsz" 36;font-size:1.7rem}
+.fmt p{color:var(--ink-2);max-width:34ch}
+.fmt .price{font-family:var(--display);font-size:1.7rem;font-variation-settings:"opsz" 36}
+.fmt .price small{font-family:var(--body);font-size:.9rem;color:var(--ink-2);display:block;margin-top:.1rem}
+.fmt ul{margin:0;padding:0;list-style:none;color:var(--ink-2);font-size:.98rem}
+.fmt ul li{padding:.15rem 0}
+.fmt .go{align-self:center}
+@media(max-width:860px){.fmt{grid-template-columns:1fr 1fr}.fmt .go{grid-column:1/-1;justify-self:start}}
+@media(max-width:520px){.fmt{grid-template-columns:1fr}}
+
+/* final */
+.final{padding:clamp(3rem,8vw,7rem) 0;background:var(--ink);color:var(--paper)}
+.final .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;align-items:end}
+.final h2{font-size:clamp(2.2rem,5vw,4.4rem);font-variation-settings:"opsz" 96}
+.final h2 em{color:var(--glow-2);font-weight:400}
+.final p{color:#c9bfb2;max-width:36ch;margin-top:1rem}
+.final .btn{border-color:var(--paper);color:var(--paper);justify-self:end}
+.final .btn:hover{background:var(--paper);color:var(--ink)}
+.final .mail{display:block;margin-top:1rem;color:#c9bfb2;font-size:.95rem;text-align:right}
+@media(max-width:760px){.final .wrap{grid-template-columns:1fr}.final .btn{justify-self:start}.final .mail{text-align:left}}
+
+footer.site{padding:1.5rem 0;font-size:.95rem;color:var(--ink-2)}
+footer.site .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+footer.site ul{list-style:none;margin:0;padding:0;display:flex;gap:1.5rem;flex-wrap:wrap}
+footer.site a{text-decoration:none}
+footer.site a:hover{color:var(--ink);text-decoration:underline}
+</style>
+</head>
+<body>
+<header>
+  <nav class="wrap" aria-label="Primary">
+    <a class="brand" href="#top">Pell <i>&amp;</i> Marrow</a>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#process">How we work</a></li>
+      <li><a href="#studio">Studio</a></li>
+      <li><a href="#formats">Formats</a></li>
+    </ul>
+    <a class="btn" href="#start">Start a project</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <h1 class="lux" id="lux" aria-label="Design that holds its shape."><span class="w">Design</span> <span class="w">that</span><br><span class="w">holds</span> <span class="w">its</span> <em class="w">shape.</em></h1>
+      <div class="hero-row">
+        <p>We are a four-person studio in Porto. We make identities, packaging and wayfinding for people who manufacture real things, then stay on to see them through production.</p>
+        <div class="hero-cta">
+          <a class="btn fill" href="#start">Start a project</a>
+          <small>Two openings for projects starting in January.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="work" id="work" aria-labelledby="work-h">
+    <div class="wrap">
+      <div class="work-head">
+        <div>
+          <h2 id="work-h">Six things we have put into the world</h2>
+          <p>Drag the row, or use the arrows. Each one shipped and is still in use.</p>
+        </div>
+        <div class="strip-ctl">
+          <button type="button" data-dir="-1" aria-label="Scroll work backwards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button type="button" data-dir="1" aria-label="Scroll work forwards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="strip" id="strip" tabindex="0" aria-label="Selected work, horizontally scrollable">
+        <a class="case wide" href="#work">
+          <div class="plate p-rings" aria-hidden="true"></div>
+          <h3>Vessel</h3>
+          <dl><dt>Client</dt><dd>Ceramics house, Porto</dd><dt>Scope</dt><dd>Identity, packaging</dd><dt>Year</dt><dd>2025</dd></dl>
+        </a>
+        <a class="case" href="#work">
+          <div class="plate p-planks" aria-hidden="true"></div>
+          <h3>Lind &amp; Daughter</h3>
+          <dl><dt>Client</dt><dd>Timber merchant</dd><dt>Scope</dt><dd>Wayfinding, print</dd><dt>Year</dt><dd>2025</dd></dl>
+        </a>
+        <a class="case" href="#work">
+          <div class="plate p-grain" aria-hidden="true"></div>
+          <h3>Haver</h3>
+          <dl><dt>Client</dt><dd>Bakery, three shops</dd><dt>Scope</dt><dd>Identity, signage</dd><dt>Year</dt><dd>2024</dd></dl>
+        </a>
+        <a class="case wide" href="#work">
+          <div class="plate p-slant" aria-hidden="true"></div>
+          <h3>Corsa Nera</h3>
+          <dl><dt>Client</dt><dd>Frame builder</dd><dt>Scope</dt><dd>Mark, decals, catalogue</dd><dt>Year</dt><dd>2024</dd></dl>
+        </a>
+        <a class="case" href="#work">
+          <div class="plate p-shelf" aria-hidden="true"></div>
+          <h3>Pell Reading Room</h3>
+          <dl><dt>Client</dt><dd>Public library</dd><dt>Scope</dt><dd>Signage, type system</dd><dt>Year</dt><dd>2023</dd></dl>
+        </a>
+        <a class="case" href="#work">
+          <div class="plate p-grid" aria-hidden="true"></div>
+          <h3>Tide Office</h3>
+          <dl><dt>Client</dt><dd>Architecture practice</dd><dt>Scope</dt><dd>Identity, stationery</dd><dt>Year</dt><dd>2023</dd></dl>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="process" id="process" aria-labelledby="process-h">
+    <div class="wrap">
+      <div class="process-head">
+        <h2 id="process-h">Ten weeks, four stages, one room</h2>
+        <p>An identity project runs on a fixed calendar. You know what you get at the end of each stage before it starts, and nobody presents more than three directions.</p>
+      </div>
+      <ol class="weeks">
+        <li><time>Weeks 1–2</time><h3>Listening</h3><p>We visit the factory, the shop, the warehouse. We talk to whoever answers the phone. We read the old brand guidelines you stopped using.</p></li>
+        <li><time>Weeks 3–5</time><h3>Three directions</h3><p>Three routes, each taken far enough to be printed, worn and put on a shelf. You choose one. We do not blend them.</p></li>
+        <li><time>Weeks 6–9</time><h3>Building it out</h3><p>Type, colour, packaging dielines, signage drawings, templates for the people who will actually use them.</p></li>
+        <li><time>Week 10</time><h3>Handover and press</h3><p>Files, a short plain-language manual and a day at the printer or sign maker with you. We stay reachable afterwards.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="studio wrap" id="studio" aria-label="About the studio">
+    <blockquote>
+      <p>“They came to the kiln twice before they drew anything. The boxes they made are the first ones our couriers have not crushed.”</p>
+      <footer>Inês Castro, owner, Vessel</footer>
+    </blockquote>
+    <dl class="facts">
+      <div><dt>Founded</dt><dd>2017, Rua das Flores, Porto</dd></div>
+      <div><dt>People</dt><dd>Two designers, one typographer, one producer</dd></div>
+      <div><dt>Projects a year</dt><dd>Eight to ten. Never more than three at once.</dd></div>
+      <div><dt>Languages</dt><dd>Portuguese, English, Spanish</dd></div>
+      <div><dt>Not for us</dt><dd>Pitches, crypto, anything due next week</dd></div>
+    </dl>
+  </section>
+
+  <section class="formats" id="formats" aria-labelledby="formats-h">
+    <div class="wrap">
+      <h2 id="formats-h">Three ways to work with us</h2>
+      <article class="fmt">
+        <div><h3>The fortnight</h3><p>Two weeks on one problem: a name, a mark, a single pack. Good when the company exists and one thing is wrong.</p></div>
+        <ul><li>One designer, daily check-ins</li><li>Finished files on day ten</li><li>Fixed price, paid in two halves</li></ul>
+        <div class="price">€6,800<small>two weeks</small></div>
+        <a class="btn go" href="#start">Book a fortnight</a>
+      </article>
+      <article class="fmt">
+        <div><h3>The identity</h3><p>The ten-week programme above. Full studio, factory visits included, press day included.</p></div>
+        <ul><li>Naming if needed</li><li>Type, colour, packaging, signage</li><li>Manual and templates</li></ul>
+        <div class="price">from €28,000<small>ten weeks</small></div>
+        <a class="btn go" href="#start">Ask about a start date</a>
+      </article>
+      <article class="fmt">
+        <div><h3>The retainer</h3><p>For companies we have already built an identity for. Six days a month of whoever you need, rolled over for one month.</p></div>
+        <ul><li>Six studio days a month</li><li>Same people, every time</li><li>Three-month minimum</li></ul>
+        <div class="price">€4,200<small>per month</small></div>
+        <a class="btn go" href="#start">Talk to Marta</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="final" id="start" aria-labelledby="start-h">
+    <div class="wrap">
+      <div>
+        <h2 id="start-h">Tell us what you <em>make.</em></h2>
+        <p>Write a few lines about the company and what is wrong with how it looks. We reply within two working days, with a yes or a no and a reason.</p>
+      </div>
+      <div>
+        <a class="btn" href="mailto:hello@pellandmarrow.pt?subject=A%20project">Write to the studio</a>
+        <span class="mail">hello@pellandmarrow.pt · +351 22 000 0000</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Pell &amp; Marrow Lda. Porto.</span>
+    <ul>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#process">How we work</a></li>
+      <li><a href="#formats">Formats</a></li>
+      <li><a href="#">Instagram</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Split the headline into letters so the light can clip each glyph separately.
+  var h=document.getElementById('lux');
+  if(h){
+    var i=0;
+    h.querySelectorAll('.w').forEach(function(w){
+      var txt=w.textContent;w.textContent='';
+      for(var k=0;k<txt.length;k++){
+        var s=document.createElement('span');s.className='ch';s.textContent=txt[k];s.style.setProperty('--i',i++);w.appendChild(s);
+      }
+    });
+    h.style.setProperty('--n',i);
+    h.querySelectorAll('.w').forEach(function(w){w.setAttribute('aria-hidden','true')});
+  }
+
+  // Pointer-draggable case-study strip. Touch keeps native scrolling.
+  var strip=document.getElementById('strip');
+  if(strip){
+    var down=false,sx=0,sl=0,moved=false,snapT;
+    strip.addEventListener('pointerdown',function(e){
+      if(e.pointerType!=='mouse'||e.button!==0)return;
+      down=true;moved=false;sx=e.clientX;sl=strip.scrollLeft;strip.classList.add('drag');strip.setPointerCapture(e.pointerId);
+    });
+    strip.addEventListener('pointermove',function(e){
+      if(!down)return;var dx=e.clientX-sx;if(Math.abs(dx)>4)moved=true;strip.scrollLeft=sl-dx;
+    });
+    function up(){
+      if(!down)return;down=false;
+      clearTimeout(snapT);snapT=setTimeout(function(){strip.classList.remove('drag')},120);
+    }
+    strip.addEventListener('pointerup',up);strip.addEventListener('pointercancel',up);
+    strip.addEventListener('click',function(e){if(moved){e.preventDefault();e.stopPropagation();moved=false}},true);
+    document.querySelectorAll('.strip-ctl button').forEach(function(b){
+      b.addEventListener('click',function(){
+        var card=strip.querySelector('.case');var step=card?card.getBoundingClientRect().width+16:320;
+        strip.scrollBy({left:step*Number(b.dataset.dir),behavior:'smooth'});
+      });
+    });
+    strip.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();strip.scrollBy({left:(e.key==='ArrowRight'?1:-1)*320,behavior:'smooth'})}
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "slug": "forge",
+  "name": "Forge",
+  "category": "Developer tools",
+  "tone": "dark",
+  "free": true,
+  "tagline": "A self-typing terminal session whose result lines fly out of the window to become the feature list, for a CLI that rehearses database migrations before they ship.",
+  "sections": [
+    "Sticky nav with brand mark, four links and a command-styled ghost action",
+    "Hero with italic amber word, one filled CTA, a typing terminal and four feature slots the output lands on",
+    "Proof band of four mono figures with one-line explanations",
+    "Install section with five copy-to-clipboard command rows",
+    "How it works as three numbered steps with mono report blocks",
+    "Pricing as three ruled rows with a glowing lead plan",
+    "Final call to action with a rising amber wash and release line",
+    "Footer"
+  ],
+  "fonts": ["Alegreya Sans", "JetBrains Mono"]
+}

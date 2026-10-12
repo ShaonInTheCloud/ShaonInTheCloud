@@ -1,0 +1,19 @@
+{
+  "slug": "monolith",
+  "name": "Monolith",
+  "category": "Portfolio",
+  "tone": "dark",
+  "free": false,
+  "tagline": "A warm-charcoal portfolio for a 3D artist with a CSS-3D slab that tilts toward the pointer under a moving specular highlight, and a plain work list with CSS-drawn hover previews.",
+  "sections": [
+    "Nav with name, discipline, three links and an outlined action",
+    "Hero with the wide-grotesque headline, lede, one filled CTA and the 3D monolith",
+    "Selected work as a ruled ordered list with hover-revealed CSS previews",
+    "Process as a four-week calendar",
+    "Rates in a three-cell ruled grid with a lead cell",
+    "Client list row",
+    "Final call to action with a soft top glow",
+    "Footer"
+  ],
+  "fonts": ["Archivo"]
+}

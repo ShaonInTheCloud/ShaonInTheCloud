@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbit Halo — the ring lamp, in three finishes</title>
+<meta name="description" content="Halo is a 28 cm ring lamp with no shade, no bulb to replace and a dimmer you turn with one finger. Aubergine lacquer, brushed brass or bone. First batch ships 18 November.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Archivo:wdth,wght@75..125,400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1020;          /* black plum */
+  --bg-2:#231527;        /* raised */
+  --bg-3:#2c1b31;
+  --line:#3a2740;
+  --line-2:#4d365a;
+  --ink:#f4ebf2;
+  --ink-2:#c3adc3;
+  --ink-3:#8f7a92;
+  --light:#ffd9a6;       /* the lamp's light */
+  --light-2:#ffb870;
+  --light-dim:rgba(255,217,166,.16);
+  /* finish tokens, swapped by [data-finish] */
+  --fin-name:"Aubergine";
+  --fin-body:#43204a;
+  --fin-hi:#7d4886;
+  --fin-lo:#1f0c23;
+  --fin-trim:#d2a86a;
+  --fin-ink:#f4ebf2;
+  --display:"Syne",system-ui,sans-serif;
+  --text:"Archivo",system-ui,sans-serif;
+  --gutter:clamp(16px,4vw,48px);
+  --max:1160px;
+}
+[data-finish="brass"]{--fin-body:#a67c3c;--fin-hi:#e9c882;--fin-lo:#5a3d1c;--fin-trim:#f7e8c6;--fin-ink:#1a1020}
+[data-finish="bone"]{--fin-body:#e6dccb;--fin-hi:#fbf7ee;--fin-lo:#a4967f;--fin-trim:#8b7f72;--fin-ink:#1a1020}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--text);font-size:1.0625rem;line-height:1.5;overflow-x:hidden}
+body.barred{padding-bottom:72px}
+h1,h2,h3,p,figure{margin:0}
+a{color:inherit}
+svg{display:block}
+:focus-visible{outline:2px solid var(--light);outline-offset:3px;border-radius:3px}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+.cond{font-stretch:78%;font-weight:600;letter-spacing:.01em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* nav */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;height:62px;gap:1.6rem}
+.brand{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:.06em;text-decoration:none;display:flex;align-items:center;gap:.55rem}
+.brand i{width:16px;height:16px;border-radius:50%;border:3px solid var(--light);box-shadow:0 0 10px var(--light-dim)}
+.nav nav{display:none;gap:1.5rem;margin-left:1.2rem}
+.nav nav a{text-decoration:none;color:var(--ink-2);font-stretch:90%}
+.nav nav a:hover{color:var(--ink)}
+.nav .act{margin-left:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.2rem;border-radius:999px;border:1px solid var(--line-2);background:transparent;color:var(--ink);text-decoration:none;font:600 1rem var(--text);cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.btn:hover{border-color:var(--light)}
+.btn.primary{background:var(--light);border-color:var(--light);color:#1a1020}
+.btn.primary:hover{background:#fff1dc}
+@media(min-width:820px){.nav nav{display:flex}}
+
+/* hero */
+.hero{position:relative;padding:clamp(1.5rem,4vw,3rem) 0 clamp(2.5rem,6vw,5rem);overflow:hidden}
+.hero .wrap{display:grid;gap:1.5rem;align-items:center}
+@media(min-width:900px){.hero .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3rem}.hero .copy{order:-1}}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,4.6vw,3.3rem);line-height:1;letter-spacing:-.02em;max-width:15ch}
+.hero .lede{margin-top:1.2rem;color:var(--ink-2);max-width:46ch;font-size:1.15rem}
+.hero .ship{margin-top:.8rem;color:var(--ink-3);font-stretch:85%}
+
+/* product */
+.scene{perspective:1100px;display:grid;place-items:center;padding:1.5rem 0 1rem}
+.pdt{position:relative;width:min(100%,420px);aspect-ratio:400/520;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.pdt .l{position:absolute;inset:0;width:100%;height:100%}
+.pdt .glow{transform:translateZ(-70px);background:radial-gradient(circle at 50% 31%,rgba(255,217,166,.2) 0,rgba(255,184,112,.16) 24%,transparent 46%);animation:breathe 4.5s ease-in-out infinite}
+.pdt .ring{transform:translateZ(50px)}
+.pdt .body{transform:translateZ(0)}
+@keyframes breathe{0%,100%{opacity:.78}50%{opacity:1}}
+.beam{animation:beam 4.5s ease-in-out infinite}
+@keyframes beam{0%,100%{opacity:.75}50%{opacity:1}}
+
+/* finish switcher + buy form */
+.buy{margin-top:1.8rem;display:grid;gap:1.1rem;max-width:420px}
+.buy fieldset{border:0;padding:0;margin:0}
+.buy legend{font-stretch:80%;font-weight:600;color:var(--ink-2);margin-bottom:.6rem;padding:0}
+.fin{display:flex;gap:.7rem;flex-wrap:wrap}
+.fin label{display:flex;align-items:center;gap:.6rem;padding:.45rem .9rem .45rem .5rem;border:1px solid var(--line-2);border-radius:999px;cursor:pointer;color:var(--ink-2);transition:border-color .15s,color .15s}
+.fin label:hover{color:var(--ink)}
+.fin input{position:absolute;opacity:0;width:1px;height:1px}
+.fin input:checked+label{border-color:var(--light);color:var(--ink)}
+.fin input:focus-visible+label{outline:2px solid var(--light);outline-offset:2px}
+.fin .sw{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--sw-hi),var(--sw-body) 55%,var(--sw-lo));box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.buy .qty{display:flex;align-items:center;gap:1rem}
+.buy .qty label{font-stretch:80%;font-weight:600;color:var(--ink-2)}
+.buy input[type=number]{width:4.5rem;background:var(--bg-2);border:1px solid var(--line-2);color:var(--ink);font:inherit;padding:.5rem .6rem;border-radius:8px}
+.buy .btn.primary{font-size:1.05rem;padding:.9rem 1.4rem}
+.buy .btn .total{font-family:var(--display);font-weight:700;margin-left:.3rem}
+.buy .note{color:var(--ink-3);font-size:.92rem;font-stretch:90%}
+.buy output{display:block;color:var(--light);font-stretch:90%;min-height:1.4em}
+
+/* sticky bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:25;transform:translateY(110%);transition:transform .35s cubic-bezier(.2,.7,.2,1);background:color-mix(in srgb,var(--bg-2) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line-2)}
+.bar.show{transform:none}
+.bar .wrap{display:flex;align-items:center;gap:.9rem;height:70px}
+.bar .dot{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--fin-hi),var(--fin-body) 55%,var(--fin-lo));flex:none;box-shadow:0 0 0 2px var(--bg-2),0 0 0 3px var(--line-2)}
+.bar .t{display:grid;line-height:1.2;min-width:0}
+.bar .t b{font-family:var(--display);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .t span{color:var(--ink-2);font-size:.9rem;font-stretch:85%}
+.bar .btn{margin-left:auto;padding:.6rem 1.1rem;white-space:nowrap}
+
+/* proof band */
+.proof{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-2)}
+.proof .wrap{display:grid;grid-template-columns:1fr 1fr}
+.proof div{padding:1.3rem 1rem 1.3rem 0;border-bottom:1px solid var(--line)}
+.proof div:nth-child(odd){border-right:1px solid var(--line)}
+.proof div:nth-child(even){padding-left:1rem}
+.proof b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3.4vw,2.2rem);line-height:1;letter-spacing:-.01em;color:var(--light)}
+.proof span{display:block;color:var(--ink-2);margin-top:.45rem;font-size:.95rem;font-stretch:92%}
+@media(min-width:820px){.proof .wrap{grid-template-columns:repeat(4,1fr)}.proof div{border-bottom:0;padding:2rem 1.5rem}.proof div:nth-child(odd),.proof div:nth-child(even){border-right:1px solid var(--line);padding-left:1.5rem}.proof div:first-child{padding-left:0}.proof div:last-child{border-right:0}}
+
+/* sections */
+section.block{padding:clamp(3.5rem,8vw,6.5rem) 0}
+.block h2{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,3.8vw,2.7rem);line-height:1.05;letter-spacing:-.015em;max-width:18ch}
+.block .sub{color:var(--ink-2);max-width:54ch;margin-top:.8rem;font-size:1.08rem}
+
+/* parts */
+.parts{display:grid;gap:2rem;margin-top:2.4rem;align-items:center}
+@media(min-width:900px){.parts{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:4rem}}
+.parts svg{width:min(100%,360px);margin:0 auto}
+.spec{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.spec li{display:grid;grid-template-columns:5.5rem 1fr;gap:1rem;padding:1.1rem 0;border-bottom:1px solid var(--line)}
+.spec .k{font-family:var(--display);font-weight:700;color:var(--light)}
+.spec p{color:var(--ink-2)}
+.spec p b{color:var(--ink);font-weight:600;display:block}
+
+/* finishes */
+.finishes{display:grid;gap:1rem;margin-top:2.2rem}
+@media(min-width:720px){.finishes{grid-template-columns:repeat(3,1fr)}}
+.fcard{text-align:left;border:1px solid var(--line);background:var(--bg-2);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;color:var(--ink);font:inherit;display:grid;transition:border-color .15s}
+.fcard:hover{border-color:var(--line-2)}
+.fcard.cur{border-color:var(--light)}
+.fcard .chip{height:150px;background:linear-gradient(160deg,var(--c-hi) 0%,var(--c-body) 48%,var(--c-lo) 100%);position:relative}
+.fcard .chip::after{content:"";position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px;border-radius:50%;border:13px solid var(--c-body);box-shadow:inset 0 0 0 3px var(--light),0 0 30px var(--light-dim);background:radial-gradient(circle,rgba(255,217,166,.3),transparent 70%)}
+.fcard .txt{padding:1rem 1.1rem 1.2rem}
+.fcard h3{font-family:var(--display);font-weight:700;font-size:1.15rem}
+.fcard p{color:var(--ink-2);font-size:.95rem;margin-top:.3rem}
+.fcard .pick{margin-top:.7rem;color:var(--light);font-stretch:85%;font-weight:600}
+.fcard.cur .pick::before{content:"Selected · "}
+
+/* delivery + story */
+.deliv{display:grid;gap:2.5rem;margin-top:2.4rem}
+@media(min-width:900px){.deliv{grid-template-columns:1fr 1fr;gap:4rem}}
+.deliv dl{margin:0;border-top:1px solid var(--line)}
+.deliv dl>div{display:grid;grid-template-columns:8rem 1fr;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line)}
+.deliv dt{font-stretch:80%;font-weight:600;color:var(--ink-2)}
+.deliv dd{margin:0}
+.quote{border-left:3px solid var(--light);padding-left:1.4rem;align-self:center}
+.quote p{font-family:var(--display);font-weight:500;font-size:clamp(1.2rem,2.2vw,1.5rem);line-height:1.35}
+.quote footer{margin-top:1rem;color:var(--ink-3);font-stretch:90%}
+
+/* final */
+.final{padding:clamp(4rem,10vw,8rem) 0;border-top:1px solid var(--line);position:relative;overflow:hidden}
+.final::before{content:"";position:absolute;left:50%;top:50%;width:min(80vw,760px);height:min(80vw,760px);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,var(--light-dim),transparent 60%);pointer-events:none}
+.final .wrap{position:relative;text-align:center;display:grid;justify-items:center;gap:1.2rem}
+.final h2{font-family:var(--display);font-weight:800;font-size:clamp(2rem,5vw,3.6rem);line-height:1;letter-spacing:-.02em;max-width:14ch}
+.final p{color:var(--ink-2);max-width:40ch;font-size:1.1rem}
+
+footer.site{border-top:1px solid var(--line);padding:2rem 0 2.5rem;color:var(--ink-3);font-size:.95rem;font-stretch:92%}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:.8rem 2rem;align-items:center}
+footer.site nav{display:flex;flex-wrap:wrap;gap:1.2rem}
+footer.site a{text-decoration:none;color:var(--ink-2)}
+footer.site a:hover{color:var(--ink)}
+footer.site .right{margin-left:auto}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .pdt,.pdt .glow,.beam,.bar,.btn,.fin label,.fcard{animation:none;transition:none}
+  .pdt{transform:none !important}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Orbit home"><i aria-hidden="true"></i>ORBIT</a>
+    <nav aria-label="Primary">
+      <a href="#parts">The lamp</a>
+      <a href="#finishes">Finishes</a>
+      <a href="#delivery">Delivery</a>
+      <a href="#story">Why we made it</a>
+    </nav>
+    <a class="btn act" href="#buy">Pre-order</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" id="hero">
+    <div class="wrap">
+      <div class="scene" id="scene">
+        <figure class="pdt" id="pdt" data-finish="aubergine" aria-label="Orbit Halo ring lamp, shown in the selected finish">
+          <div class="l glow" aria-hidden="true"></div>
+          <svg class="l body" viewBox="0 0 400 520" aria-hidden="true">
+            <defs>
+              <linearGradient id="stem" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" style="stop-color:var(--fin-lo)"/><stop offset=".35" style="stop-color:var(--fin-hi)"/><stop offset=".6" style="stop-color:var(--fin-body)"/><stop offset="1" style="stop-color:var(--fin-lo)"/>
+              </linearGradient>
+              <linearGradient id="basetop" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" style="stop-color:var(--fin-hi)"/><stop offset=".55" style="stop-color:var(--fin-body)"/><stop offset="1" style="stop-color:var(--fin-lo)"/>
+              </linearGradient>
+              <radialGradient id="pool" cx=".5" cy=".5" r=".5">
+                <stop offset="0" stop-color="#ffd9a6" stop-opacity=".55"/><stop offset="1" stop-color="#ffd9a6" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="200" cy="478" rx="190" ry="34" fill="url(#pool)" class="beam"/>
+            <ellipse cx="200" cy="492" rx="150" ry="16" fill="#000" opacity=".45"/>
+            <ellipse cx="200" cy="474" rx="124" ry="28" style="fill:var(--fin-lo)"/>
+            <ellipse cx="200" cy="462" rx="124" ry="28" fill="url(#basetop)"/>
+            <ellipse cx="200" cy="462" rx="124" ry="28" fill="none" style="stroke:var(--fin-hi)" stroke-opacity=".5"/>
+            <circle cx="262" cy="458" r="11" style="fill:var(--fin-trim)"/>
+            <circle cx="262" cy="458" r="4" style="fill:var(--fin-lo)"/>
+            <rect x="191" y="268" width="18" height="200" rx="9" fill="url(#stem)"/>
+            <rect x="188" y="262" width="24" height="14" rx="5" style="fill:var(--fin-trim)"/>
+          </svg>
+          <svg class="l ring" viewBox="0 0 400 520" aria-hidden="true">
+            <defs>
+              <linearGradient id="ringg" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" style="stop-color:var(--fin-hi)"/><stop offset=".5" style="stop-color:var(--fin-body)"/><stop offset="1" style="stop-color:var(--fin-lo)"/>
+              </linearGradient>
+              <radialGradient id="inner" cx=".5" cy=".5" r=".5">
+                <stop offset=".7" stop-color="#ffd9a6" stop-opacity="0"/><stop offset=".93" stop-color="#ffd9a6" stop-opacity=".5"/><stop offset="1" stop-color="#ffd9a6" stop-opacity=".9"/>
+              </radialGradient>
+            </defs>
+            <circle cx="200" cy="160" r="104" fill="url(#inner)" class="beam"/>
+            <circle cx="200" cy="160" r="118" fill="none" stroke="url(#ringg)" stroke-width="28"/>
+            <circle cx="200" cy="160" r="104" fill="none" stroke="#ffd9a6" stroke-width="3" class="beam"/>
+            <circle cx="200" cy="160" r="132" fill="none" style="stroke:var(--fin-hi)" stroke-opacity=".35" stroke-width="1"/>
+            <path d="M160 70 A100 100 0 0 1 250 60" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </figure>
+      </div>
+
+      <div class="copy">
+        <h1>Light that stays where you put it.</h1>
+        <p class="lede">Halo is a 28 cm ring of light on a weighted base. No shade, no bulb to replace, and a dimmer you turn with one finger from candle to daylight.</p>
+        <p class="ship">First batch ships 18 November. Pre-orders close when it is gone.</p>
+
+        <form class="buy" id="buy" action="#buy" method="post" novalidate>
+          <fieldset>
+            <legend>Finish</legend>
+            <div class="fin">
+              <input type="radio" name="finish" id="f-aub" value="aubergine" data-name="Aubergine" checked>
+              <label for="f-aub"><span class="sw" style="--sw-hi:#7d4886;--sw-body:#43204a;--sw-lo:#1f0c23"></span>Aubergine</label>
+              <input type="radio" name="finish" id="f-brass" value="brass" data-name="Brushed brass">
+              <label for="f-brass"><span class="sw" style="--sw-hi:#e9c882;--sw-body:#a67c3c;--sw-lo:#5a3d1c"></span>Brushed brass</label>
+              <input type="radio" name="finish" id="f-bone" value="bone" data-name="Bone">
+              <label for="f-bone"><span class="sw" style="--sw-hi:#fbf7ee;--sw-body:#e6dccb;--sw-lo:#a4967f"></span>Bone</label>
+            </div>
+          </fieldset>
+          <div class="qty">
+            <label for="qty">Quantity</label>
+            <input type="number" id="qty" name="qty" min="1" max="4" value="1" inputmode="numeric">
+          </div>
+          <button class="btn primary" type="submit">Add to cart <span class="total" id="total">€289</span></button>
+          <p class="note">€289 each, VAT included. Free shipping in the EU, €25 elsewhere. Charged when it ships.</p>
+          <output for="qty f-aub f-brass f-bone" id="msg" aria-live="polite"></output>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof" aria-label="Figures">
+    <div class="wrap">
+      <div><b>1,100 lm</b><span>Enough to read by at the lowest warm setting, enough to work by at the top.</span></div>
+      <div><b>2,140</b><span>Pre-ordered from the first batch of 3,000. Aubergine is the one running low.</span></div>
+      <div><b>30 days</b><span>Returns, no questions, and we pay the return label inside the EU.</span></div>
+      <div><b>5 years</b><span>Warranty on the LED driver, the part that fails on other lamps.</span></div>
+    </div>
+  </section>
+
+  <section class="block" id="parts">
+    <div class="wrap">
+      <h2>Three parts. No screws, no bulb.</h2>
+      <p class="sub">Halo slots together in under a minute and comes apart the same way, so a scratched ring or a tired driver is a swap, not a replacement lamp.</p>
+      <div class="parts">
+        <svg viewBox="0 0 360 400" aria-labelledby="exp-t" role="img"><title id="exp-t">Exploded view: the ring, the stem and the base, separated vertically</title>
+          <g style="stroke:var(--line-2)" stroke-dasharray="4 6" fill="none"><line x1="180" y1="40" x2="180" y2="370"/></g>
+          <circle cx="180" cy="100" r="68" fill="none" style="stroke:var(--fin-body)" stroke-width="17"/>
+          <circle cx="180" cy="100" r="60" fill="none" stroke="#ffd9a6" stroke-width="2" opacity=".8"/>
+          <text x="262" y="104" style="fill:var(--ink-2)" font-family="Archivo,sans-serif" font-size="13">ring · 1.1 kg</text>
+          <rect x="173" y="200" width="14" height="110" rx="7" style="fill:var(--fin-hi)"/>
+          <rect x="169" y="194" width="22" height="12" rx="4" style="fill:var(--fin-trim)"/>
+          <text x="200" y="258" style="fill:var(--ink-2)" font-family="Archivo,sans-serif" font-size="13">stem · 38 cm</text>
+          <ellipse cx="180" cy="360" rx="92" ry="22" style="fill:var(--fin-lo)"/>
+          <ellipse cx="180" cy="350" rx="92" ry="22" style="fill:var(--fin-body)"/>
+          <circle cx="226" cy="347" r="8" style="fill:var(--fin-trim)"/>
+          <text x="284" y="354" style="fill:var(--ink-2)" font-family="Archivo,sans-serif" font-size="13">base · 1.6 kg</text>
+        </svg>
+        <ul class="spec">
+          <li><span class="k">Ring</span><p><b>28 cm, 2700 to 4000 K, 1,100 lumens</b>The LEDs sit behind a diffuser on the inner edge, so you see the glow, never the diodes. Colour temperature follows the dimmer: lower is warmer.</p></li>
+          <li><span class="k">Stem</span><p><b>Anodised aluminium, 38 cm</b>Carries power through a sprung contact in the collar. Lift the ring off to clean it, drop it back on, done.</p></li>
+          <li><span class="k">Base</span><p><b>Cast zinc, 1.6 kg, one dial</b>Heavy enough that a cat cannot tip it. The dial is the only control: turn for brightness, press to switch off, press and hold to save a level.</p></li>
+          <li><span class="k">Power</span><p><b>USB-C, 30 W, 2 m braided cable</b>Runs from the charger you already own. Driver is in the base, where it stays cool and can be swapped in warranty.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="finishes" style="padding-top:0">
+    <div class="wrap">
+      <h2>Three finishes, one price</h2>
+      <p class="sub">Pick one here and the lamp above changes with it. Every finish uses the same brass dial and the same warm diffuser.</p>
+      <div class="finishes" id="fcards">
+        <button type="button" class="fcard cur" data-finish="aubergine" style="--c-hi:#7d4886;--c-body:#43204a;--c-lo:#1f0c23">
+          <span class="chip" aria-hidden="true"></span>
+          <span class="txt"><h3>Aubergine</h3><p>Deep lacquer over the aluminium, eight coats, polished by hand. Reads near black until the light is on.</p><span class="pick">Choose Aubergine</span></span>
+        </button>
+        <button type="button" class="fcard" data-finish="brass" style="--c-hi:#e9c882;--c-body:#a67c3c;--c-lo:#5a3d1c">
+          <span class="chip" aria-hidden="true"></span>
+          <span class="txt"><h3>Brushed brass</h3><p>Real brass plating, brushed in one direction and left unlacquered so it darkens a little each year.</p><span class="pick">Choose Brushed brass</span></span>
+        </button>
+        <button type="button" class="fcard" data-finish="bone" style="--c-hi:#fbf7ee;--c-body:#e6dccb;--c-lo:#a4967f">
+          <span class="chip" aria-hidden="true"></span>
+          <span class="txt"><h3>Bone</h3><p>A warm off-white powder coat with a slight texture. The one we put on our own desks.</p><span class="pick">Choose Bone</span></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="delivery" style="padding-top:0">
+    <div class="wrap">
+      <h2>Delivery, returns and the small print</h2>
+      <div class="deliv">
+        <dl>
+          <div><dt>Ships</dt><dd>18 November for the first batch, in order of pre-order. We email a tracking link the day it leaves Tallinn.</dd></div>
+          <div><dt>Shipping</dt><dd>Free inside the EU. €25 to the UK, Norway, Switzerland and the US; duties included in that price.</dd></div>
+          <div><dt>Returns</dt><dd>30 days from delivery, any reason. Use the box it came in; we send the label.</dd></div>
+          <div><dt>Warranty</dt><dd>Five years on the driver and LEDs, two years on everything else, and spare parts sold at cost after that.</dd></div>
+          <div><dt>In the box</dt><dd>Ring, stem, base, 2 m USB-C cable, a cloth, and a one-page sheet. No charger, you have one.</dd></div>
+        </dl>
+        <blockquote class="quote" id="story">
+          <p>We made Halo because every lamp we owned lit the ceiling, the wall, our eyes, everything except the page. A ring puts the light around the thing you are looking at and nowhere else.</p>
+          <footer>Marta Kõiv, founder, Orbit</footer>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>Reserve a Halo in your finish.</h2>
+      <p>Nothing is charged until it ships. Change the finish or cancel any time before then.</p>
+      <a class="btn primary" href="#buy">Go to the buy box</a>
+    </div>
+  </section>
+</main>
+
+<div class="bar" id="bar" aria-hidden="true">
+  <div class="wrap">
+    <span class="dot" id="bardot"></span>
+    <span class="t"><b id="bartitle">Halo · Aubergine</b><span id="barsub">€289 · ships 18 November</span></span>
+    <button class="btn primary" type="submit" form="buy" tabindex="-1">Add to cart</button>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Orbit Lighting OÜ, Tallinn</span>
+    <nav aria-label="Footer">
+      <a href="#parts">Specs</a><a href="#delivery">Delivery</a><a href="#delivery">Warranty</a><a href="#top">Privacy</a><a href="#top">Contact</a>
+    </nav>
+    <span class="right">Designed in Tallinn, assembled in Tartu.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var pdt=document.getElementById('pdt'), scene=document.getElementById('scene'), hero=document.getElementById('hero');
+  var form=document.getElementById('buy'), qty=document.getElementById('qty'), total=document.getElementById('total'), msg=document.getElementById('msg');
+  var bar=document.getElementById('bar'), bardot=document.getElementById('bardot'), bartitle=document.getElementById('bartitle');
+  var radios=form.querySelectorAll('input[name=finish]'), cards=document.querySelectorAll('.fcard');
+  var PRICE=289;
+
+  function finishName(){ var r=form.querySelector('input[name=finish]:checked'); return r?r.getAttribute('data-name'):'Aubergine'; }
+  function finishKey(){ var r=form.querySelector('input[name=finish]:checked'); return r?r.value:'aubergine'; }
+  function sync(){
+    var k=finishKey();
+    pdt.setAttribute('data-finish',k); bardot.setAttribute('data-finish',k);
+    document.querySelector('.parts svg').setAttribute('data-finish',k);
+    cards.forEach(function(c){ c.classList.toggle('cur',c.getAttribute('data-finish')===k); });
+    var n=Math.min(4,Math.max(1,parseInt(qty.value,10)||1)); qty.value=n;
+    total.textContent='€'+(PRICE*n).toLocaleString('en');
+    bartitle.textContent='Halo · '+finishName()+(n>1?' × '+n:'');
+    msg.textContent='';
+  }
+  radios.forEach(function(r){ r.addEventListener('change',sync); });
+  qty.addEventListener('input',sync);
+  cards.forEach(function(c){ c.addEventListener('click',function(){
+    var k=c.getAttribute('data-finish'); var r=form.querySelector('input[value="'+k+'"]'); if(r){ r.checked=true; sync(); }
+  }); });
+  form.addEventListener('submit',function(e){
+    e.preventDefault(); sync();
+    var n=parseInt(qty.value,10)||1;
+    msg.textContent='Added '+n+' × Halo in '+finishName()+'. Checkout would open here in your shop.';
+    if(!reduced) msg.animate([{opacity:0},{opacity:1}],{duration:300});
+  });
+  sync();
+
+  /* pointer tilt: layers sit at different depths, so the lamp turns as the cursor crosses the hero */
+  if(!reduced && matchMedia('(hover:hover) and (pointer:fine)').matches){
+    var tx=0,ty=0,cx=0,cy=0,raf=null;
+    function tick(){ cx+=(tx-cx)*.12; cy+=(ty-cy)*.12; pdt.style.transform='rotateY('+cx.toFixed(2)+'deg) rotateX('+cy.toFixed(2)+'deg)'; if(Math.abs(tx-cx)>.02||Math.abs(ty-cy)>.02) raf=requestAnimationFrame(tick); else raf=null; }
+    hero.addEventListener('pointermove',function(e){
+      var r=scene.getBoundingClientRect(); var x=(e.clientX-(r.left+r.width/2))/r.width, y=(e.clientY-(r.top+r.height/2))/r.height;
+      tx=Math.max(-1,Math.min(1,x))*10; ty=Math.max(-1,Math.min(1,-y))*7; if(!raf) raf=requestAnimationFrame(tick);
+    });
+    hero.addEventListener('pointerleave',function(){ tx=0;ty=0; if(!raf) raf=requestAnimationFrame(tick); });
+    pdt.style.transition='none';
+  }
+
+  /* sticky bar after the buy box leaves the viewport */
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(en){
+      var past=!en[0].isIntersecting && en[0].boundingClientRect.bottom<0;
+      bar.classList.toggle('show',past); bar.setAttribute('aria-hidden',past?'false':'true');
+      bar.querySelector('button').tabIndex=past?0:-1; document.body.classList.toggle('barred',past);
+    },{threshold:0});
+    io.observe(form);
+  }
+})();
+</script>
+</body>
+</html>

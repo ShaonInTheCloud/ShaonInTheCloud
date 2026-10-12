@@ -1,0 +1,19 @@
+{
+  "slug": "harbor",
+  "name": "Harbor",
+  "category": "Hospitality / Travel",
+  "tone": "dark",
+  "free": false,
+  "tagline": "A canvas-drawn night harbour whose quay lamps shimmer on the water behind the headline, with a real booking form, for a small inn or sailing charter.",
+  "sections": [
+    "Nav with brand, four links and a ghost booking action",
+    "Hero over a canvas harbour with moving lamp reflections, italic kicker, one booking form as the primary action",
+    "Harbour notices band styled as a tide table",
+    "Rooms as a ruled three-column list with prices",
+    "The morning sail as a timed log with a what-to-bring aside",
+    "Winter rate table beside the owners' story",
+    "Final call to action with a warm radial glow",
+    "Footer"
+  ],
+  "fonts": ["Cormorant Garamond", "Alegreya Sans"]
+}
