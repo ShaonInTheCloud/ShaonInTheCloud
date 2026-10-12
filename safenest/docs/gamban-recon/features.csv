@@ -1,0 +1,36 @@
+feature,area,priority,original,clone,notes
+Sign up and log in with email and password,onboarding,must,yes,no,source: login page (gamban.com/payment)
+Sign in with Google and X,onboarding,should,yes,no,source: login page
+Password reset,onboarding,must,yes,no,forgot password link on login page
+Free trial of 7 days,billing,must,yes,no,pricing page; cancellation and renewal terms unknown
+Monthly plan and annual plan,billing,must,yes,no,pricing page: $6.99 monthly and $41.99 annual at time of reading; do not copy prices
+One licence covers all of a user's devices,licensing,must,yes,no,marketing site and blocking page; device limit unknown
+Licence period is the only timeframe; no early removal,tamper resistance,must,yes,no,uninstall article; core to the product promise
+Block gambling websites,blocking,must,yes,no,blocking page; mechanism unknown
+Block gambling apps,blocking,must,yes,no,blocking page; mechanism unknown
+Blocklist categories (sports betting casino poker bingo lottery social casino crypto NFT affiliates trading esports skins),blocking,must,yes,no,blocking page; own list required
+Blocklist updated regularly,blocking,must,yes,no,blocking page
+Does not block ads investment sites adult content or loot boxes,blocking,should,yes,no,blocking page lists these exclusions; a product decision to copy or change
+Layered self-exclusion in the app,self-exclusion,should,yes,no,marketing site and blocking page; contents unseen
+Android setup wizard with checkmark steps,android,must,yes,no,Android install article
+Android accessibility service permission,android,must,yes,no,Android install article
+Android device admin to resist removal,android,must,yes,no,Android install article
+Android local VPN for filtering,android,must,yes,no,Android install article
+Background run and battery exemption,android,must,yes,no,Android install article
+Final test-protection step in setup,android,should,yes,no,Android install article
+Android install without Google Play Services,android,could,yes,no,separate kb article not read
+iOS install via configuration profile with Remote Management,ios,must,yes,no,iOS 14+ article; not available on work-managed devices
+macOS installer with restart,desktop,should,yes,no,macOS article
+Windows installer,desktop,should,yes,no,compatibility page lists Windows 7 and later; install article not read
+Protection check page,desktop,could,yes,no,check.gamban.com shows a protected message on macOS
+Progress tracking (days without gambling),dashboard,should,yes,no,marketing site
+Estimated time and money saved,dashboard,could,yes,no,marketing site; method unknown
+Account page to manage devices and get installers,account,should,yes,no,login page text; unseen
+Live installation support and contact page,support,should,yes,no,marketing site
+Language and country selector,i18n,could,yes,no,login page
+Get-help links to addiction support,support,should,yes,no,marketing nav; link to local services rather than copy theirs
+Certifications (B Corp ISO 9001 ISO 27001 Investors in People),trust,could,yes,skip,their audits and awards cannot be rebuilt
+Government or program free access (Time Out Ohio),partnerships,could,yes,skip,partner agreement is theirs
+GAMSTOP and banking-block guides,partnerships,could,yes,skip,external schemes and their content
+Curated blocklist data,blocking,could,yes,skip,their data asset; build your own sources
+Testimonials and marketing copy,marketing,could,yes,skip,their content and users
