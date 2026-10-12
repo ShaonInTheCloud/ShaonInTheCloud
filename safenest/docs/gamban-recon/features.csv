@@ -34,3 +34,11 @@ Government or program free access (Time Out Ohio),partnerships,could,yes,skip,pa
 GAMSTOP and banking-block guides,partnerships,could,yes,skip,external schemes and their content
 Curated blocklist data,blocking,could,yes,skip,their data asset; build your own sources
 Testimonials and marketing copy,marketing,could,yes,skip,their content and users
+Local VPN used for filtering only; user traffic not tunnelled,android,must,yes,no,Google Play listing; mechanism otherwise unpublished
+Block use of other VPNs while protection is active,android,should,yes,no,Google Play listing; follows from one active VPN at a time on Android; a reviewer reported unrelated apps breaking
+Screen-content detection of gambling pages and apps,android,should,yes,no,Google Play listing (Accessibility Service); matching method unpublished
+Secure DNS (DNS over HTTPS) blocking on iOS,ios,must,yes,no,App Store FAQ: replaced MDM approach in v3.2.0; older kb article still describes a profile
+Report missed or wrongly blocked sites and apps,blocking,should,yes,no,Gamban help center and App Store reviews; review process unpublished
+Dashboard with recovery resources and self-exclusion suggestions,dashboard,should,yes,no,App Store listing
+Fair-use policy on devices per licence,licensing,could,yes,no,App Store and Play listings
+Warn against installing on work-managed devices,onboarding,could,yes,no,Play listing and iOS install article

@@ -128,7 +128,7 @@ Relationships: User 1-n Licence (likely one active), User 1-n Device, Licence 1-
 
 ## Feature matrix
 
-See `features.csv`. Must: 16, should: 10, could: 4, skip: 5.
+See `features.csv`. Must: 18, should: 14, could: 6, skip: 5.
 
 ## Out of scope (cannot or should not be cloned)
 
@@ -142,3 +142,17 @@ See `features.csv`. Must: 16, should: 10, could: 4, skip: 5.
 Screens 20, flows 7, entities 6. Hard parts: reliable blocking per OS (local VPN on Android, a configuration profile with Remote Management on iOS, a system-level installer on desktop), tamper resistance and removal friction, keeping the blocklist fresh, billing with trial, and platform review for apps that use accessibility and device admin. Size: L (a quarter). The blocking engine and blocklist are the long pole; account, payment and dashboard alone would be M.
 
 Open questions to check on a trial account: the payment screens and trial terms, how many devices a licence allows, what the self-exclusion layers contain, what the dashboard shows, and what a blocked page looks like. The App Store listing was not read.
+
+## Addendum 2026-10-12: blocking mechanics and removal resistance (public sources)
+
+Sources: Google Play listing (https://play.google.com/store/apps/details?id=com.gamban.beanstalkhps.gambanapp), App Store listing (https://apps.apple.com/us/app/block-online-gambling-gamban/id1459803064), https://gamban.com/blocking, https://kb.gamban.com/en-gb/10-/46-gamban.
+
+- **Android blocking:** a local VPN that reconfigures network settings for filtering (publisher says user traffic is not routed through it), an Accessibility Service that detects gambling content on screen, and Device Administrator. Background and battery exemption are part of setup.
+- **iOS blocking:** the App Store FAQ says secure DNS (DNS over HTTPS) replaced the earlier MDM-based protection in v3.2.0. The iOS install article in the sources table still describes a configuration profile with Remote Management, so it may be out of date. Flow F03 should be re-checked on a trial account.
+- **Other VPNs:** the Play listing says third-party VPNs cannot be used while Gamban is protecting the device. Nothing public describes detecting or blocking VPN apps being installed. A Play reviewer reported connection instability and some unrelated apps failing.
+- **Removal resistance:** Device Administrator makes uninstalling harder while protection is on. Gamban's policy is no removal before the licence ends, with removal at expiry. This is policy plus permissions, not a claimed unbreakable lock. How iOS and macOS resist removal is not documented.
+- **Known gaps (App Store reviews):** installed apps not blocked at first, and only logins and lobbies blocked rather than downloads. Users are asked to report missed domains and apps.
+- **Blocklist scope:** the blocking page lists loot boxes as not blocked, while the App Store listing lists loot boxes and prediction markets. The sources disagree.
+- **Listing details:** rated 16+, iOS 15.6 or later, 64.6 MB, dashboard with money and time saved trackers and self-exclusion suggestions. Listed prices include $6.99 monthly and $41.99 yearly in the US store and GBP 2.49 monthly and GBP 24.99 yearly on Play UK. Prices are theirs, not benchmarks to copy.
+- **Privacy labels:** the App Store lists contact info as collected; the Play data-safety labels list personal and financial info while the publisher says no personal data is collected. The listing does not explain the difference.
+- **Not public:** matching rules, update format, VPN routing, and the exact anti-removal code. Not inferred from the app or its network traffic.
