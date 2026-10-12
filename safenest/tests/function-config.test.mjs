@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const config = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
+const setting = name => config.match(new RegExp(`\\[functions\\.${name}\\]\\s*\\nverify_jwt\\s*=\\s*(true|false)`))?.[1];
+
+test('gateway and scheduler callbacks are reachable without a user JWT', () => {
+  for (const name of ['payment-notification', 'payment-return', 'payment-reconcile', 'payment-catalogue'])
+    assert.equal(setting(name), 'false', `${name} must set verify_jwt = false`);
+});
+
+test('functions that act for a signed-in user keep JWT verification', () => {
+  for (const name of ['delete-account', 'protection-access', 'start-trial'])
+    assert.equal(setting(name), 'true', `${name} must keep verify_jwt = true`);
+});

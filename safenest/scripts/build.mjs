@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { mkdir, copyFile, writeFile, cp, rm, readdir, readFile } from 'node:fs/promises';
 import { securityHeaders, contentSecurityPolicy } from './security-headers.mjs';
+import { workerSource } from './cloudflare-worker.mjs';
 
 const projectUrl = process.env.SUPABASE_URL || 'https://kflenmeizngmafwnwhgv.supabase.co';
 const key = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl';
@@ -28,6 +29,8 @@ await build({
 });
 // Apply these headers through the website host. The HTML also carries its CSP.
 await writeFile('dist/_headers', securityHeaders(url.origin));
+// Deployable to Cloudflare in front of the host that ignores _headers; see docs/security-headers-cloudflare.md.
+await writeFile('dist/cloudflare-security-headers-worker.js', workerSource(securityHeaders(url.origin)));
 console.log(key ? 'Built account page. Live Auth and database verification still required.' : 'Built setup preview. Account forms are disabled until a publishable key is configured.');
 await import('./release-pages.mjs');
 
