@@ -5,7 +5,7 @@ migration is now applied in the hosted database (version `20260924212500`).
 The personal account portal is published with Log in links in the public
 header and footer at
 `https://mysafenestbd.com/account`. On 5 October 2026 the Auth Site URL,
-exact redirect allowlist and Resend custom SMTP were configured. Signup,
+exact redirect allowlist and custom SMTP were configured (Resend until the Brevo switch below). Signup,
 confirmation-email delivery, email verification and private profile saving
 were verified with an owner-controlled test account. Password reset and
 email/password login still require an end-to-end test. The owner requested
@@ -41,12 +41,14 @@ Open your [Supabase project](https://supabase.com/dashboard/project/kflenmeizngm
    - `https://mysafenestbd.com/account?mode=recovery`
    - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account`
    - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account?mode=recovery`
-4. Under **Authentication → Email / SMTP Settings**, custom SMTP is configured:
+4. Under **Authentication → Email / SMTP Settings**, custom SMTP uses Brevo:
    sender `no-reply@auth.mysafenestbd.com`, name `SafeNest`, host
-   `smtp.resend.com`, port `465`, username `resend`, minimum interval 60 seconds.
-   The sending-only key is restricted to the verified `auth.mysafenestbd.com`
-   domain and saved only in Supabase. Keep credentials out of Git. Confirmation
-   delivery to Gmail passed SPF and DKIM; recovery still needs live testing.
+   `smtp-relay.brevo.com`, port `587`, username and SMTP key from Brevo's
+   SMTP & API page (the SMTP key, not the account password). Authenticate the
+   `auth.mysafenestbd.com` domain in Brevo (DKIM and DMARC DNS records) and
+   verify the sender before enabling. Keep credentials out of Git. After the
+   switch, re-test confirmation and recovery delivery to Gmail and check SPF/DKIM.
+   Brevo's free plan allows 300 emails a day; Supabase's minimum interval of 60 seconds stays.
 5. In **Connect** or **Settings → API Keys**, copy the **Publishable key**
    beginning `sb_publishable_`. The account page does not need any secret key.
 
