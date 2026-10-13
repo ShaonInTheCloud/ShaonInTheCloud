@@ -1,6 +1,7 @@
 name: SafeNest payment reconciliation
-# Re-checks recent unpaid orders with the payment gateway so a missed callback never leaves a paying
-# customer without access. It does nothing until the owner adds both repository secrets below.
+# Re-checks up to three recent unpaid orders per run. Recovery is bounded to seven days;
+# a green skipped run is not evidence of callback delivery or recovered payments.
+# It does nothing while both repository secrets below are absent.
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -19,10 +20,16 @@ jobs:
     steps:
       - name: Call the reconcile function
         run: |
-          if [ -z "$RECONCILE_URL" ] || [ -z "$RECONCILE_KEY" ]; then
+          if [ -z "$RECONCILE_URL" ] && [ -z "$RECONCILE_KEY" ]; then
             echo "Reconciliation secrets are not configured; nothing to do."; exit 0
           fi
-          case "$RECONCILE_URL" in https://*.supabase.co/functions/v1/payment-reconcile) ;; *)
-            echo "SAFENEST_RECONCILE_URL must be the project's payment-reconcile function URL"; exit 1;; esac
-          curl --fail-with-body --silent --show-error --max-time 60 --proto '=https' --no-location \
+          # Compare the entire URL: a wildcard suffix can match an attacker URL's fragment
+          # or query and send the key to the wrong host. Do not print secret values.
+          if [ "$RECONCILE_URL" != 'https://kflenmeizngmafwnwhgv.supabase.co/functions/v1/payment-reconcile' ]; then
+            echo "SAFENEST_RECONCILE_URL must be SafeNest's exact payment-reconcile URL"; exit 1
+          fi
+          if [ "${#RECONCILE_KEY}" -lt 32 ] || [[ "$RECONCILE_KEY" == *$'\r'* || "$RECONCILE_KEY" == *$'\n'* ]]; then
+            echo "SAFENEST_RECONCILE_KEY must contain at least 32 characters and no line breaks"; exit 1
+          fi
+          curl --fail-with-body --silent --show-error --connect-timeout 10 --max-time 60 --proto '=https' --no-location \
             -X POST -H "x-reconcile-key: $RECONCILE_KEY" "$RECONCILE_URL"
