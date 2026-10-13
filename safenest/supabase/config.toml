@@ -52,3 +52,11 @@ verify_jwt = false
 
 [functions.payment-catalogue]
 verify_jwt = false
+
+# Preserve hosted customer-endpoint restrictions alongside handler-level
+# /auth/v1/user validation and owner-scoped RPCs.
+[functions.payment-order]
+verify_jwt = true
+
+[functions.payment-status]
+verify_jwt = true
