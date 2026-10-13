@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">SafeNest Owner Test</string>
+    <string name="accessibility_service_label">SafeNest Owner Test app guard</string>
+    <string name="accessibility_service_summary">Debug test build. Consent first, then a finite app and SafeNest Owner Test control guard. Stop test remains available.</string>
+    <string name="accessibility_service_description">Debug test build for checking device-owner controls without a paid subscription. After your separate consent, the active 60-minute test checks foreground app IDs and narrow Settings or installer labels locally, and returns Home from selected blocked apps and SafeNest Owner Test removal or VPN control screens. Main Settings, the Accessibility list and the VPN list remain usable. Stop test releases these pages; expiry or reboot ends the test. Observations are not recorded or uploaded. Browser pages, messages and passwords are not read.</string>
+</resources>

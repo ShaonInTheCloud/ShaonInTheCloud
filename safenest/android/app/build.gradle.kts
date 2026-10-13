@@ -39,6 +39,15 @@ android {
             buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "false")
             buildConfigField("boolean", "MANAGED_CONTROLS", "false")
         }
+        // Debug-only test build with the device-owner lock and no paid check. Never released.
+        create("ownerlab") {
+            dimension = "distribution"
+            applicationIdSuffix = ".ownerlab"
+            versionNameSuffix = "-owner-test"
+            buildConfigField("boolean", "LOCAL_TEST_BUILD", "true")
+            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "false")
+            buildConfigField("boolean", "MANAGED_CONTROLS", "true")
+        }
     }
     val uploadKey = System.getenv("SAFENEST_UPLOAD_KEYSTORE")
     if (!uploadKey.isNullOrBlank()) {
@@ -62,6 +71,9 @@ android {
 
 androidComponents {
     beforeVariants(selector().withFlavor("distribution" to "lab").withBuildType("release")) {
+        it.enable = false
+    }
+    beforeVariants(selector().withFlavor("distribution" to "ownerlab").withBuildType("release")) {
         it.enable = false
     }
 }

@@ -37,6 +37,11 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Uninstall"), List.of("App info", "\u00a0", "  "), List.of("Uninstall")), "blank Compose section headings do not hide own uninstall page");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "Another VPN"), List.of("Another VPN"), List.of("Disconnect")), "background test label cannot target another VPN detail");
         check(!SystemScreenGuard.blocksTestControl("com.android.chrome", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "test phrase in browser is not a control");
+        check(SystemScreenGuard.blocksTestControl("com.google.android.packageinstaller", List.of("SafeNest Owner Test"), List.of(), List.of("Uninstall")), "owner test uninstall confirmation");
+        check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("com.safenest.app.ownerlab"), List.of(), List.of("Force stop")), "owner test package identity");
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("SafeNest Owner Test app guard", "Use SafeNest Owner Test app guard"), List.of(), List.of()).equals("test_accessibility"), "owner test accessibility switch");
+        check(SystemScreenGuard.testFocusedWindowReason("com.android.settings", "SafeNest Owner Test").equals("test_settings_detail"), "owner test focused detail");
+        check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Owner Testing Notes"), List.of("SafeNest Owner Testing Notes"), List.of("Uninstall")), "similar name is not owner test");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("Accessibility", "SafeNest Test app guard", "TalkBack"), List.of("Accessibility"), List.of("SafeNest Test app guard")), "Accessibility list stays available");
         check(!SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test"), List.of(), List.of("Allow", "Always-on VPN")), "test permissions and network toggles remain accessible");
         check(!SystemScreenGuard.blocksTestControl("com.android.vending", List.of("SafeNest Test"), List.of(), List.of("Uninstall")), "lab inspection limited to Settings and installers");

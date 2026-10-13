@@ -62,8 +62,8 @@ public final class SystemScreenGuard {
     public static String testFocusedWindowReason(String pkg, String title) {
         if (!SETTINGS.contains(pkg) || title == null || title.length() > 240) return "";
         String text = normalize(title);
-        if (text.equals("safenest test app guard")) return "test_accessibility";
-        if (text.equals("safenest") || text.equals("safenest test")) return "test_settings_detail";
+        if (text.equals("safenest test app guard") || text.equals("safenest owner test app guard")) return "test_accessibility";
+        if (text.equals("safenest") || text.equals("safenest test") || text.equals("safenest owner test")) return "test_settings_detail";
         return "";
     }
     public static String testControlReason(String pkg, Collection<String> labels,
@@ -75,8 +75,8 @@ public final class SystemScreenGuard {
         Set<String> pageTitles = new HashSet<>();
         titles.stream().map(SystemScreenGuard::normalize).filter(s -> !s.isEmpty() && !PAGE_CHROME.contains(s)).forEach(pageTitles::add);
         // The exact Use label occurs on our service detail page, not the services list.
-        if (settings && text.contains("use safenest test app guard") &&
-            text.contains("safenest test app guard")) return "test_accessibility";
+        if (settings && ((text.contains("use safenest test app guard") && text.contains("safenest test app guard")) ||
+            (text.contains("use safenest owner test app guard") && text.contains("safenest owner test app guard")))) return "test_accessibility";
         boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
         boolean ownTitle = pageTitles.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
         boolean knownVpnTitle = pageTitles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
@@ -104,7 +104,8 @@ public final class SystemScreenGuard {
         return removal ? "test_app_control" : "";
     }
     private static boolean isSafeNestIdentity(String s) {
-        return s.equals("safenest test") || s.equals("com.safenest.app.lab") || s.equals("safenest test local dns filter") ||
+        return s.equals("safenest test") || s.equals("com.safenest.app.lab") ||
+            s.equals("safenest owner test") || s.equals("com.safenest.app.ownerlab") || s.equals("safenest test local dns filter") ||
             s.equals("safenest") || s.equals("com.safenest.app") || s.equals("safenest local dns filter");
     }
     private static String normalize(String s) { return s == null ? "" : s.replace('\u00a0', ' ').trim().toLowerCase(Locale.ROOT); }

@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Keeps the device-admin receiver (unlike the Lab build) so this test build can become device owner. -->
+    <application android:label="SafeNest Owner Test" tools:replace="android:label" />
+</manifest>

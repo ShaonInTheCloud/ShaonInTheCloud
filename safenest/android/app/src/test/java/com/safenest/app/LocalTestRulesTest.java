@@ -4,12 +4,14 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class LocalTestRulesTest {
-    @Test public void onlyLabDebugGetsLocalAccess() {
+    @Test public void onlyTestDebugBuildsGetLocalAccess() {
         assertTrue(LocalTestRules.enabled(true, true));
         assertFalse(LocalTestRules.enabled(false, true));
         assertFalse(LocalTestRules.enabled(true, false));
         assertFalse(LocalTestRules.enabled(false, false));
-        assertEquals(BuildConfig.DEBUG && BuildConfig.FLAVOR.equals("lab"), LocalTestSession.INSTANCE.getEnabled());
+        // Only the two debug test builds skip the paid check; play and direct never do.
+        boolean testFlavor = BuildConfig.FLAVOR.equals("lab") || BuildConfig.FLAVOR.equals("ownerlab");
+        assertEquals(BuildConfig.DEBUG && testFlavor, LocalTestSession.INSTANCE.getEnabled());
     }
     @Test public void finiteSessionExpiresWithoutWallClock() {
         assertTrue(LocalTestRules.active(1000, 500, 4, 4));

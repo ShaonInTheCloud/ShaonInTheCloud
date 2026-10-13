@@ -28,6 +28,10 @@ object LocalTestSession {
     @Synchronized fun stop(c: Context) {
         if (!enabled) return
         prefs(c).edit().clear().commit()
+        // Owner test build: ending the test also lifts device-owner controls, so the test phone never stays locked.
+        if (BuildConfig.MANAGED_CONTROLS && ManagedProtection.isConfigured(c)) {
+            try { ManagedProtection.release(c) } catch (_: Exception) { }
+        }
         GuardPreferences.clearForExpiry(c)
         c.stopService(Intent(c, SafeNestVpnService::class.java))
     }
