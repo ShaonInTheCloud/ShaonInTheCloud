@@ -19,4 +19,4 @@ select public.operator_revoke_entitlement('<entitlement uuid>', 'reason');
 select public.operator_refund_order('<order uuid>', 'Customer refunded at gateway');
 ```
 
-Tests (`tests/operator-controls.test.mjs`) run the real migrations in PGlite: duration and reason limits, audit rows, double-refund rejection, a late "paid" proof cannot restore refunded access, anon/authenticated cannot call or read, and the log cannot be edited even by the table owner. Apply with `supabase db push` after review; the hosted history otherwise already matches the repo.
+Tests (`tests/operator-controls.test.mjs`) run the real migrations in PGlite: duration and reason limits, audit rows, double-refund rejection, a late "paid" proof cannot restore refunded access, anon/authenticated cannot call or read, and the log cannot be edited even by the table owner. Historical note: application was deferred pending review. The [13 October deployment review](backend-deployment-review-2026-10-13.md) subsequently found hosted migration-history drift; use the separate migration preview and resolve that drift before authorizing any push. Function deployment no longer applies migrations.
