@@ -11,6 +11,6 @@ test('gateway and scheduler callbacks are reachable without a user JWT', () => {
 });
 
 test('functions that act for a signed-in user keep JWT verification', () => {
-  for (const name of ['delete-account', 'protection-access', 'start-trial'])
+  for (const name of ['delete-account', 'protection-access', 'start-trial', 'payment-order', 'payment-status'])
     assert.equal(setting(name), 'true', `${name} must keep verify_jwt = true`);
 });
