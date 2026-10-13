@@ -4,6 +4,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {sslcommerzAdapter,moneyMinor,providerTime} from '../supabase/functions/_shared/sslcommerz.mjs';
 import {handleCatalogue,handleStatus,handleReturn,handleReconcile} from '../supabase/functions/_shared/payment-endpoints.mjs';
+import {PaymentError} from '../supabase/functions/_shared/payments.mjs';
 const env={SSLCOMMERZ_ENABLED:'true',SSLCOMMERZ_ENVIRONMENT:'sandbox',SSLCOMMERZ_TIMESTAMP_ZONE:'Asia/Dhaka',
   SSLCOMMERZ_SANDBOX_STORE_ID:'fixture',SSLCOMMERZ_SANDBOX_STORE_PASSWORD:'local-only',
   SSLCOMMERZ_CHECKOUT_ENABLED:'true',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_ANON_KEY:'fixture'};
@@ -80,6 +81,81 @@ test('status derives ownership from live authentication, never a body user ID',a
   const deps={fetcher:async()=>json({id:user,email_confirmed_at:'fixture'}),rpc:async(name,args)=>{assert.equal(args.p_user_id,user);return null;}};
   assert.equal((await handleStatus(req({order_id:other}),env,deps)).status,404);
   assert.equal((await handleStatus(req({order_id:other,user_id:other}),env,deps)).status,400);
+});
+test('reconciliation checks its own secret before provider calls or ledger access',async()=>{
+  const secret='local-fixture-reconcile-secret-0001';let calls=0;
+  const deps={rpc:async()=>{calls++;},fetcher:async()=>{calls++;}};
+  const req=(key=secret,body)=>new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key},body});
+  for(const key of ['',secret.slice(1),'x'.repeat(secret.length)])
+    assert.equal((await handleReconcile(req(key),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},deps)).status,401);
+  assert.equal((await handleReconcile(req(),{...env,SSLCOMMERZ_RECONCILE_KEY:'short'},deps)).status,401);
+  assert.equal((await handleReconcile(req(secret,'{}'),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},deps)).status,400);
+  assert.equal((await handleReconcile(req(),{SSLCOMMERZ_RECONCILE_KEY:secret},deps)).status,503);
+  assert.equal(calls,0);
+});
+test('reconciliation reports provider and ledger outages as retryable failures while keeping ambiguous evidence in review',async()=>{
+  const secret='local-fixture-reconcile-secret-0001';
+  const req=()=>new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':secret}});
+  const batches=[order,{...order,id:other,provider_order_id:'SNfixture2'},
+    {...order,id:'33333333-3333-4333-8333-333333333333',provider_order_id:'SNfixture3'}];
+  const writes=[];
+  const fetcher=async(url)=>{
+    const parsed=new URL(url),reference=parsed.searchParams.get('tran_id');
+    if(reference==='SNfixture2')return json({APIConnect:'DONE',element:[]});
+    if(reference==='SNfixture3')throw new Error('private merchant/network detail');
+    return json(url.includes('merchantTransID')?{APIConnect:'DONE',element:[validation]}:validation);
+  };
+  const result=await handleReconcile(req(),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},{fetcher,rpc:async(name,args)=>{
+    if(name==='payment_reconciliation_batch')return batches;
+    writes.push(args.p_order_id);return {duplicate:true};
+  }});
+  assert.equal(result.status,503);assert.deepEqual(await result.json(),{processed:1,review:1,failed:1});
+  assert.deepEqual(writes,[order.id]);
+  const failed=await handleReconcile(req(),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},{fetcher,rpc:async(name)=>{
+    if(name==='payment_reconciliation_batch')return [order];
+    throw new PaymentError('payment_processing_unavailable');
+  }});
+  assert.equal(failed.status,503);assert.deepEqual(await failed.json(),{processed:0,review:0,failed:1});
+  const review=await handleReconcile(req(),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},{fetcher,rpc:async()=>[batches[1]]});
+  assert.equal(review.status,200);assert.deepEqual(await review.json(),{processed:0,review:1,failed:0});
+  const empty=await handleReconcile(req(),{...env,SSLCOMMERZ_RECONCILE_KEY:secret},{rpc:async()=>[]});
+  assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{processed:0,review:0,failed:0});
+});
+test('SQL batch leases rotate, delayed paid proof recovers once, and the seven-day recovery limit is explicit',async()=>{
+  const db=new PGlite();try {
+    await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+      create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql as $$select null::uuid$$;
+      grant usage on schema auth,public to anon,authenticated,service_role;insert into auth.users values('${user}');`);
+    const dir=new URL('../supabase/migrations/',import.meta.url);
+    for(const name of (await readdir(dir)).filter(x=>/protection_entitlements|payment_foundation|sslcommerz_gateway/.test(x)).sort())
+      await db.exec(await readFile(new URL(name,dir),'utf8'));
+    await db.exec(`update payments.configuration set mode='sandbox';insert into payments.providers values('sslcommerz','sandbox',true);
+      insert into payments.products values('fixture','sandbox','monthly',37900,'BDT',2592000,true);set role service_role;`);
+    const orders=[];
+    for(let i=0;i<5;i++)orders.push((await db.query(`select public.create_payment_order($1,'fixture','sslcommerz','sandbox',$2) result`,
+      [user,'fixture-recovery-key-'+i])).rows[0].result);
+    await db.exec("update payments.orders set created_at=now()-interval '2 hours', expires_at=now()-interval '90 minutes'");
+    await db.query("update payments.orders set created_at=now()-interval '8 days', expires_at=now()-interval '7 days' where id=$1",[orders[4].id]);
+    const batch=async()=>(await db.query("select public.payment_reconciliation_batch('sandbox') result")).rows.map(x=>x.result);
+    const first=await batch();assert.equal(first.length,3);
+    const second=await batch();assert.equal(second.length,1);assert.ok(!first.some(x=>x.id===second[0].id));
+    assert.equal((await batch()).length,0);
+    const recovered=first[0];
+    const paidAt=(await db.query("select now()-interval '100 minutes' t")).rows[0].t.toISOString();
+    const args=[recovered.id,'sslcommerz','sandbox','paid:fixturebank','fixturebank','paid',37900,'BDT',paidAt,'fixtureval','a'.repeat(64)];
+    const process=async()=>(await db.query('select public.process_validated_payment($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) result',args)).rows[0].result;
+    // PGlite queues one connection: this checks burst/replay semantics, not cross-session lock contention.
+    const results=await Promise.all(Array.from({length:20},()=>process()));
+    assert.equal(results.filter(x=>!x.duplicate).length,1);
+    assert.equal((await db.query('select count(*)::int n from payments.sandbox_entitlements')).rows[0].n,1);
+    assert.equal((await db.query('select count(*)::int n from public.protection_entitlements')).rows[0].n,0);
+    await db.exec("update payments.orders set reconciled_at=now()-interval '6 minutes'");
+    assert.equal((await batch()).length,3);
+    await db.exec("update payments.configuration set mode='disabled'");
+    await assert.rejects(batch(),/payment_processing_disabled/);
+    await db.exec('reset role;set role anon');
+    await assert.rejects(batch(),/permission denied/);
+  }finally {await db.close();}
 });
 test('actual gateway SQL keeps sessions private, claims once, scopes status and defaults off',async()=>{
   const db=new PGlite();try{
