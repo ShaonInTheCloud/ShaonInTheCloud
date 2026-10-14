@@ -213,6 +213,27 @@ test('failure after entitlement insertion rolls back receipt, grant, order trans
   } finally {await db.close();}
 });
 
+test('duplicate bursts and competing reversal proofs leave one receipt and a revoked grant',async()=>{
+  const db=await fixture('live');
+  try {
+    const ord=await order(db,{mode:'live'});const proof=await evidence(db,ord);
+    // PGlite queues one backend: this exercises burst/replay state transitions,
+    // not multi-connection PostgreSQL lock contention.
+    const outcomes=await Promise.all(Array.from({length:32},()=>process(db,proof)));
+    assert.equal(outcomes.filter(x=>!x.duplicate).length,1);
+    assert.equal(await count(db,'payments.receipts'),1);assert.equal(await count(db,'public.protection_entitlements'),1);
+    await Promise.all([
+      process(db,{...proof,event:'burst-refund',status:'refunded'}),
+      process(db,{...proof,event:'burst-paid'}),
+      process(db,{...proof,event:'burst-chargeback',status:'chargeback'}),
+      process(db,proof),
+    ]);
+    assert.equal(await count(db,'payments.receipts'),1);
+    assert.equal((await db.query('select status from public.protection_entitlements')).rows[0].status,'revoked');
+    assert.ok(['refunded','chargeback'].includes((await db.query('select state from payments.orders')).rows[0].state));
+  } finally {await db.close();}
+});
+
 test('anonymous/authenticated clients cannot call RPCs or access ledger; entitlements remain owner-read-only', async () => {
   const db=await fixture('live');
   try {

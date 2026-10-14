@@ -1,11 +1,12 @@
 name: SafeNest payment reconciliation
-# Re-checks recent unpaid orders with the payment gateway so a missed callback never leaves a paying
-# customer without access. It does nothing until the owner adds both repository secrets below.
+# Checks at most 3 recent unpaid orders per run; seven-day and backlog limits require operator monitoring.
+# Inert until the owner explicitly enables the repository variable AND supplies both secrets.
 on:
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
-permissions: {}
+permissions:
+  contents: read
 concurrency:
   group: safenest-payment-reconcile
   cancel-in-progress: false
@@ -13,16 +14,16 @@ jobs:
   reconcile:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
-    env:
-      RECONCILE_URL: ${{ secrets.SAFENEST_RECONCILE_URL }}
-      RECONCILE_KEY: ${{ secrets.SAFENEST_RECONCILE_KEY }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
       - name: Call the reconcile function
-        run: |
-          if [ -z "$RECONCILE_URL" ] || [ -z "$RECONCILE_KEY" ]; then
-            echo "Reconciliation secrets are not configured; nothing to do."; exit 0
-          fi
-          case "$RECONCILE_URL" in https://*.supabase.co/functions/v1/payment-reconcile) ;; *)
-            echo "SAFENEST_RECONCILE_URL must be the project's payment-reconcile function URL"; exit 1;; esac
-          curl --fail-with-body --silent --show-error --max-time 60 --proto '=https' --no-location \
-            -X POST -H "x-reconcile-key: $RECONCILE_KEY" "$RECONCILE_URL"
+        env:
+          RECONCILE_ENABLED: ${{ vars.SAFENEST_RECONCILE_ENABLED }}
+          RECONCILE_URL: ${{ secrets.SAFENEST_RECONCILE_URL }}
+          RECONCILE_KEY: ${{ secrets.SAFENEST_RECONCILE_KEY }}
+        run: node safenest/scripts/payment-reconcile.mjs

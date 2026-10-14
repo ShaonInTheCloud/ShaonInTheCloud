@@ -1,0 +1,60 @@
+name: SafeNest database migrations (manual)
+# Preview by default. Never deploys functions. Review ALL pending SQL before authorizing.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Type "apply-migrations" only after authorizing all pending production SQL; otherwise dry run'
+        required: false
+        default: 'dry-run'
+      reviewed_sha:
+        description: 'Full commit SHA whose migration preview and SQL were reviewed (required for apply)'
+        required: false
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: safenest-deploy-backend
+  cancel-in-progress: false
+jobs:
+  migrations:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    defaults:
+      run:
+        working-directory: safenest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: kflenmeizngmafwnwhgv
+      SUPABASE_CLI: supabase@2.120.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Verify reviewed commit before any database connection
+        if: ${{ inputs.apply == 'apply-migrations' }}
+        env:
+          REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+        run: |
+          [ "$REVIEWED_SHA" = "$GITHUB_SHA" ] || { echo 'Apply requires the exact full SHA from the reviewed preview. Run dry-run again if main has changed.'; exit 1; }
+      - name: Check migration secrets
+        run: |
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_DB_PASSWORD" ] || { echo 'Configure SUPABASE_ACCESS_TOKEN and SUPABASE_DB_PASSWORD for the production environment.'; exit 1; }
+      - name: Link project
+        run: npx --yes "$SUPABASE_CLI" link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Migration history
+        run: |
+          printf 'Review commit: %s\n' "$GITHUB_SHA"
+          sha256sum supabase/migrations/*.sql
+          npx --yes "$SUPABASE_CLI" migration list --linked
+      - name: Pending migrations (dry run; stop on history mismatch)
+        run: npx --yes "$SUPABASE_CLI" db push --linked --dry-run --skip-vault
+      - name: Apply separately authorized migrations
+        if: ${{ inputs.apply == 'apply-migrations' }}
+        run: npx --yes "$SUPABASE_CLI" db push --linked --yes --skip-vault
