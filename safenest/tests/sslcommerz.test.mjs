@@ -70,7 +70,7 @@ test('reconciliation independently validates a single transaction; ambiguous pay
 });
 test('disabled catalogue, untrusted redirects and unauthorized reconciliation grant nothing',async()=>{
   let calls=0;const rpc=async()=>{calls++;};
-  assert.deepEqual(await (await handleCatalogue(new Request('https://fixture'),{}, {rpc})).json(),{available:false,products:[]});
+  assert.deepEqual(await (await handleCatalogue(new Request('https://fixture'),{}, {rpc})).json(),{available:false,products:[],providers:[]});
   const returned=await handleReturn(new Request('https://fixture?status=paid&redirect=https://attacker.example'),{});
   assert.equal(returned.status,303);assert.equal(returned.headers.get('location'),'https://mysafenestbd.com/account.html?payment=checking');
   assert.equal((await handleReconcile(new Request('https://fixture',{method:'POST'}),env,{rpc})).status,401);assert.equal(calls,0);

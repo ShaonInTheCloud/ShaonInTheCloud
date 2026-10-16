@@ -1,7 +1,7 @@
-import {PaymentError, configuredAdapter, checkoutUrl, readLimitedBody, serviceRpc, uuid} from '../_shared/payments.mjs';
+import {PaymentError, configuredAdapter, checkoutUrl, providerNames, readLimitedBody, serviceRpc, uuid} from '../_shared/payments.mjs';
 
 export async function handleOrder(req, env, {fetcher = fetch, rpc = serviceRpc(env, fetcher),
-  adapterFor = () => configuredAdapter(env,rpc,fetcher)} = {}) {
+  adapterFor = provider => configuredAdapter(env,rpc,fetcher,provider)} = {}) {
   const origin = req.headers.get('origin');
   const allowed = new Set(['https://mysafenestbd.com']);
   const cors = origin && allowed.has(origin) ? {'Access-Control-Allow-Origin':origin,
@@ -28,13 +28,15 @@ export async function handleOrder(req, env, {fetcher = fetch, rpc = serviceRpc(e
     let body;
     try { body = JSON.parse(raw); } catch { throw new PaymentError('invalid_request',400); }
     if (!body || typeof body !== 'object' || Array.isArray(body) ||
-      Object.keys(body).some(key => !['product_code','idempotency_key','customer'].includes(key)) ||
+      Object.keys(body).some(key => !['product_code','idempotency_key','customer','provider'].includes(key)) ||
+      (body.provider !== undefined && !providerNames.includes(body.provider)) ||
       typeof body.product_code !== 'string' || !/^[a-z][a-z0-9_-]{0,79}$/.test(body.product_code) ||
       typeof body.idempotency_key !== 'string' || !/^[A-Za-z0-9_-]{16,128}$/.test(body.idempotency_key))
       throw new PaymentError('invalid_request',400);
-    // Server selects provider/environment. Buyers cannot set price, duration, identity,
-    // mode or receipt evidence. The resolver is disabled until operator configuration.
-    const adapter = adapterFor();
+    // The buyer may choose between the configured payment methods (card, crypto, local
+    // gateway) but never price, duration, identity, mode or receipt evidence. Each provider
+    // stays disabled until operator configuration completes server-side.
+    const adapter = adapterFor(body.provider);
     const order = await rpc('create_payment_order', {p_user_id:user.id,p_product_code:body.product_code,
       p_provider:adapter.provider,p_environment:adapter.environment,p_idempotency_key:body.idempotency_key});
     if (order.state !== 'pending' || Date.parse(order.expires_at) <= Date.now())
