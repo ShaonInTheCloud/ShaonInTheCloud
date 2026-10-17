@@ -25,6 +25,41 @@ export function parseDomainList(text) {
   return set;
 }
 
+/**
+ * Memory-light set for ~half a million names: one sorted, newline-joined string plus an offset table,
+ * searched by binary search. Same `has()` contract as Set, so matchBlocked accepts either.
+ */
+export class SortedDomainList {
+  constructor(sortedText) {
+    this.text = sortedText.endsWith('\n') ? sortedText : sortedText + '\n';
+    let count = 0;
+    for (let i = 0; i < this.text.length; i++) if (this.text.charCodeAt(i) === 10) count++;
+    this.starts = new Uint32Array(count + 1);
+    let n = 1;
+    for (let i = 0; i < this.text.length; i++) if (this.text.charCodeAt(i) === 10) this.starts[n++] = i + 1;
+    this.size = count;
+  }
+  at(i) { return this.text.slice(this.starts[i], this.starts[i + 1] - 1); }
+  has(name) {
+    let lo = 0, hi = this.size - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >>> 1, value = this.at(mid);
+      if (value === name) return true;
+      if (value < name) lo = mid + 1; else hi = mid - 1;
+    }
+    return false;
+  }
+}
+
+/** Decodes the compiler's gzip+base64 payload into a SortedDomainList (Deno, Workers, Node 18+). */
+export async function loadCompressedList(base64) {
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new SortedDomainList(await new Response(stream).text());
+}
+
 /** Returns the listed suffix that matches `name` (exact or parent), or null. */
 export function matchBlocked(name, sets) {
   let host = String(name).toLowerCase().replace(/\.$/, '');

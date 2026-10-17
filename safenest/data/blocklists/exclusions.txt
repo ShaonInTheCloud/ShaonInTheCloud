@@ -1,0 +1,83 @@
+# Hostnames the bundled gambling blocklist must never contain.
+# The compiler drops an exact match from every source and reports each removal.
+# Rules match a name and its subdomains, so listing a shared platform or a public
+# suffix would block everything under it; those are protected here too.
+#
+# Gambling-harm support, recovery and self-exclusion services
+gamblersanonymous.org
+gamanon.org
+gamcare.org.uk
+begambleaware.org
+gamblingtherapy.org
+ncpgambling.org
+gamstop.co.uk
+betblocker.org
+gamban.com
+responsiblegambling.org
+gamblingcommission.gov.uk
+# Flagged during 2026-10 Bangladesh research as a non-gambling entry in a feed
+bangladeshtannersassociation.org
+# Ordinary services and Bangladesh essentials (sanity guard)
+google.com
+youtube.com
+facebook.com
+instagram.com
+whatsapp.com
+messenger.com
+tiktok.com
+twitter.com
+x.com
+linkedin.com
+reddit.com
+wikipedia.org
+telegram.org
+microsoft.com
+apple.com
+amazon.com
+cloudflare.com
+github.com
+trustpilot.com
+bkash.com
+nagad.com.bd
+dutchbanglabank.com
+rocket.com.bd
+upaybd.com
+sslcommerz.com
+prothomalo.com
+thedailystar.net
+bdnews24.com
+dhakatribune.com
+tbsnews.net
+jagonews24.com
+bangladesh.gov.bd
+btrc.gov.bd
+cricbuzz.com
+espncricinfo.com
+tigercricket.com.bd
+daraz.com.bd
+mysafenestbd.com
+# Shared hosting platforms and public suffixes (a listing would block every tenant)
+blogspot.com
+wordpress.com
+github.io
+gitlab.io
+netlify.app
+vercel.app
+pages.dev
+workers.dev
+web.app
+firebaseapp.com
+herokuapp.com
+lovable.app
+notion.site
+co.com
+gb.net
+eu.com
+cn.com
+us.com
+uk.com
+com.bd
+net.bd
+org.bd
+co.uk
+co.in

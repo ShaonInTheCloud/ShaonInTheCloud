@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BYPASS_DOMAINS, blockedResponse, handleDoh, matchBlocked, parseDomainList, parseQuery} from '../supabase/functions/_shared/doh.mjs';
-import {BUNDLED_COUNT, BUNDLED_DOMAINS} from '../supabase/functions/dns-query/domains.generated.mjs';
+import {BYPASS_DOMAINS, SortedDomainList, blockedResponse, handleDoh, loadCompressedList, matchBlocked, parseQuery} from '../supabase/functions/_shared/doh.mjs';
+import {BUNDLED_COUNT, BUNDLED_GZIP_BASE64} from '../supabase/functions/dns-query/domains.generated.mjs';
 import {profileXml, DEFAULT_SERVER} from '../scripts/build-ios-dns-profile.mjs';
 
 function query(name, type = 1, id = 0x1234) {
@@ -10,7 +10,7 @@ function query(name, type = 1, id = 0x1234) {
   return new Uint8Array([id >> 8, id & 255, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0, ...labels, 0, type >> 8, type & 255, 0, 1]);
 }
 const b64url = bytes => Buffer.from(bytes).toString('base64url');
-const bundled = parseDomainList(BUNDLED_DOMAINS);
+const bundled = await loadCompressedList(BUNDLED_GZIP_BASE64);
 const sets = [bundled, new Set(BYPASS_DOMAINS)];
 function deps(overrides = {}) {
   const calls = [];
@@ -22,10 +22,19 @@ function deps(overrides = {}) {
 }
 const post = bytes => new Request('https://x/dns-query', {method: 'POST', headers: {'content-type': 'application/dns-message'}, body: bytes});
 
-test('bundled list is the full SafeNest data file', () => {
-  assert.ok(BUNDLED_COUNT > 30000);
+test('bundled list matches the Android blocklist sources (541k+ names) and spares shared platforms', () => {
+  assert.ok(BUNDLED_COUNT >= 541485, `only ${BUNDLED_COUNT}`);
   assert.equal(bundled.size, BUNDLED_COUNT);
-  assert.ok(bundled.has('1xbet.com') || [...bundled].some(d => d.includes('1xbet')));
+  for (const d of ['bet365.com', '1xbet.com', 'stake.com', 'jeetbuzz.com']) assert.ok(bundled.has(d), d);
+  for (const d of ['google.com', 'wikipedia.org', 'gamblersanonymous.org', 'blogspot.com', 'github.io', 'com', 'co.uk', 'bkash.com'])
+    assert.equal(bundled.has(d), false, d);
+});
+
+test('SortedDomainList behaves like a Set for has()', () => {
+  const l = new SortedDomainList(['a.com', 'b.com', 'c.org'].join('\n'));
+  assert.equal(l.size, 3);
+  for (const d of ['a.com', 'b.com', 'c.org']) assert.ok(l.has(d));
+  for (const d of ['', 'a.co', 'b.comx', 'd.com']) assert.equal(l.has(d), false);
 });
 
 test('matching covers exact names and subdomains, not lookalikes', () => {
@@ -61,7 +70,7 @@ test('blocked A and AAAA get sinkhole answers; other types get empty NOERROR', (
 });
 
 test('POST: a known gambling domain is answered locally and never forwarded', async () => {
-  const name = [...bundled][0];
+  const name = bundled.at(0);
   const {calls, deps: d} = deps();
   const res = await handleDoh(post(query(`www.${name}`)), d);
   assert.equal(res.status, 200);
