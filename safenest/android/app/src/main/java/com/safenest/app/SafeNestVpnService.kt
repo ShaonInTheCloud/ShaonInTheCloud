@@ -168,7 +168,7 @@ class SafeNestVpnService : VpnService() {
                 stopProtection("Android 9 encrypted Private DNS is not supported by this filter. Use Android 10 or newer, or review Private DNS in Android Settings. Internet access has been restored.")
                 return
             }
-            val descriptor = Builder()
+            val builder = Builder()
                 .setSession(if (LocalTestSession.enabled) "SafeNest Test local DNS filter" else "SafeNest local DNS filter")
                 .setMtu(1500)
                 .setBlocking(true)
@@ -178,7 +178,12 @@ class SafeNestVpnService : VpnService() {
                 .allowFamily(OsConstants.AF_INET6)
                 // A default route here would black-hole all internet: this is DNS only.
                 .addRoute(DNS_IP, 32)
-                .establish() ?: throw IllegalStateException("VPN consent is no longer available")
+            // Listed gambling IP ranges are routed in too. The packet loop only answers DNS, so traffic to them
+            // is dropped: sites opened by IP address fail instead of bypassing the DNS filter.
+            for (range in BlockedIps.ranges(this)) {
+                try { builder.addRoute(range.address, range.prefix) } catch (_: Exception) {}
+            }
+            val descriptor = builder.establish() ?: throw IllegalStateException("VPN consent is no longer available")
             val current = Session(descriptor)
             session = current
             reportedUnderlying = initialNetwork

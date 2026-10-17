@@ -172,6 +172,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
                                 ?.let { RulesStore.isBlocked(this, it) } == true
                         }
                         if (blocked) { returnHome(now, "website", "SafeNest blocked this website."); return }
+                        // A site opened by public IP address never asks DNS; the router's 192.168.x.x page stays usable.
+                        if (nodes.any { !it.isPassword && IpRules.isPublicIpAddressBar(it.text?.toString()) }) {
+                            returnHome(now, "ip_address", "SafeNest blocks websites opened by IP address."); return
+                        }
                     } finally { nodes.forEach { @Suppress("DEPRECATION") it.recycle() } }
                 }
             } finally { @Suppress("DEPRECATION") root.recycle() }

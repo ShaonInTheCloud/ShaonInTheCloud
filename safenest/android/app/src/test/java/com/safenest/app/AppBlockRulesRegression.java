@@ -56,6 +56,20 @@ public final class AppBlockRulesRegression {
         check(!AppBlockRules.blocksInstall(List.of("Baji Live"), List.of("Uninstall"), brands, names), "uninstalling stays allowed");
         check(!AppBlockRules.blocksInstall(List.of("WhatsApp Messenger"), List.of("Install"), brands, names), "normal install");
         check(!AppBlockRules.blocksInstall(List.of("Operator Tools"), List.of("Install"), brands, names), "'Opera' prefix only as a word");
+        // IP blocklist and raw-IP address bars
+        check(IpRules.parseBlockEntry("203.0.113.7") != null, "single public IPv4");
+        check(IpRules.parseBlockEntry("198.51.100.0/24 # comment") != null, "public /24");
+        check(IpRules.parseBlockEntry("8.0.0.0/8") == null, "too broad a range is ignored");
+        check(IpRules.parseBlockEntry("192.168.1.0/24") == null, "private range ignored");
+        check(IpRules.parseBlockEntry("10.0.0.1") == null && IpRules.parseBlockEntry("127.0.0.1") == null, "private/loopback ignored");
+        check(IpRules.parseBlockEntry("2001:db8::1") != null && IpRules.parseBlockEntry("fe80::1") == null, "IPv6 public vs link-local");
+        check(IpRules.parseBlockEntry("casino.com") == null && IpRules.parseBlockEntry("") == null, "names and blanks ignored");
+        check(IpRules.isPublicIpAddressBar("203.0.113.7"), "bare public IP in address bar");
+        check(IpRules.isPublicIpAddressBar("https://203.0.113.7:8443/play?x=1"), "IP URL with port and path");
+        check(!IpRules.isPublicIpAddressBar("192.168.1.1"), "router page stays usable");
+        check(!IpRules.isPublicIpAddressBar("http://10.0.0.138/admin"), "LAN page stays usable");
+        check(!IpRules.isPublicIpAddressBar("example.com/203.0.113.7"), "IP only in the path is not the host");
+        check(!IpRules.isPublicIpAddressBar("best casino 2024"), "search text");
         System.out.println("AppBlockRulesRegression: " + checks + " checks passed");
     }
 }

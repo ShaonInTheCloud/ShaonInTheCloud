@@ -12,8 +12,8 @@ android {
         applicationId = "com.safenest.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 41
-        versionName = "0.5.12"
+        versionCode = 42
+        versionName = "0.5.13"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "LOCAL_TEST_BUILD", "false")
         buildConfigField("String", "SUPABASE_URL", "\"https://kflenmeizngmafwnwhgv.supabase.co\"")
