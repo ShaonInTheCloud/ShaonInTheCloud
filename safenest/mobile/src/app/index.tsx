@@ -1,6 +1,7 @@
 import {Redirect, router} from 'expo-router';
 import {Image, View} from 'react-native';
 import {Body, Button, Choice, Display, Label, Screen} from '@/components/ui';
+import {NestOrb} from '@/components/motion';
 import {useStore} from '@/lib/store';
 
 export default function Welcome() {
@@ -17,8 +18,9 @@ export default function Welcome() {
           ))}
         </View>
       </View>
-      <View style={{gap: 12, marginTop: 24}}>
-        <Display size={40}>{t.welcomeTitle}</Display>
+      <View style={{alignItems: 'center', marginTop: 8}}><NestOrb size={230} active /></View>
+      <View style={{gap: 12}}>
+        <Display size={44}>{t.welcomeTitle}</Display>
         <Body muted>{t.welcomeBody}</Body>
       </View>
       <View style={{gap: 10, marginTop: 12}}>

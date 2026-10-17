@@ -1,21 +1,25 @@
-// SafeNest brand: raspberry/hot pink on soft white by day, on plum night by night.
+// SafeNest "Neon Nest": glossy hot pink and solar orange on night plum, with neon glow.
+// One look in light and dark system modes: the glow needs the dark stage.
 export type Theme = {
   dark: boolean;
   bg: string; surface: string; surfaceAlt: string; ink: string; muted: string; line: string;
-  pink: string; pinkDeep: string; lavender: string; good: string; bad: string; onPink: string;
+  pink: string; pinkDeep: string; orange: string; neon: string; lavender: string;
+  good: string; bad: string; onPink: string;
 };
-export function palette(dark: boolean): Theme {
-  return dark ? {
-    dark, bg: '#1a0b1f', surface: '#2a1033', surfaceAlt: '#36153f', ink: '#fff4f8', muted: '#c9b2c4', line: '#ffffff22',
-    pink: '#ff2d87', pinkDeep: '#ff5fa3', lavender: '#c7b3ff', good: '#7ee7b8', bad: '#ff8aa8', onPink: '#ffffff',
-  } : {
-    dark, bg: '#fffafb', surface: '#ffffff', surfaceAlt: '#fff0f5', ink: '#2b1a2f', muted: '#7a6376', line: '#f0dbe4',
-    pink: '#ff2d87', pinkDeep: '#c2185b', lavender: '#6f4fd8', good: '#1f8a5b', bad: '#b3123f', onPink: '#ffffff',
+export function palette(_systemDark: boolean): Theme {
+  return {
+    dark: true,
+    bg: '#14030F', surface: '#22061A', surfaceAlt: '#2E0A24',
+    ink: '#FFF3F9', muted: '#C7A3B9', line: '#FF5CE12E',
+    pink: '#FF1E8A', pinkDeep: '#FF6FB4', orange: '#FF8A1F', neon: '#FF5CE1', lavender: '#C9B4FF',
+    good: '#5CF2B2', bad: '#FF5C7A', onPink: '#FFFFFF',
   };
 }
+/** Glossy candy gradient used for primary actions and the orb core. */
+export const gloss = ['#FF3D9A', '#FF1E8A', '#FF8A1F'] as const;
 export const fonts = {
   display: 'AnekBangla_800ExtraBold', displayBold: 'AnekBangla_700Bold',
   body: 'Manrope_400Regular', bodySemi: 'Manrope_600SemiBold', bodyBold: 'Manrope_700Bold',
   bangla: 'AnekBangla_500Medium',
 };
-export const radius = {card: 22, button: 999, input: 14};
+export const radius = {card: 26, button: 999, input: 16};

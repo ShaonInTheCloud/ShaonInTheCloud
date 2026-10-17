@@ -2,25 +2,31 @@ import React from 'react';
 import {ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ColorValue, type PressableProps,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {LinearGradient} from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import {useStore} from '@/lib/store';
-import {fonts, radius} from '@/lib/theme';
+import {fonts, gloss, radius} from '@/lib/theme';
+import {Aurora} from '@/components/motion';
 
 export function Screen({children, scroll = true, style}: {children: React.ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>}) {
   const {theme} = useStore();
   const insets = useSafeAreaInsets();
-  const padding = {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28, paddingLeft: Math.max(20, insets.left), paddingRight: Math.max(20, insets.right)};
-  if (!scroll) return <View style={[{flex: 1, backgroundColor: theme.bg}, padding, style]}>{children}</View>;
+  const padding = {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 110, paddingLeft: Math.max(20, insets.left), paddingRight: Math.max(20, insets.right)};
+  if (!scroll) return <View style={{flex: 1, backgroundColor: theme.bg}}><Aurora /><View style={[{flex: 1}, padding, style]}>{children}</View></View>;
   return (
-    <ScrollView style={{flex: 1, backgroundColor: theme.bg}} contentContainerStyle={[padding, {gap: 16}, style]}
-      keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="never">
-      {children}
-    </ScrollView>
+    <View style={{flex: 1, backgroundColor: theme.bg}}>
+      <Aurora />
+      <ScrollView style={{flex: 1}} contentContainerStyle={[padding, {gap: 18}, style]}
+        keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="never">
+        {children}
+      </ScrollView>
+    </View>
   );
 }
 
 export function Display({children, style, size = 34}: {children: React.ReactNode; style?: StyleProp<TextStyle>; size?: number}) {
   const {theme, lang} = useStore();
-  return <Text style={[{fontFamily: lang === 'bn' ? fonts.display : fonts.display, fontSize: size, lineHeight: size * 1.08, color: theme.ink, letterSpacing: -0.5}, style]}>{children}</Text>;
+  return <Text style={[{fontFamily: lang === 'bn' ? fonts.display : fonts.display, fontSize: size, lineHeight: size * 1.04, color: theme.ink, letterSpacing: -size * 0.025}, style]}>{children}</Text>;
 }
 export function Title({children, style}: {children: React.ReactNode; style?: StyleProp<TextStyle>}) {
   const {theme} = useStore();
@@ -35,24 +41,49 @@ export function Label({children, style}: {children: React.ReactNode; style?: Sty
   return <Text style={[{fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: theme.muted}, style]}>{children}</Text>;
 }
 
+/** Dark glass with a neon gradient edge; 'pink' is the glossy candy surface for the one thing that matters most. */
 export function Card({children, style, tone = 'surface'}: {children: React.ReactNode; style?: StyleProp<ViewStyle>; tone?: 'surface' | 'alt' | 'pink'}) {
   const {theme} = useStore();
-  const bg = tone === 'pink' ? theme.pink : tone === 'alt' ? theme.surfaceAlt : theme.surface;
-  return <View style={[{backgroundColor: bg, borderRadius: radius.card, padding: 20, gap: 10, borderWidth: tone === 'surface' ? 1 : 0, borderColor: theme.line}, style]}>{children}</View>;
+  if (tone === 'pink') return (
+    <LinearGradient colors={[...gloss]} start={{x: 0, y: 0}} end={{x: 1, y: 1}}
+      style={[{borderRadius: radius.card, padding: 22, gap: 10, shadowColor: theme.pink, shadowOpacity: 0.55, shadowRadius: 24, shadowOffset: {width: 0, height: 10}, elevation: 10}, style]}>
+      <LinearGradient pointerEvents="none" colors={['#FFFFFF55', '#FFFFFF00']} style={{position: 'absolute', left: 1, right: 1, top: 1, height: '45%', borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card}} />
+      {children}
+    </LinearGradient>
+  );
+  return (
+    <LinearGradient colors={tone === 'alt' ? ['#FF8A1F66', '#FF5CE122'] : ['#FF5CE155', '#FFFFFF10', '#FF8A1F33']} start={{x: 0, y: 0}} end={{x: 1, y: 1}}
+      style={[{borderRadius: radius.card, padding: 1}]}>
+      <View style={[{backgroundColor: tone === 'alt' ? '#2A0820F2' : '#1E0517E6', borderRadius: radius.card - 1, padding: 20, gap: 10}, style]}>{children}</View>
+    </LinearGradient>
+  );
 }
 
 type ButtonProps = PressableProps & {label: string; kind?: 'primary' | 'ghost' | 'text'; busy?: boolean; style?: StyleProp<ViewStyle>};
-export function Button({label, kind = 'primary', busy, disabled, style, ...rest}: ButtonProps) {
+/** Primary: glossy candy pill with a highlight and pink glow. Ghost: neon outline. Text: inline link. */
+export function Button({label, kind = 'primary', busy, disabled, style, onPress, ...rest}: ButtonProps) {
   const {theme} = useStore();
-  const base: ViewStyle = {minHeight: 54, borderRadius: radius.button, paddingHorizontal: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10};
-  const look: ViewStyle = kind === 'primary' ? {backgroundColor: theme.pink}
-    : kind === 'ghost' ? {borderWidth: 2, borderColor: theme.ink} : {minHeight: 44};
+  const base: ViewStyle = {minHeight: 56, borderRadius: radius.button, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10, overflow: 'hidden'};
   const color = kind === 'primary' ? theme.onPink : kind === 'ghost' ? theme.ink : theme.pinkDeep;
-  return (
-    <Pressable accessibilityRole="button" disabled={disabled || busy} {...rest}
-      style={({pressed}) => [base, look, {opacity: disabled ? 0.5 : pressed ? 0.85 : 1}, style]}>
+  const press: PressableProps['onPress'] = e => { if (kind === 'primary') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); onPress?.(e); };
+  const content = (
+    <>
       {busy ? <ActivityIndicator color={color} /> : null}
-      <Text style={{fontFamily: fonts.displayBold, fontSize: 18, color, includeFontPadding: false}}>{label}</Text>
+      <Text style={{fontFamily: fonts.displayBold, fontSize: 18, color, includeFontPadding: false, letterSpacing: 0.2}}>{label}</Text>
+    </>
+  );
+  return (
+    <Pressable accessibilityRole="button" disabled={disabled || busy} onPress={press} {...rest}
+      style={({pressed}) => [{borderRadius: radius.button, opacity: disabled ? 0.45 : 1, transform: [{scale: pressed ? 0.97 : 1}]},
+        kind === 'primary' ? {shadowColor: theme.pink, shadowOpacity: 0.6, shadowRadius: 18, shadowOffset: {width: 0, height: 8}, elevation: 8} : null, style]}>
+      {kind === 'primary' ? (
+        <LinearGradient colors={[...gloss]} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={base}>
+          <LinearGradient pointerEvents="none" colors={['#FFFFFF66', '#FFFFFF00']} style={{position: 'absolute', left: 0, right: 0, top: 0, height: '52%'}} />
+          {content}
+        </LinearGradient>
+      ) : (
+        <View style={[base, kind === 'ghost' ? {borderWidth: 1.5, borderColor: theme.neon, backgroundColor: '#FF5CE10F'} : {minHeight: 44, paddingHorizontal: 8}]}>{content}</View>
+      )}
     </Pressable>
   );
 }
@@ -64,7 +95,7 @@ export function Field(props: TextInputProps & {label: string; hint?: string}) {
     <View style={{gap: 6}}>
       <Label>{label}</Label>
       <TextInput placeholderTextColor={theme.muted} {...rest}
-        style={[{fontFamily: fonts.body, fontSize: 17, color: theme.ink, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.line,
+        style={[{fontFamily: fonts.body, fontSize: 17, color: theme.ink, backgroundColor: '#FFFFFF0D', borderWidth: 1, borderColor: theme.line,
           borderRadius: radius.input, paddingHorizontal: 16, paddingVertical: 14}, style]} />
       {hint ? <Label>{hint}</Label> : null}
     </View>
@@ -76,7 +107,8 @@ export function Choice({selected, title, note, onPress}: {selected: boolean; tit
   return (
     <Pressable accessibilityRole="radio" accessibilityState={{selected}} onPress={onPress}
       style={({pressed}) => [{flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 18, borderWidth: 2,
-        borderColor: selected ? theme.pink : theme.line, backgroundColor: selected ? theme.surfaceAlt : theme.surface, opacity: pressed ? 0.85 : 1}]}>
+        borderColor: selected ? theme.neon : theme.line, backgroundColor: selected ? '#FF1E8A26' : '#FFFFFF08', opacity: pressed ? 0.85 : 1,
+        shadowColor: theme.neon, shadowOpacity: selected ? 0.5 : 0, shadowRadius: 12}]}>
       <View style={{width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selected ? theme.pink : theme.muted, alignItems: 'center', justifyContent: 'center'}}>
         {selected ? <View style={{width: 11, height: 11, borderRadius: 6, backgroundColor: theme.pink}} /> : null}
       </View>
