@@ -68,6 +68,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         isConnected = true
         connectedService = this
+        // Warm the 541k-name blocklist off the main thread so the first app/address check does not stall.
+        Thread({ try { BundledGamblingRules.load(applicationContext) } catch (_: Exception) {} }, "SafeNest-blocklist-warmup").start()
         controlExit?.cancel()
         if (LocalTestSession.enabled) controlExit = ControlScreenExit(packageName, object : ControlScreenExit.Driver {
             override fun active() = isConnected && GuardPreferences.testControlsActive(this@SafeNestAccessibilityService)
@@ -145,15 +147,24 @@ class SafeNestAccessibilityService : AccessibilityService() {
             if (!inspectControlScreen(name, event.windowId)) scheduleControlScan(name, event.windowId)
             return
         }
-        if (GuardRules.isBrowserExempt(name)) {
-            // In Play, the DNS filter denies hosts while Chrome/Firefox stay open.
-            if (!BuildConfig.ALLOW_SYSTEM_GUARD) return
+        // Browsers with a built-in VPN/proxy (Opera, Aloha, Tor, Puffin...) bypass the on-device filter: block whole.
+        if (GuardPreferences.blocksVpnApps(this) && BlockedAppCatalog.isVpnBrowser(this, name)) {
+            val root = rootInActiveWindow ?: return
+            try {
+                if (root.packageName?.toString() == name) returnHome(now, "vpn_browser", "SafeNest blocks browsers with a built-in VPN.")
+            } finally { @Suppress("DEPRECATION") root.recycle() }
+            return
+        }
+        val addressBars = AppBlockRules.addressBarIds(name)
+        if (addressBars != null) {
+            // The address bar shows the real site even when the browser's own VPN (e.g. Edge Secure Network)
+            // tunnels the traffic past the DNS filter. In Play, only the DNS filter applies.
+            if (!BuildConfig.ALLOW_SYSTEM_GUARD && !GuardPreferences.testControlsActive(this)) return
             val root = rootInActiveWindow ?: return
             try {
                 if (root.packageName?.toString() != name) return
                 // Address-bar resource IDs only: never traverse browser page content.
-                val ids = listOf("url_bar", "mozac_browser_toolbar_url_view", "mozac_browser_toolbar_edit_url_view")
-                for (id in ids) {
+                for (id in addressBars) {
                     val nodes = root.findAccessibilityNodeInfosByViewId("$name:id/$id")
                     try {
                         val blocked = nodes.any { node ->
@@ -361,6 +372,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
             if (guardActive && GuardPreferences.blocksVpnApps(this) &&
                 SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
                 returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
+                return true
+            }
+            if (guardActive && (name == "com.android.vending" || SystemScreenGuard.isSystemSurface(name)) &&
+                BlockedAppCatalog.blocksInstall(this, screen.titles, screen.actions)) {
+                returnHome(now, "app_install", "SafeNest blocked installing a gambling app or VPN browser.")
                 return true
             }
             return false

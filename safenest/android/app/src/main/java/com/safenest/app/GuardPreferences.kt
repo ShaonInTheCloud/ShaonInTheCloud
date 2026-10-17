@@ -64,11 +64,13 @@ object GuardPreferences {
 
     /** Foreground event path: no installed-app inventory scan per event. */
     fun isBlockedPackage(context: Context, name: String): Boolean =
-        (KnownGamblingPackages.contains(name) || name in prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty()) &&
+        (KnownGamblingPackages.contains(name) || name in prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() ||
+            BlockedAppCatalog.isGamblingApp(context, name)) &&
             GuardRules.isPackageName(name) && !GuardRules.isBrowserExempt(name) && !isEssentialPackage(context, name)
 
     fun getBlockedPackages(context: Context): Set<String> =
-        (prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() + KnownGamblingPackages.installed(context))
+        (prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() + KnownGamblingPackages.installed(context) +
+            BlockedAppCatalog.installedMatches(context).filter { BlockedAppCatalog.isGamblingApp(context, it) })
             .filter { GuardRules.isPackageName(it) && !GuardRules.isBrowserExempt(it) && !isEssentialPackage(context, it) }.toSet()
 
     /** Only installed apps can be chosen. System/recovery apps cannot be added. */

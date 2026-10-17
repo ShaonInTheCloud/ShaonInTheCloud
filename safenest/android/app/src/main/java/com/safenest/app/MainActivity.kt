@@ -85,6 +85,7 @@ private fun SafeNestStartup() {
             withContext(Dispatchers.IO) {
                 CatalogStore.status(context)
                 RuleCategory.entries.forEach { RulesStore.get(context, it) }
+                BundledGamblingRules.load(context)
             }
             ready = true
         } catch (cancel: CancellationException) { throw cancel }
