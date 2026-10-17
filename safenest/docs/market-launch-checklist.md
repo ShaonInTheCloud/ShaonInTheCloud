@@ -1,6 +1,27 @@
 # SafeNest market launch checklist
 
-Updated: 7 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+Updated: 17 October 2026. Product: https://mysafenestbd.com. Android package: `com.safenest.app`.
+
+## 0. 17 October 2026 — launch push (0.5.0, code 28, branch `launch/play-billing-and-full-guard`)
+
+Owner decisions recorded this session: (1) ship **one Play app** with the full self-exclusion guard (uninstall/Settings/installer bounce, VPN-app and VPN-install bounce, Private DNS guard, Device Administrator) despite the Accessibility-policy risk documented in `play-submission-pack.md`; (2) sell through **Google Play Billing**; (3) ship **Bangladesh and Global as one app with an edition setting** (Bangla-first vs English-first; Play prices per country).
+
+Done in source (unit tests green on play+direct, 80 backend tests green):
+- Google Play Billing: app provider, subscribe/restore flow, `play-billing-verify` + `play-billing-rtdn` functions, `payments.play_subscriptions` ledger, `process_play_subscription` RPC, migration `20261017060000`.
+- Play flavor: `ALLOW_SYSTEM_GUARD=true`, `MANAGED_CONTROLS=true`, Device Admin receiver kept, full Accessibility XML, truthful disclosure strings.
+- Guard hardening: any-VPN install detection (generic "VPN/proxy" titles + 30 brands, OEM stores), Private DNS dialog guard, other-VPN connect dialog guard, encrypted-DNS bypass forced on at commit, "protection interrupted" alert when another VPN takes over, lock-aware Device Admin deactivation message, wider OEM Settings/installer package coverage.
+- Edition setting (`Region.kt`, Settings screen), privacy page copy for Play purchases and the guard scope, submission pack rewritten.
+
+**Owner must do (nothing below can be done from source):**
+- [ ] Play Console developer account verified; check whether the 12-tester/14-day closed-test rule applies.
+- [ ] Upload keystore + `SAFENEST_UPLOAD_*` GitHub secrets; Play App Signing.
+- [ ] Subscription product `safenest_protection` with base plans `monthly`/`quarterly`/`annual` and per-country prices.
+- [ ] Google Cloud service account with Play API access; set Supabase secrets `PLAY_PACKAGE_NAME`, `PLAY_SERVICE_ACCOUNT_JSON`, `PLAY_RTDN_SECRET` (and `PLAY_ALLOW_TEST_PURCHASES=true` during testing); run the backend deploy workflow (migration + functions).
+- [ ] RTDN Pub/Sub topic + push subscription to `play-billing-rtdn?key=<secret>`.
+- [ ] Licence testers; reviewer account; support email; Data safety; Accessibility/VPN/foreground-service declarations and video.
+- [ ] Physical-phone matrix (Samsung, Xiaomi, Pixel) per `play-submission-pack.md` release gates.
+- [ ] Website: switch pricing/checkout copy to "Get it on Google Play" only once the listing is live.
+
 
 Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
 
