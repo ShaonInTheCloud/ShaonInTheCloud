@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the SafeNest blocklist health check every day
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

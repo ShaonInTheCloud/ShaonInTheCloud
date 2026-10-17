@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalize} from '../src/core.mjs';
 
-const assets = new URL('../../android/app/src/main/assets/', import.meta.url);
+const assets = new URL('../../data/blocklists/sources/', import.meta.url);
 const files = [
   ['gambling_hosts_vn.txt', 3983],
   ['gambling_hosts_sinfonietta.txt', 2690],
