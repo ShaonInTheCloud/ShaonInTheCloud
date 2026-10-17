@@ -53,3 +53,16 @@ CI=1 npx expo export --platform android --platform ios   # full Metro bundle for
 2. Move `android/` blocking code into a local Expo module and expose `start/stop/status` to JS.
 3. Add Google Play Billing (`expo-iap` or RevenueCat) behind the same entitlement model.
 4. iOS: Network Extension target + entitlement request, then the same module interface.
+
+## Test without a computer (EAS Update)
+
+The app is linked to the Expo account `safenesst` (project `@safenesst/safenest`). Each publish makes a
+QR that opens the app in Expo Go on any phone, on any network:
+
+```sh
+npx eas-cli login            # or set EXPO_TOKEN
+npx eas-cli update --branch preview --environment preview --message "what changed"
+```
+
+Open the printed EAS Dashboard link and scan its QR (Android: Expo Go; iPhone: Camera).
+`expo-updates` is installed with `--legacy-peer-deps` (same peer conflict as the rest of the tree).
