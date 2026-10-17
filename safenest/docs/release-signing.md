@@ -23,11 +23,11 @@ Do not paste the keystore or passwords in chat. They are read only during the ma
 
 After the normal release checks for the exact source pass, manually run `SafeNest signed Play bundle` from `main`; enter the exact reviewed version name. The job runs core/signing regressions, Play release unit tests and lint, then builds `bundlePlayRelease`.
 
-The verifier checks the actual merged package, version/code, backup and cleartext policy, absence of debug/test-only flags and Device Administrator receiver, and expected permission-protected services. It reads every AAB payload entry through the JDK JAR signature verifier, requires a single signer matching the intended upload certificate, and writes the AAB SHA-256 and public release evidence. An unsigned bundle, a mismatched signer or a changed payload is rejected.
+The verifier checks the actual merged package, version/code, backup and cleartext policy, absence of debug/test-only flags, the presence of exactly one Device Administrator receiver bound to `BIND_DEVICE_ADMIN` (owner decision, 17 Oct 2026), and expected permission-protected services. It reads every AAB payload entry through the JDK JAR signature verifier, requires a single signer matching the intended upload certificate, and writes the AAB SHA-256 and public release evidence. An unsigned bundle, a mismatched signer or a changed payload is rejected.
 
 Download `safenest-signed-play-release` from the successful run. Upload the checked AAB to an internal Play track only after the remaining review-access, legal/contact, privacy, payment and device checks are complete. This workflow does not bypass those launch requirements. No signed release has been produced while the owner's configuration is unavailable.
 
-Direct-distribution APK signing needs a separate distribution/upgrade plan: a Play-installed app signed by Google's app-signing key cannot be updated with an APK signed only by the upload key. This workflow intentionally generates the Play bundle only.
+Direct-distribution APK signing is a separate workflow, `SafeNest signed direct APK` (added 17 Oct 2026), using the `SAFENEST_DIRECT_*` environment secrets (`SAFENEST_DIRECT_KEYSTORE_BASE64`, `_STORE_PASSWORD`, `_KEY_ALIAS`, `_KEY_PASSWORD`). It builds `assembleDirectRelease`, verifies the signer with `apksigner`, and uploads `SafeNest-<version>.apk` plus its SHA-256 for the website download. A Play-installed app cannot be updated with this APK and vice versa; the two keys are deliberately independent.
 
 Primary references: [Android app signing](https://developer.android.com/studio/publish/app-signing), [GitHub environment configuration](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).
 
