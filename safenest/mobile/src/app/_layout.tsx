@@ -3,7 +3,8 @@ import {Stack} from 'expo-router';
 import {StatusBar} from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {useFonts, AnekBangla_500Medium, AnekBangla_700Bold, AnekBangla_800ExtraBold} from '@expo-google-fonts/anek-bangla';
-import {Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold} from '@expo-google-fonts/manrope';
+import {InterTight_700Bold, InterTight_800ExtraBold} from '@expo-google-fonts/inter-tight';
+import {Inter_400Regular, Inter_600SemiBold, Inter_700Bold} from '@expo-google-fonts/inter';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Text, View} from 'react-native';
 import {StoreProvider, useStore} from '@/lib/store';
@@ -30,7 +31,7 @@ function Root() {
 }
 
 export default function Layout() {
-  const [loaded] = useFonts({AnekBangla_500Medium, AnekBangla_700Bold, AnekBangla_800ExtraBold, Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold});
+  const [loaded] = useFonts({AnekBangla_500Medium, AnekBangla_700Bold, AnekBangla_800ExtraBold, InterTight_700Bold, InterTight_800ExtraBold, Inter_400Regular, Inter_600SemiBold, Inter_700Bold});
   if (!loaded) return null;
   return (
     <SafeAreaProvider>

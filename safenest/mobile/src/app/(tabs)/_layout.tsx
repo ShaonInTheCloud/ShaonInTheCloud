@@ -15,10 +15,9 @@ export default function TabsLayout() {
       tabBarInactiveTintColor: theme.muted,
       // Floating glass bar; screens leave room for it at the bottom.
       tabBarStyle: {position: 'absolute', left: 16, right: 16, bottom: 18, height: 74, paddingTop: 10, paddingBottom: 10, borderRadius: 37,
-        backgroundColor: '#1E0517F2', borderTopWidth: 0, borderWidth: 1, borderColor: '#FF5CE140',
-        shadowColor: '#FF1E8A', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: {width: 0, height: 8}, elevation: 12},
+        backgroundColor: theme.surface, borderTopWidth: 0, borderWidth: 0, elevation: 0},
       tabBarItemStyle: {borderRadius: 26},
-      tabBarBackground: () => <View style={{flex: 1, borderRadius: 37, backgroundColor: '#1E0517'}} />,
+      tabBarBackground: () => <View style={{flex: 1, borderRadius: 37, backgroundColor: theme.surface}} />,
       tabBarLabelStyle: {fontFamily: fonts.bodySemi, fontSize: 11},
     }}>
       <Tabs.Screen name="index" options={{title: t.home, tabBarIcon: ({color}) => <Glyph name="home" color={color} />}} />

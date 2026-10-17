@@ -53,11 +53,11 @@ import kotlinx.coroutines.withContext
 // Neon Nest (see NeonNest.kt): light text on night plum, glossy pink accents, dark glass cards.
 private val Ink = Neon.Text
 private val Violet = Neon.Pink
-private val Sunshine = Color(0xFF2A0820)
-private val Lilac = Color(0xFF2E0A24)
+private val Sunshine = Neon.Raised
+private val Lilac = Neon.Raised
 private val Paper = Neon.Night
 private val SoftText = Neon.Muted
-private val Mint = Color(0xFF301024)
+private val Mint = Neon.Plum
 private val Glass = Neon.Glass
 private val BarInk = Color(0xFFFFE3EF)
 private val Bar = Neon.Plum
@@ -114,7 +114,7 @@ private fun SafeNestTheme(content: @Composable () -> Unit) {
         tertiary = Neon.Magenta, background = Neon.Night, onBackground = Neon.Text, surface = Neon.Plum, onSurface = Neon.Text,
         surfaceVariant = Neon.Raised, onSurfaceVariant = Neon.Muted, outline = Color(0x99FF5CE1), outlineVariant = Neon.Edge,
         error = Color(0xFFFF5C7A)
-    ), content = content)
+    ), typography = NeonTypography, content = content)
 }
 
 @Composable
@@ -301,8 +301,8 @@ private fun SafeNestApp() {
         containerColor = Color.Transparent,
         bottomBar = {
             Column(Modifier.fillMaxWidth()) {
-            NavigationBar(containerColor = Color(0xFF1E0517), tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0),
-                modifier = Modifier.padding(horizontal = 14.dp).clip(RoundedCornerShape(32.dp)).border(1.dp, Neon.Edge, RoundedCornerShape(32.dp))) {
+            NavigationBar(containerColor = Neon.Plum, tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0),
+                modifier = Modifier.padding(horizontal = 14.dp).clip(RoundedCornerShape(32.dp))) {
                 listOf("home", "protect", "recover", "insights").forEach { destination ->
                     val selected = page == destination
                     NavigationBarItem(selected = selected, onClick = { page = destination },
@@ -461,7 +461,7 @@ private fun SafeNestApp() {
     Text(t("SUPPORT FOR THE HUMAN SIDE","মানসিক সহায়তা"),fontSize=9.sp,letterSpacing=1.sp,color=SoftText,fontWeight=FontWeight.Bold)
     Text(t("Recovery isn’t a straight line.","পুনরুদ্ধার সবসময় সরল পথ নয়।"),fontSize=23.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.padding(top=4.dp))
     Text(t("No judgement. Just tools for the next moment.","কোনো বিচার নয়। শুধু পরবর্তী মুহূর্তের জন্য কিছু উপায়।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp))
-    Surface(shape=RoundedCornerShape(18.dp),color=Color(0xFF3A0B2C)){Column(Modifier.padding(17.dp)){Text(t("Struggling right now?","কঠিন সময় যাচ্ছে?"),fontSize=16.sp,fontWeight=FontWeight.Bold);Text(t("Free, confidential help for gambling, debt and crisis.","জুয়া, ঋণ বা মানসিক চাপে বিনামূল্যের গোপন সাহায্য আছে।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp));Button(onClick=onHelp,modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Get help","সাহায্য দেখুন"),fontSize=11.sp)} } }
+    Surface(shape=RoundedCornerShape(18.dp),color=Neon.Orange){Column(Modifier.padding(17.dp)){Text(t("Struggling right now?","কঠিন সময় যাচ্ছে?"),fontSize=16.sp,fontWeight=FontWeight.Bold,color=Color.White);Text(t("Free, confidential help for gambling, debt and crisis.","জুয়া, ঋণ বা মানসিক চাপে বিনামূল্যের গোপন সাহায্য আছে।"),fontSize=11.sp,color=Color.White,modifier=Modifier.padding(top=4.dp));Button(onClick=onHelp,colors=ButtonDefaults.buttonColors(containerColor=Neon.Night,contentColor=Color.White),modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Get help","সাহায্য দেখুন"),fontSize=11.sp)} } }
     Surface(shape=RoundedCornerShape(20.dp),color=Lilac){Column(Modifier.padding(19.dp)){Text(t("YOUR PLAN FOR A HARD MOMENT","কঠিন মুহূর্তের পরিকল্পনা"),fontSize=9.sp,color=Violet,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(12.dp));Text(t("Pause. Name it. Choose your next step.","একটু থামুন। অনুভব করুন। পরের পদক্ষেপ বেছে নিন।"),fontSize=22.sp,fontWeight=FontWeight.Bold,color=Ink,lineHeight=27.sp);Spacer(Modifier.height(9.dp));Text(t("An urge is a feeling, not an instruction. Try a short reset or reach out to someone you trust.","তাড়না একটি অনুভূতি, নির্দেশ নয়। একটু বিরতি নিন বা বিশ্বাসের কাউকে জানান।"),fontSize=11.sp,color=SoftText,lineHeight=16.sp);Spacer(Modifier.height(14.dp));Button(onClick=onReset,shape=RoundedCornerShape(11.dp),colors=ButtonDefaults.buttonColors(containerColor=Glass,contentColor=Ink)){Text(t("Help me through this urge","এই তাড়না সামলাতে সাহায্য করুন"),fontSize=10.sp)} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("A QUICK CHECK-IN","একটি ছোট চেক-ইন"),fontSize=9.sp,color=SoftText,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Text(t("How are you, really?","সত্যি করে বলুন, কেমন আছেন?"),fontSize=16.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp));Text(t("$checkins saved check-ins","${checkins}টি সংরক্ষিত চেক-ইন"),fontSize=10.sp,color=SoftText,modifier=Modifier.padding(top=4.dp));Button(onClick=onCheckin,modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Log a check-in","চেক-ইন লিখুন"),fontSize=10.sp)} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("A private reflection","একটি ব্যক্তিগত ভাবনা"),fontSize=14.sp,fontWeight=FontWeight.Bold);Text(t("Notice what was happening before the urge. No blame, just curiosity.","তাড়নার আগে কী ঘটছিল খেয়াল করুন। দোষ নয়, শুধু কৌতূহল।"),fontSize=10.sp,color=SoftText,modifier=Modifier.padding(top=5.dp));OutlinedTextField(value=reflection,onValueChange={reflection=it},modifier=Modifier.fillMaxWidth().padding(top=8.dp),minLines=3,label={Text(t("A note to future me","ভবিষ্যতের নিজের জন্য নোট"))});TextButton(onClick={recoveryPrefs.edit().putString("reflection",reflection).apply()}){Text(t("Save privately on this device","এই ডিভাইসে ব্যক্তিগতভাবে সংরক্ষণ করুন"),fontSize=10.sp)} } }

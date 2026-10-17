@@ -1,9 +1,8 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Image, Linking, Pressable, ScrollView, Text, View} from 'react-native';
-import {LinearGradient} from 'expo-linear-gradient';
 import {router, useFocusEffect, type Href} from 'expo-router';
 import {Body, Button, Card, Display, Label, Notice, Pill, Screen, Title} from '@/components/ui';
-import {NestOrb} from '@/components/motion';
+import {CountUp, NestOrb} from '@/components/motion';
 import {useStore} from '@/lib/store';
 import {api, ApiError, type AccessResult} from '@/lib/api';
 import {fill} from '@/lib/i18n';
@@ -20,15 +19,12 @@ function remaining(iso: string, lang: 'en' | 'bn') {
 }
 
 /** One poster in the tools rail. */
-function Poster({title, note, colors, onPress}: {title: string; note: string; colors: readonly [string, string, ...string[]]; onPress: () => void}) {
+function Poster({title, note, color, ink = '#FFFFFF', onPress}: {title: string; note: string; color: string; ink?: string; onPress: () => void}) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress}
-      style={({pressed}) => ({width: 168, height: 200, borderRadius: 24, overflow: 'hidden', transform: [{scale: pressed ? 0.97 : 1}]})}>
-      <LinearGradient colors={colors} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={{flex: 1, padding: 16, justifyContent: 'flex-end'}}>
-        <LinearGradient pointerEvents="none" colors={['#FFFFFF40', '#FFFFFF00']} style={{position: 'absolute', left: 0, right: 0, top: 0, height: '40%'}} />
-        <Text style={{fontFamily: fonts.display, fontSize: 24, lineHeight: 25, color: '#fff', letterSpacing: -0.6}}>{title}</Text>
-        <Text style={{fontFamily: fonts.bodySemi, fontSize: 13, color: '#FFFFFFD9', marginTop: 6}}>{note}</Text>
-      </LinearGradient>
+      style={({pressed}) => ({width: 164, height: 196, borderRadius: 24, padding: 16, justifyContent: 'flex-end', backgroundColor: color, transform: [{scale: pressed ? 0.96 : 1}]})}>
+      <Text style={{fontFamily: fonts.display, fontSize: 24, lineHeight: 26, color: ink, letterSpacing: -0.8}}>{title}</Text>
+      <Text style={{fontFamily: fonts.bodySemi, fontSize: 13, color: ink, opacity: 0.85, marginTop: 6}}>{note}</Text>
     </Pressable>
   );
 }
@@ -87,7 +83,10 @@ export default function Home() {
         <View style={{marginTop: -6}}><Pill text={status} tone={active ? 'good' : state === 'offline' ? 'bad' : 'neutral'} /></View>
         {active && ent ? (
           <>
-            <Display size={52} style={{marginTop: 14, textAlign: 'center'}}>{remaining(ent.ends_at, lang)}</Display>
+            <CountUp value={Math.max(0, (new Date(ent.ends_at).getTime() - Date.now()) / 86400000)}
+              format={n => lang === 'bn' ? `${Math.floor(n)} দিন` : `${Math.floor(n)} days`}
+              style={{marginTop: 14, textAlign: 'center', fontFamily: lang === 'bn' ? fonts.banglaDisplay : fonts.display, fontSize: 60, lineHeight: 64, letterSpacing: -2, color: theme.ink}} />
+            <Body muted size={14} style={{textAlign: 'center'}}>{remaining(ent.ends_at, lang)} {lang === 'bn' ? 'বাকি' : 'left'}</Body>
             <Body muted size={14} style={{textAlign: 'center'}}>
               {ent.plan_code === 'test' ? t.testAccess : fill(t.endsIn, {when: when(ent.ends_at, lang)})}
             </Body>
@@ -105,13 +104,13 @@ export default function Home() {
 
       <Title style={{marginTop: 6}}>{lang === 'bn' ? 'আপনার টুল' : 'Your tools'}</Title>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap: 14, paddingRight: 20}} style={{marginHorizontal: -20, paddingLeft: 20}}>
-        <Poster title={t.check} note={lang === 'bn' ? 'কোনো সাইট ব্লক কি না দেখুন' : 'Is a site on the blocklist?'} colors={['#FF1E8A', '#B0145A']} onPress={go('/(tabs)/check')} />
-        <Poster title={lang === 'bn' ? 'সাহায্য' : 'Get help'} note={lang === 'bn' ? 'জুয়া, ঋণ, সংকট' : 'Gambling, debt, crisis'} colors={['#FF8A1F', '#FF3D6E']} onPress={go('/(tabs)/help')} />
-        <Poster title={t.plans} note={lang === 'bn' ? 'মেয়াদ ও দাম' : 'Plans and prices'} colors={['#FF5CE1', '#7A1FFF']} onPress={go('/(tabs)/plans')} />
-        <Poster title={lang === 'bn' ? 'অ্যান্ড্রয়েড অ্যাপ' : 'Android blocker'} note={lang === 'bn' ? 'ফোনে ব্লক চালু করুন' : 'Turn on blocking'} colors={['#3D0A30', '#FF1E8A']} onPress={() => Linking.openURL('https://mysafenestbd.com/account')} />
+        <Poster title={t.check} note={lang === 'bn' ? 'কোনো সাইট ব্লক কি না দেখুন' : 'Is a site on the blocklist?'} color={theme.pink} onPress={go('/(tabs)/check')} />
+        <Poster title={lang === 'bn' ? 'সাহায্য' : 'Get help'} note={lang === 'bn' ? 'জুয়া, ঋণ, সংকট' : 'Gambling, debt, crisis'} color={theme.orange} onPress={go('/(tabs)/help')} />
+        <Poster title={t.plans} note={lang === 'bn' ? 'মেয়াদ ও দাম' : 'Plans and prices'} color={theme.neon} onPress={go('/(tabs)/plans')} />
+        <Poster title={lang === 'bn' ? 'অ্যান্ড্রয়েড অ্যাপ' : 'Android blocker'} note={lang === 'bn' ? 'ফোনে ব্লক চালু করুন' : 'Turn on blocking'} color={theme.surfaceAlt} onPress={() => Linking.openURL('https://mysafenestbd.com/account')} />
       </ScrollView>
 
-      <Card>
+      <Card tone="alt">
         <Title>{t.engineTitle}</Title>
         <Body size={15} muted>{t.engineBody}</Body>
       </Card>

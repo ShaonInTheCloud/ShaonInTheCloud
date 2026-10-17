@@ -37,7 +37,7 @@ fun HelpScreen(language: String, onBack: () -> Unit) {
             }
         }
         HelpContent.sections(region).forEachIndexed { index, section ->
-            Surface(shape = RoundedCornerShape(18.dp), color = if (index == 0) Color(0xFF3A0B2C) else Neon.Glass) {
+            Surface(shape = RoundedCornerShape(18.dp), color = if (index == 0) Neon.Pink else Neon.Plum) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(section.title.of(language), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     section.body?.let { Text(it.of(language), fontSize = 12.sp) }

@@ -54,7 +54,32 @@ export const api = {
       body: JSON.stringify({product_code, provider, idempotency_key, customer: {}})}),
   orderStatus: (order_id: string) =>
     call<{order_id: string; state: string; environment: string}>('payment-status', {method: 'POST', body: JSON.stringify({order_id})}),
-  /** Asks the published blocklist whether a hostname is a known gambling domain. */
-  checkDomain: (domain: string) =>
-    call<DomainCheck>(`intelligence/check?domain=${encodeURIComponent(domain.trim())}`, {method: 'GET', auth: false}),
+  /**
+   * Is a hostname a known gambling domain? Asks the signed catalogue first; when no signed release is published
+   * yet, asks the live SafeNest DNS filter (the same 541k list the iPhone profile uses).
+   */
+  checkDomain: async (domain: string): Promise<DomainCheck> => {
+    try { return await call<DomainCheck>(`intelligence/check?domain=${encodeURIComponent(domain.trim())}`, {method: 'GET', auth: false}); }
+    catch (error) {
+      if (error instanceof ApiError && error.code === 'network_unavailable') throw error;
+      return {blocked: await dnsFilterBlocks(domain.trim()), domain: domain.trim(), confidence: 'SafeNest DNS filter'};
+    }
+  },
 };
+
+/** One A-record lookup through the SafeNest DNS-over-HTTPS filter; blocked names answer 0.0.0.0. */
+export async function dnsFilterBlocks(host: string): Promise<boolean> {
+  const labels = host.toLowerCase().split('.').filter(Boolean);
+  const bytes: number[] = [0x5a, 0xfe, 0x01, 0x00, 0, 1, 0, 0, 0, 0, 0, 0];
+  for (const l of labels) { bytes.push(l.length); for (const ch of l) bytes.push(ch.charCodeAt(0) & 0x7f); }
+  bytes.push(0, 0, 1, 0, 1);
+  let response: Response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/dns-query`, {method: 'POST', headers: {'Content-Type': 'application/dns-message', Accept: 'application/dns-message'}, body: new Uint8Array(bytes)});
+  } catch { throw new ApiError('network_unavailable'); }
+  if (!response.ok) throw new ApiError(`http_${response.status}`, response.status);
+  const answer = new Uint8Array(await response.arrayBuffer());
+  const count = (answer[6] << 8) | answer[7];
+  if (!count || answer.length < 4) return false;
+  return answer.slice(answer.length - 4).every(b => b === 0);
+}
