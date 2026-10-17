@@ -18,6 +18,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{title: t.home, tabBarIcon: ({color}) => <Glyph name="home" color={color} />}} />
       <Tabs.Screen name="check" options={{title: t.check, tabBarIcon: ({color}) => <Glyph name="check" color={color} />}} />
       <Tabs.Screen name="plans" options={{title: t.plans, tabBarIcon: ({color}) => <Glyph name="plans" color={color} />}} />
+      <Tabs.Screen name="help" options={{title: t.help, tabBarIcon: ({color}) => <Glyph name="help" color={color} />}} />
       <Tabs.Screen name="settings" options={{title: t.settings, tabBarIcon: ({color}) => <Glyph name="settings" color={color} />}} />
     </Tabs>
   );

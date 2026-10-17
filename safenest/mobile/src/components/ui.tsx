@@ -111,7 +111,7 @@ export function Notice({text, tone = 'neutral'}: {text: string; tone?: 'neutral'
 }
 
 // Tab glyphs drawn from Views so the app needs no icon font.
-export function Glyph({name, color: tint, size = 22}: {name: 'home' | 'check' | 'plans' | 'settings'; color: ColorValue | null | undefined; size?: number}) {
+export function Glyph({name, color: tint, size = 22}: {name: 'home' | 'check' | 'plans' | 'help' | 'settings'; color: ColorValue | null | undefined; size?: number}) {
   const color = (typeof tint === 'string' ? tint : undefined) ?? '#7a6376';
   const s = size, b = StyleSheet.hairlineWidth * 4;
   if (name === 'home') return (
@@ -128,6 +128,12 @@ export function Glyph({name, color: tint, size = 22}: {name: 'home' | 'check' | 
     <View style={{width: s, height: s, justifyContent: 'center'}}>
       <View style={{width: s, height: s * 0.68, borderWidth: b, borderColor: color, borderRadius: 5}} />
       <View style={{position: 'absolute', top: s * 0.38, width: s, height: b, backgroundColor: color}} />
+    </View>);
+  if (name === 'help') return (
+    <View style={{width: s, height: s, alignItems: 'center', justifyContent: 'center'}}>
+      <View style={{width: s * 0.9, height: s * 0.9, borderRadius: s, borderWidth: b, borderColor: color, alignItems: 'center', justifyContent: 'center'}}>
+        <Text style={{color, fontSize: s * 0.55, fontWeight: '800', lineHeight: s * 0.62, includeFontPadding: false}}>?</Text>
+      </View>
     </View>);
   return (
     <View style={{width: s, height: s, alignItems: 'center', justifyContent: 'center'}}>

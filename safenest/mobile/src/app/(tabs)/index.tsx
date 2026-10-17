@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Image, Linking, View} from 'react-native';
-import {useFocusEffect} from 'expo-router';
+import {router, useFocusEffect} from 'expo-router';
 import {Body, Button, Card, Display, Label, Notice, Pill, Screen, Title} from '@/components/ui';
 import {useStore} from '@/lib/store';
 import {api, ApiError, type AccessResult} from '@/lib/api';
@@ -88,6 +88,11 @@ export default function Home() {
         <Button kind="text" label={t.engineAndroid} onPress={() => Linking.openURL('https://mysafenestbd.com/account')} style={{alignSelf: 'flex-start', paddingHorizontal: 0}} />
       </Card>
 
+      <Card>
+        <Title>{lang === 'bn' ? 'কঠিন সময় যাচ্ছে?' : 'Struggling right now?'}</Title>
+        <Body size={15}>{lang === 'bn' ? 'জুয়া, ঋণ বা মানসিক চাপে বিনামূল্যের গোপন সাহায্য আছে।' : 'Free, confidential help for gambling, debt and crisis.'}</Body>
+        <Button kind="ghost" label={lang === 'bn' ? 'সাহায্য দেখুন' : 'Get help'} onPress={() => router.push('/(tabs)/help')} />
+      </Card>
       <Body muted size={14}>{t.honest}</Body>
     </Screen>
   );
