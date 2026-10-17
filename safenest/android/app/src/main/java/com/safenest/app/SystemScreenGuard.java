@@ -22,12 +22,19 @@ public final class SystemScreenGuard {
         "com.huawei.appmarket", "com.hihonor.appmarket", "com.sec.android.app.samsungapps",
         "com.xiaomi.market", "com.xiaomi.mipicks", "com.oppo.market", "com.heytap.market",
         "com.bbk.appstore", "com.vivo.appstore", "com.transsnet.store", "com.aurora.store");
+    // Page headings describe Settings, not a different selected application.
     private static final Set<String> PAGE_CHROME = set(
         "settings", "app info", "vpn", "accessibility", "version", "always-on vpn",
-        "block connections without vpn", "forget vpn");
+        "block connections without vpn", "forget vpn", "storage", "storage & cache", "storage and cache",
+        "space used", "manage storage", "স্টোরেজ", "স্টোরেজ ও ক্যাশে", "tallennustila", "tallennustila ja välimuisti");
+    // Shared by consumer and lab paths so translated clearing controls cannot diverge.
+    private static final Set<String> STORAGE_ACTIONS = set(
+        "clear storage", "clear data", "clear cache", "clear all data", "manage space", "delete app data",
+        "স্টোরেজ সাফ করুন", "ডেটা সাফ করুন", "ক্যাশে সাফ করুন", "স্টোরেজ মুছুন", "ডেটা মুছুন", "ক্যাশে মুছুন",
+        "tyhjennä tallennustila", "tyhjennä tiedot", "tyhjennä välimuisti", "poista tiedot");
     private static final Set<String> PROTECTED_ACTIONS = set(
         "disconnect", "uninstall", "deactivate", "deactivate and uninstall", "disable",
-        "force stop", "clear storage", "clear data", "delete vpn", "forget vpn", "forget",
+        "force stop", "delete vpn", "forget vpn", "forget",
         "remove", "remove profile", "delete", "turn off", "stop",
         "সংযোগ বিচ্ছিন্ন", "আনইনস্টল", "নিষ্ক্রিয়", "নিষ্ক্রিয়", "বন্ধ করুন",
         "poista", "poista asennus", "katkaise yhteys", "poista käytöstä");
@@ -50,6 +57,10 @@ public final class SystemScreenGuard {
     }
     public static boolean blocksSafeNestControl(String pkg, Collection<String> labels,
                                                 Collection<String> actions, boolean checkedToggle) {
+        return blocksSafeNestControl(pkg, labels, java.util.Collections.emptySet(), actions, checkedToggle);
+    }
+    public static boolean blocksSafeNestControl(String pkg, Collection<String> labels,
+                                                Collection<String> titles, Collection<String> actions, boolean checkedToggle) {
         if (!SETTINGS.contains(pkg) && !INSTALLERS.contains(pkg)) return false;
         boolean target = labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("safenest") || s.equals("safenest app guard") || s.equals("com.safenest.app") ||
@@ -57,8 +68,18 @@ public final class SystemScreenGuard {
         if (!target) return false;
         boolean ownToggle = checkedToggle && labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("use safenest") || s.equals("use safenest app guard"));
-        return ownToggle || actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+        return ownToggle || blocksOwnStorage(pkg, labels, titles, actions) || actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             PROTECTED_ACTIONS.contains(s) || s.startsWith("deactivate and uninstall"));
+    }
+    private static boolean blocksOwnStorage(String pkg, Collection<String> labels,
+                                             Collection<String> titles, Collection<String> actions) {
+        if (!SETTINGS.contains(pkg)) return false;
+        boolean own = labels.stream().map(SystemScreenGuard::normalize).anyMatch(SystemScreenGuard::isSafeNestIdentity);
+        if (!own) return false;
+        // Another app may mention SafeNest in a summary. Its selected heading takes precedence.
+        boolean foreignTitle = titles.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            !s.isEmpty() && !PAGE_CHROME.contains(s) && !isSafeNestIdentity(s));
+        return !foreignTitle && actions.stream().map(SystemScreenGuard::normalize).anyMatch(STORAGE_ACTIONS::contains);
     }
     public static boolean blocksVpnInstall(String pkg, Collection<String> titles, Collection<String> actions) {
         if (!INSTALLERS.contains(pkg) && !"com.android.vending".equals(pkg)) return false;
@@ -114,6 +135,7 @@ public final class SystemScreenGuard {
         // The exact Use label occurs on our service detail page, not the services list.
         if (settings && ((text.contains("use safenest test app guard") && text.contains("safenest test app guard")) ||
             (text.contains("use safenest owner test app guard") && text.contains("safenest owner test app guard")))) return "test_accessibility";
+        if (blocksOwnStorage(pkg, labels, titles, actions)) return "test_app_storage";
         boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
         boolean ownTitle = pageTitles.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity);
         boolean knownVpnTitle = pageTitles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());

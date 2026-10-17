@@ -81,6 +81,7 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.testFocusedWindowReason("com.android.chrome", "SafeNest Test").isEmpty(), "same title in another app is ignored");
         check(SystemScreenGuard.testFocusedWindowReason("com.safenest.app.lab", "SafeNest Test").isEmpty(), "own app and Stop test remain usable");
         check(SystemScreenGuard.testFocusedWindowReason("com.google.android.packageinstaller", "SafeNest Test").isEmpty(), "installer name alone is insufficient");
+        storageControls();
         WindowPackageCache windows = new WindowPackageCache();
         windows.observe(24, "com.android.settings");
         check("com.android.settings".equals(windows.owner(24)) && windows.owner(25) == null, "ownership never transfers to a different focused window ID");
@@ -95,5 +96,61 @@ public final class CommitmentGuardRegression {
         windows.clear();
         check(windows.owner(42) == null, "unbind clears ephemeral ownership");
         System.out.println("Paid-window and UI-guard regression: " + checks + " checks passed.");
+    }
+
+    private static void storageControls() {
+        String[][] locales = {
+            {"Storage", "Clear storage", "Clear data", "Clear cache", "Clear all data", "Manage space", "Delete app data"},
+            {"স্টোরেজ", "স্টোরেজ সাফ করুন", "ডেটা সাফ করুন", "ক্যাশে সাফ করুন", "স্টোরেজ মুছুন", "ডেটা মুছুন", "ক্যাশে মুছুন"},
+            {"Tallennustila", "Tyhjennä tallennustila", "Tyhjennä tiedot", "Tyhjennä välimuisti", "Poista tiedot"}
+        };
+        List<String> settingsPackages = List.of("com.android.settings", "com.hihonor.settings", "com.huawei.systemmanager",
+            "com.hihonor.systemmanager", "com.miui.securitycenter", "com.samsung.android.lool", "com.coloros.safecenter",
+            "com.oplus.safecenter", "com.vivo.permissionmanager", "com.iqoo.secure", "com.oneplus.security", "com.transsion.phonemaster");
+        for (String pkg : settingsPackages) {
+            check(SystemScreenGuard.isSystemSurface(pkg), "OEM Settings surface retained: " + pkg);
+            for (String[] locale : locales) {
+                String heading = locale[0];
+                for (int i = 1; i < locale.length; i++) {
+                    String action = locale[i];
+                    List<String> controls = List.of(action);
+                    List<String> ownLabels = List.of(heading, "SafeNest", action);
+                    check(SystemScreenGuard.blocksSafeNestControl(pkg, ownLabels, controls, false), "consumer storage action: " + pkg + " / " + action);
+                    check(SystemScreenGuard.blocksSafeNestControl(pkg, ownLabels, List.of(heading), controls, false), "consumer selected Storage page: " + action);
+                    for (String identity : List.of("SafeNest", "SafeNest Test", "SafeNest Owner Test", "com.safenest.app", "com.safenest.app.lab", "com.safenest.app.ownerlab")) {
+                        check(SystemScreenGuard.testControlReason(pkg, List.of(heading, identity, action), List.of(heading), controls)
+                            .equals("test_app_storage"), "lab/ownerlab own Storage page: " + identity + " / " + action);
+                    }
+                    check(!SystemScreenGuard.blocksSafeNestControl(pkg, List.of(heading, "Chrome", action), List.of(heading), controls, false), "consumer unrelated app storage: " + action);
+                    check(!SystemScreenGuard.blocksTestControl(pkg, List.of(heading, "Chrome", action), List.of(heading), controls), "lab unrelated app storage: " + action);
+                    check(!SystemScreenGuard.blocksSafeNestControl(pkg, List.of(heading, "Chrome", "SafeNest", action), List.of(heading, "Chrome"), controls, false), "foreign app heading beats background SafeNest label: " + action);
+                    check(!SystemScreenGuard.blocksTestControl(pkg, List.of(heading, "Chrome", "SafeNest Test", action), List.of(heading, "Chrome"), controls), "lab foreign app heading beats background label: " + action);
+                    check(!SystemScreenGuard.blocksSafeNestControl("com.android.chrome", ownLabels, controls, false), "browser storage text ignored: " + action);
+                    check(!SystemScreenGuard.blocksTestControl("com.android.chrome", ownLabels, List.of(heading), controls), "lab browser storage text ignored: " + action);
+                    check(!SystemScreenGuard.blocksSafeNestControl(pkg, ownLabels, List.of(heading), List.of(), false), "non-actionable storage label stays usable: " + action);
+                    check(!SystemScreenGuard.blocksTestControl(pkg, ownLabels, List.of(heading), List.of()), "lab non-actionable storage label stays usable: " + action);
+                    check(SystemScreenGuard.blocksSafeNestControl(pkg, List.of(heading, "SafeNest"), List.of("\u00a0" + action.toUpperCase(java.util.Locale.ROOT) + "  "), false), "case and surrounding whitespace normalized: " + action);
+                }
+                List<String> overview = List.of(heading, "Internal shared storage", "Apps", "SafeNest", "SafeNest Test", "23.92 MB");
+                check(!SystemScreenGuard.blocksSafeNestControl(pkg, overview, List.of(heading), List.of("Apps", "Free up space"), false), "consumer device storage overview remains accessible");
+                check(!SystemScreenGuard.blocksTestControl(pkg, overview, List.of(heading), List.of("Apps", "Free up space")), "lab device storage overview remains accessible");
+            }
+            for (String heading : List.of("Storage & cache", "Storage and cache", "Space used", "Manage storage", "স্টোরেজ ও ক্যাশে", "Tallennustila ja välimuisti")) {
+                check(SystemScreenGuard.blocksTestControl(pkg, List.of(heading, "SafeNest Test", "Clear cache"), List.of(heading, "\u00a0"), List.of("Clear cache")), "storage heading is page chrome: " + heading);
+                check(SystemScreenGuard.blocksSafeNestControl(pkg, List.of(heading, "SafeNest", "Clear cache"), List.of(heading), List.of("Clear cache"), false), "consumer storage heading is page chrome: " + heading);
+            }
+            for (String page : List.of("Settings", "Apps", "Network & internet", "Wi-Fi", "Bluetooth", "Accessibility", "Notifications", "Permissions", "Battery")) {
+                List<String> labels = List.of(page, "SafeNest", "SafeNest Test");
+                check(!SystemScreenGuard.blocksSafeNestControl(pkg, labels, List.of(page), List.of("Open", "Allow", "Save"), false), "consumer ordinary Settings navigation: " + page);
+                check(!SystemScreenGuard.blocksTestControl(pkg, labels, List.of(page), List.of("Open", "Allow", "Save")), "lab ordinary Settings navigation: " + page);
+            }
+        }
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Storage", "SafeNest Test", "0.5.0-test", "Clear storage", "Clear cache", "Space used", "App size", "23.92 MB", "User data", "Cache", "Total"),
+            List.of("Storage"), List.of("Clear storage", "Clear cache")).equals("test_app_storage"), "original supplied Storage-page regression");
+        check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Storage", "com.safenest.app"), List.of(), List.of("Clear cache"), false), "consumer package identity without heading IDs");
+        for (String store : List.of("com.android.packageinstaller", "com.google.android.packageinstaller", "com.samsung.android.packageinstaller", "com.miui.packageinstaller", "com.huawei.appmarket", "com.hihonor.appmarket", "com.sec.android.app.samsungapps", "com.xiaomi.market", "com.xiaomi.mipicks", "com.oppo.market", "com.heytap.market", "com.bbk.appstore", "com.vivo.appstore", "com.transsnet.store", "com.aurora.store", "com.android.vending")) {
+            check(SystemScreenGuard.blocksVpnInstall(store, List.of("Unknown Fast VPN Proxy"), List.of("Install")), "broader VPN/OEM install protection retained: " + store);
+            check(!SystemScreenGuard.blocksVpnInstall(store, List.of("Facebook"), List.of("Install")), "ordinary app install remains accessible: " + store);
+        }
     }
 }

@@ -248,7 +248,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 returnHome(now, reason, "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
                 return true
             }
-            if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
+            if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.detailTitles, screen.actions, screen.checkedToggle)) {
                 returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
                 return true
             }
