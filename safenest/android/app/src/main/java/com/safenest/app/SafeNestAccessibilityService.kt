@@ -248,6 +248,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
         }
         val destructive = texts.any { SystemScreenGuard.isDestructiveControl(it) }
         val alwaysOnRow = texts.any { it.trim().equals("Always-on VPN", ignoreCase = true) || it.trim() == "সবসময় চালু VPN" }
+        qa("tap pkg=$name texts=${texts.take(4)} destructive=$destructive alwaysOn=$alwaysOnRow recentOwn=${recentlyOnOwnPage(now)}")
         if (!destructive && !alwaysOnRow) return
         // Attribute the tap to SafeNest: the page was ours moments ago, or the live window says so.
         var own = recentlyOnOwnPage(now)
@@ -340,11 +341,18 @@ class SafeNestAccessibilityService : AccessibilityService() {
     }
 
     private var lastAlwaysOnClick = 0L
-    /** On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Bounded, label-driven, no text retained. */
+    private var alwaysOnAttempt = 0
+    private fun qa(message: String) { if (BuildConfig.DEBUG) android.util.Log.d("SafeNestGuard", message) }
+    /**
+     * On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Android
+     * disconnects the VPN the moment Always-on is switched off, so this must succeed; it
+     * alternates between clicking the row and the switch and verifies after each attempt.
+     */
     private fun ensureAlwaysOn(root: AccessibilityNodeInfo, now: Long, force: Boolean = false) {
         if (!force && now - lastAlwaysOnClick < 1500L) return
         val rows = (root.findAccessibilityNodeInfosByText("Always-on VPN") ?: emptyList()) +
             (root.findAccessibilityNodeInfosByText("সবসময় চালু VPN") ?: emptyList())
+        qa("ensureAlwaysOn rows=${rows.size} force=$force attempt=$alwaysOnAttempt")
         if (rows.isEmpty()) return
         try {
             for (label in rows) {
@@ -355,13 +363,26 @@ class SafeNestAccessibilityService : AccessibilityService() {
                     val toggle = findToggle(row, 0)
                     if (toggle != null) {
                         try {
-                            if (!toggle.isChecked && toggle.isEnabled) {
-                                val target = if (toggle.isClickable) toggle else row
-                                if (target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                                    lastAlwaysOnClick = now
-                                    recordHome("always_on_restored", "SafeNest keeps Always-on VPN switched on during protection.")
-                                }
-                            }
+                            qa("ensureAlwaysOn toggle checked=${toggle.isChecked} enabled=${toggle.isEnabled} clickable=${toggle.isClickable} rowClickable=${row.isClickable}")
+                            if (toggle.isChecked) { alwaysOnAttempt = 0; return }
+                            if (!toggle.isEnabled) return
+                            // Alternate targets across attempts: the row handles the click on most
+                            // Settings builds; a few route it through the switch itself.
+                            val preferSwitch = alwaysOnAttempt % 2 == 1
+                            val first = if (preferSwitch) toggle else row
+                            val second = if (preferSwitch) row else toggle
+                            val clicked = first.performAction(AccessibilityNodeInfo.ACTION_CLICK) ||
+                                second.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            qa("ensureAlwaysOn click sent=$clicked preferSwitch=$preferSwitch")
+                            lastAlwaysOnClick = now
+                            alwaysOnAttempt++
+                            if (clicked) recordHome("always_on_restored", "SafeNest keeps Always-on VPN switched on during protection.")
+                            // Verify shortly; retry with the other target if the switch is still off.
+                            if (alwaysOnAttempt < 6) handler.postDelayed({
+                                val again = controlForegroundRoot() ?: return@postDelayed
+                                try { if (SystemScreenGuard.isSettingsPackage(again.packageName?.toString().orEmpty())) ensureAlwaysOn(again, SystemClock.elapsedRealtime(), force = true) }
+                                finally { @Suppress("DEPRECATION") again.recycle() }
+                            }, 700)
                         } finally { @Suppress("DEPRECATION") toggle.recycle() }
                         return
                     }
@@ -371,6 +392,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 }
                 @Suppress("DEPRECATION") row?.recycle()
             }
+            qa("ensureAlwaysOn: no switch found near the label")
         } finally { rows.forEach { @Suppress("DEPRECATION") it.recycle() } }
     }
     private fun findToggle(node: AccessibilityNodeInfo, depth: Int): AccessibilityNodeInfo? {

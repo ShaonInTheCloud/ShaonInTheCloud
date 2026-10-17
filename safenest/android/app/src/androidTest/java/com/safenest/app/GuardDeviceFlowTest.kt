@@ -118,7 +118,14 @@ class GuardDeviceFlowTest {
             capture("vpn-detail-open-while-guarded")
             // Switching Always-on off is undone by the guard; the page itself stays.
             tap("Always-on VPN")
+            // Android clears the setting (and drops the VPN) ~200 ms after the tap; wait for that
+            // first so the restore below is a real one, not a stale read.
+            val turnedOffAt = SystemClock.elapsedRealtime()
+            while (alwaysOnPackage() == context.packageName && SystemClock.elapsedRealtime() - turnedOffAt < 3000) SystemClock.sleep(100)
+            capture("vpn-always-on-after-tap")
             await("Always-on restored by the guard") { alwaysOnPackage() == context.packageName }
+            SystemClock.sleep(1500)
+            assertEquals("Always-on stays restored", context.packageName, alwaysOnPackage())
             assertSettings("Still on own VPN detail after Always-on restore")
             pass("Own VPN detail open; Always-on VPN kept enabled")
             tap("Forget VPN")
