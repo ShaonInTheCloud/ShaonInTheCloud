@@ -6,8 +6,8 @@ import {useStore} from '@/lib/store';
 import {supabase} from '@/lib/supabase';
 
 export default function Settings() {
-  const {t, lang, setLang, edition, setEdition, session} = useStore();
-  async function signOut() { await supabase.auth.signOut(); router.replace('/'); }
+  const {t, lang, setLang, edition, setEdition, session, email, setGuest} = useStore();
+  async function signOut() { setGuest(false); if (session) await supabase.auth.signOut(); router.replace('/'); }
   return (
     <Screen>
       <Display>{t.settings}</Display>
@@ -23,8 +23,8 @@ export default function Settings() {
       </Card>
       <Card>
         <Title>{t.account}</Title>
-        <View><Label>{t.signedInAs}</Label><Body>{session?.user.email}</Body></View>
-        <Button label={t.signOut} kind="ghost" onPress={signOut} />
+        <View><Label>{t.signedInAs}</Label><Body>{email}</Body></View>
+        <Button label={session ? t.signOut : t.testReset} kind="ghost" onPress={signOut} />
         <Button label={t.deleteAccount} kind="text" onPress={() => Linking.openURL('https://mysafenestbd.com/delete-account.html')} />
       </Card>
       <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 4}}>

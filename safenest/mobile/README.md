@@ -66,3 +66,9 @@ npx eas-cli update --branch preview --environment preview --message "what change
 
 Open the printed EAS Dashboard link and scan its QR (Android: Expo Go; iPhone: Camera).
 `expo-updates` is installed with `--legacy-peer-deps` (same peer conflict as the rest of the tree).
+
+### Test build (no login, no paywall)
+
+`EXPO_PUBLIC_TEST_MODE=1 npx eas-cli update --branch test --environment preview --message "..."` publishes a
+build with a "Start testing" button (guest, no account), Home showing full access, and Plans unlocked.
+The server is unchanged: the test build simply skips the account and payment calls. Never set this for store builds.

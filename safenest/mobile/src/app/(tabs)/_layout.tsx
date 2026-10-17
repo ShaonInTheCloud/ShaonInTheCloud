@@ -4,8 +4,8 @@ import {useStore} from '@/lib/store';
 import {fonts} from '@/lib/theme';
 
 export default function TabsLayout() {
-  const {t, theme, session} = useStore();
-  if (!session) return <Redirect href="/" />;
+  const {t, theme, signedIn} = useStore();
+  if (!signedIn) return <Redirect href="/" />;
   return (
     <Tabs screenOptions={{
       headerShown: false,

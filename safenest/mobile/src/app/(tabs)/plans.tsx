@@ -29,7 +29,8 @@ function read(key: string) { try { return localStorage.getItem(key); } catch { r
 function write(key: string, value: string | null) { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch {} }
 
 export default function Plans() {
-  const {t, edition, session} = useStore();
+  const {t, edition, session, testMode} = useStore();
+  const testGuest = testMode && !session;
   const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
   const [busy, setBusy] = useState(''), [note, setNote] = useState(''), [tone, setTone] = useState<'good' | 'bad' | 'neutral'>('neutral');
   const pendingKey = `safenest.payment.${session?.user.id}`;
@@ -69,13 +70,13 @@ export default function Plans() {
     } finally { setBusy(''); }
   }
 
-  const live = catalogue?.available === true;
+  const live = catalogue?.available === true && !testGuest;
   const products = live ? catalogue!.products.filter(p => p.region === edition) : proposed[edition];
   return (
     <Screen>
       <Display>{t.plansTitle}</Display>
       <Label>{edition === 'bd' ? `${t.editionBd} · ৳ BDT` : `${t.editionGlobal} · $ USD`}</Label>
-      {!live ? <Notice text={t.plansClosed} /> : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
+      {testGuest ? <Notice text={t.testUnlocked} tone="good" /> : !live ? <Notice text={t.plansClosed} /> : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
       <Notice text={note} tone={tone} />
       {products.map(p => (
         <Card key={p.code}>
@@ -87,7 +88,7 @@ export default function Plans() {
           {live ? p.providers.map(name => (
             <Button key={name} label={providerLabel(t, name)} kind={name === 'stripe' ? 'primary' : 'ghost'}
               busy={busy === p.code + name} disabled={!!busy} onPress={() => pay(p, name)} />
-          )) : <Pill text={t.plansClosed.split('.')[0]} tone="neutral" />}
+          )) : <Pill text={testGuest ? t.testUnlocked : t.plansClosed.split('.')[0]} tone={testGuest ? 'good' : 'neutral'} />}
         </Card>
       ))}
       <Button kind="text" label={t.refreshStatus} onPress={load} />

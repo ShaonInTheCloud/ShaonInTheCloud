@@ -12,14 +12,21 @@ function when(iso: string, lang: 'en' | 'bn') {
 }
 
 export default function Home() {
-  const {t, lang, theme, session, edition} = useStore();
+  const {t, lang, theme, session, edition, email} = useStore();
+  const testGuest = !session; // only reachable without a session in the test build
   const [access, setAccess] = useState<AccessResult | null>(null);
   const [state, setState] = useState<'checking' | 'ok' | 'offline'>('checking');
   const [busy, setBusy] = useState(false), [note, setNote] = useState(''), [noteTone, setNoteTone] = useState<'good' | 'bad' | 'neutral'>('neutral');
   const load = useCallback(async () => {
     setState(access ? 'ok' : 'checking');
+    if (testGuest) {
+      const now = new Date();
+      setAccess({active: true, user_id: 'test', server_now: now.toISOString(),
+        entitlement: {id: 'test', plan_code: 'test', starts_at: now.toISOString(), ends_at: new Date(now.getTime() + 30 * 86400_000).toISOString()}});
+      setState('ok'); return;
+    }
     try { setAccess(await api.access()); setState('ok'); } catch { setState('offline'); }
-  }, [access]);
+  }, [access, testGuest]);
   useFocusEffect(useCallback(() => { load(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const id = setInterval(load, 60_000); return () => clearInterval(id); }, [load]);
 
@@ -52,7 +59,7 @@ export default function Home() {
         <Image source={require('../../../assets/icon.png')} style={{width: 44, height: 44, borderRadius: 13}} />
         <View style={{flex: 1}}>
           <Display size={28}>{t.appName}</Display>
-          <Label>{edition === 'bd' ? `${t.editionBd} · ৳` : `${t.editionGlobal} · $`} · {session?.user.email}</Label>
+          <Label>{edition === 'bd' ? `${t.editionBd} · ৳` : `${t.editionGlobal} · $`} · {email}</Label>
         </View>
       </View>
 
@@ -65,7 +72,7 @@ export default function Home() {
         {active && ent ? (
           <View style={{gap: 4}}>
             <Display size={30} style={{color: theme.onPink}}>{fill(t.endsIn, {when: when(ent.ends_at, lang)})}</Display>
-            <Body size={14} style={{color: theme.onPink, opacity: .85}}>{t.perPlan[ent.plan_code] ?? ent.plan_code} · {t.startedOn}</Body>
+            <Body size={14} style={{color: theme.onPink, opacity: .85}}>{ent.plan_code === 'test' ? t.testAccess : `${t.perPlan[ent.plan_code] ?? ent.plan_code} · ${t.startedOn}`}</Body>
           </View>
         ) : state === 'offline' ? <Body muted>{t.errorNetwork}</Body>
           : <Body muted>{t.noAccess}</Body>}

@@ -38,6 +38,8 @@ const en = {
   errorGeneric: 'Something went wrong. Try again.', errorNetwork: 'No connection. Check your internet and try again.',
   errorAuth: 'Wrong email or password.', errorRate: 'Too many attempts. Wait a minute.',
   honest: 'SafeNest helps people who want to stay away. It is not a locked door and never claims to block everything.',
+  testBanner: 'TEST BUILD · no login · everything unlocked', testEnter: 'Start testing', testGuest: 'Test guest (no account)',
+  testUnlocked: 'Unlocked in the test build', testAccess: 'Full access (test build)', testReset: 'Back to the welcome screen',
 };
 const bn: typeof en = {
   appName: 'SafeNest',
@@ -76,6 +78,8 @@ const bn: typeof en = {
   errorGeneric: 'কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।', errorNetwork: 'সংযোগ নেই। ইন্টারনেট দেখে আবার চেষ্টা করুন।',
   errorAuth: 'ইমেইল বা পাসওয়ার্ড ভুল।', errorRate: 'অনেকবার চেষ্টা হয়েছে। এক মিনিট অপেক্ষা করুন।',
   honest: 'SafeNest তাদের সাহায্য করে যারা দূরে থাকতে চান। এটা তালাবদ্ধ দরজা নয় এবং কখনো সব ব্লক করার দাবি করে না।',
+  testBanner: 'টেস্ট বিল্ড · লগইন লাগবে না · সব খোলা', testEnter: 'টেস্ট শুরু করুন', testGuest: 'টেস্ট অতিথি (অ্যাকাউন্ট নেই)',
+  testUnlocked: 'টেস্ট বিল্ডে খোলা', testAccess: 'পূর্ণ অ্যাক্সেস (টেস্ট বিল্ড)', testReset: 'শুরুর পাতায় ফিরুন',
 };
 export const strings: Record<Lang, typeof en> = {en, bn};
 export type Strings = typeof en;

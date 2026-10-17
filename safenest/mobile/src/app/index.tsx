@@ -4,8 +4,8 @@ import {Body, Button, Choice, Display, Label, Screen} from '@/components/ui';
 import {useStore} from '@/lib/store';
 
 export default function Welcome() {
-  const {t, lang, setLang, edition, setEdition, session, theme} = useStore();
-  if (session) return <Redirect href="/(tabs)" />;
+  const {t, lang, setLang, edition, setEdition, signedIn, testMode, setGuest, theme} = useStore();
+  if (signedIn) return <Redirect href="/(tabs)" />;
   return (
     <Screen>
       <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -27,8 +27,9 @@ export default function Welcome() {
         <Choice selected={edition === 'global'} title={`${t.editionGlobal} · $`} note={t.editionGlobalNote} onPress={() => setEdition('global')} />
       </View>
       <View style={{gap: 10, marginTop: 16}}>
-        <Button label={t.signIn} onPress={() => router.push('/(auth)/sign-in')} />
-        <Button label={t.signUp} kind="ghost" onPress={() => router.push('/(auth)/sign-up')} />
+        {testMode ? <Button label={t.testEnter} onPress={() => { setGuest(true); router.replace('/(tabs)'); }} /> : null}
+        <Button label={t.signIn} kind={testMode ? 'ghost' : 'primary'} onPress={() => router.push('/(auth)/sign-in')} />
+        {testMode ? null : <Button label={t.signUp} kind="ghost" onPress={() => router.push('/(auth)/sign-up')} />}
       </View>
       <Body muted size={14} style={{marginTop: 8, color: theme.muted}}>{t.honest}</Body>
     </Screen>
