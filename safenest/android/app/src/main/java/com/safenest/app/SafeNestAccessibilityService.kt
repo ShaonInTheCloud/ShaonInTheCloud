@@ -232,7 +232,6 @@ class SafeNestAccessibilityService : AccessibilityService() {
         val testControls = GuardPreferences.testControlsActive(this)
         if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return
         val now = SystemClock.elapsedRealtime()
-        if (!recentlyOnOwnPage(now)) return
         val texts = mutableListOf<String>()
         event.text?.forEach { it?.toString()?.takeIf { t -> t.length in 1..120 }?.let(texts::add) }
         event.contentDescription?.toString()?.takeIf { it.length in 1..120 }?.let(texts::add)
@@ -247,7 +246,30 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 }
             } finally { @Suppress("DEPRECATION") source.recycle() }
         }
-        if (texts.none { SystemScreenGuard.isDestructiveControl(it) }) return
+        val destructive = texts.any { SystemScreenGuard.isDestructiveControl(it) }
+        val alwaysOnRow = texts.any { it.trim().equals("Always-on VPN", ignoreCase = true) || it.trim() == "সবসময় চালু VPN" }
+        if (!destructive && !alwaysOnRow) return
+        // Attribute the tap to SafeNest: the page was ours moments ago, or the live window says so.
+        var own = recentlyOnOwnPage(now)
+        if (!own) {
+            val root = controlForegroundRoot()
+            if (root != null) try {
+                if (root.packageName?.toString() == name) {
+                    val screen = readControlLabels(root)
+                    own = SystemScreenGuard.hasOwnIdentity(screen.labels) &&
+                        !SystemScreenGuard.isForeignDetailPage(name, screen.labels, screen.detailTitles)
+                    if (own) lastOwnPageAt = now
+                }
+            } finally { @Suppress("DEPRECATION") root.recycle() }
+        }
+        if (!own) return
+        if (alwaysOnRow && !destructive) {
+            // The switch has just flipped; re-read the page shortly and put it back on if it is off.
+            handler.postDelayed({ val root = controlForegroundRoot() ?: return@postDelayed
+                try { if (root.packageName?.toString() == name) ensureAlwaysOn(root, SystemClock.elapsedRealtime(), force = true) }
+                finally { @Suppress("DEPRECATION") root.recycle() } }, 350)
+            return
+        }
         cancelControlScan()
         returnHome(now, "destructive_tap", if (LocalTestSession.enabled)
             "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test."
@@ -318,8 +340,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private var lastAlwaysOnClick = 0L
     /** On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Bounded, label-driven, no text retained. */
-    private fun ensureAlwaysOn(root: AccessibilityNodeInfo, now: Long) {
-        if (now - lastAlwaysOnClick < 1500L) return
+    private fun ensureAlwaysOn(root: AccessibilityNodeInfo, now: Long, force: Boolean = false) {
+        if (!force && now - lastAlwaysOnClick < 1500L) return
         val rows = (root.findAccessibilityNodeInfosByText("Always-on VPN") ?: emptyList()) +
             (root.findAccessibilityNodeInfosByText("সবসময় চালু VPN") ?: emptyList())
         if (rows.isEmpty()) return

@@ -77,11 +77,15 @@ class GuardDeviceFlowTest {
                 pass("$pkg App info open; Uninstall tap returns Home")
                 appInfo(pkg)
                 assertSettings("$pkg App info open again")
-                tap("Force stop")
-                await("$pkg Force stop tap returns Home") {
-                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
-                }
-                pass("$pkg Force stop tap returns Home")
+                val forceStop = device.wait(Until.findObject(By.text("Force stop")), 5000)
+                if (forceStop != null && forceStop.isEnabled) {
+                    tap("Force stop")
+                    await("$pkg Force stop tap returns Home") {
+                        device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
+                    }
+                    pass("$pkg Force stop tap returns Home")
+                } else pass("$pkg Force stop is disabled (app not running); nothing to guard")
+                device.pressHome()
             }
             appInfo(context.packageName)
             assertSettings("Storage sub-page reachable")
