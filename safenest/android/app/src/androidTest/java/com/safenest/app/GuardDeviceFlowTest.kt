@@ -77,8 +77,10 @@ class GuardDeviceFlowTest {
                 pass("$pkg App info open; Uninstall tap returns Home")
                 appInfo(pkg)
                 assertSettings("$pkg App info open again")
+                // Force stop is inert for an app that is not running (the consumer build in CI);
+                // only the lab app, which is running the test, has a live button.
                 val forceStop = device.wait(Until.findObject(By.text("Force stop")), 5000)
-                if (forceStop != null && forceStop.isEnabled) {
+                if (pkg == context.packageName && forceStop != null) {
                     tap("Force stop")
                     await("$pkg Force stop tap returns Home") {
                         device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
