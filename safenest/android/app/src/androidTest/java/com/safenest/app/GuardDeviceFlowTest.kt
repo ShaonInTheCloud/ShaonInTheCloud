@@ -153,6 +153,32 @@ class GuardDeviceFlowTest {
             assertSettings("Unrelated App info stays available")
             pass("Unrelated app settings remain available")
 
+            // 0.5.11+ app blocking, with stand-in apps CI installs (android/teststubs). Skipped if absent.
+            val stubs = listOf(
+                Triple("com.opera.browser", "Opera (browser with built-in VPN)", setOf("vpn_browser")),
+                Triple("com.krikya.krikya", "Krikya (gambling app by package ID)", setOf("app")),
+                Triple("com.example.luckycasino", "Lucky Casino Slots (gambling word in the name)", setOf("app")),
+                Triple("com.example.stubvpn", "Stub VPN (detected VPN app)", setOf("app")))
+            for ((pkg, label, reasons) in stubs) {
+                if (!installed(pkg)) { outcomes.add("SKIP $label: stand-in not installed"); continue }
+                device.pressHome()
+                openStub(pkg)
+                await("$label returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in reasons
+                }
+                capture("blocked-${pkg.substringAfterLast('.')}")
+                pass("$label opened and returned Home")
+            }
+            if (installed("com.example.notes")) {
+                device.pressHome()
+                openStub("com.example.notes")
+                SystemClock.sleep(2500)
+                assertEquals("Ordinary app must stay open", "com.example.notes", device.currentPackageName)
+                capture("ordinary-app-open")
+                pass("Ordinary app (Notes) stays open with protection on")
+                device.pressHome()
+            }
+
             stopTest()
             appInfo(context.packageName)
             assertSettings("Stop test releases uninstall page")
@@ -276,6 +302,12 @@ class GuardDeviceFlowTest {
         tap("SafeNest Test app guard", scroll = true)
     }
 
+    private fun installed(pkg: String) = try { context.packageManager.getApplicationInfo(pkg, 0); true } catch (_: Exception) { false }
+    private fun openStub(pkg: String) {
+        val output = device.executeShellCommand("am start -W -n $pkg/com.safenest.teststub.StubActivity")
+        check(!output.contains("Error:")) { "Stand-in launch failed: $output" }
+        SystemClock.sleep(300)
+    }
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
     private fun openApp() {
         // Permission Settings can sit above MainActivity in the app's task.
