@@ -335,13 +335,11 @@ class GuardDeviceFlowTest {
             SystemClock.sleep(200)
         }
         if (scroll) {
-            repeat(16) {
-                if (tapVisibleText(text)) return
-                swipePage(towardStart = true)
-            }
-            repeat(24) {
-                if (tapVisibleText(text)) return
-                swipePage(towardStart = false)
+            // Two full passes: top-to-bottom, then back up, settling after each swipe so a
+            // Compose page that is still laying out does not hide the button between frames.
+            repeat(2) {
+                repeat(12) { swipePage(towardStart = true); SystemClock.sleep(250); if (tapVisibleText(text)) return }
+                repeat(24) { swipePage(towardStart = false); SystemClock.sleep(250); if (tapVisibleText(text)) return }
             }
         }
         error("Missing visible button: $text")
