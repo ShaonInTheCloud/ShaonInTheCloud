@@ -1,0 +1,67 @@
+// Writes the SafeNest DNS configuration profile for iPhone, iPad and Mac.
+//   node scripts/build-ios-dns-profile.mjs [server-url]
+// Fixed UUIDs on purpose: installing a newer copy replaces the old one instead of stacking profiles.
+import {writeFileSync} from 'node:fs';
+
+export const DEFAULT_SERVER = 'https://kflenmeizngmafwnwhgv.supabase.co/functions/v1/dns-query';
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export function profileXml(server = DEFAULT_SERVER) {
+  const url = new URL(server);
+  if (url.protocol !== 'https:') throw new Error('DNS server must be https');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>DNSSettings</key>
+      <dict>
+        <key>DNSProtocol</key>
+        <string>HTTPS</string>
+        <key>ServerURL</key>
+        <string>${esc(url.href)}</string>
+      </dict>
+      <key>ProhibitDisablement</key>
+      <true/>
+      <key>PayloadDescription</key>
+      <string>Sends this device's DNS lookups to the SafeNest filter, which refuses known gambling sites. Lookups are not logged.</string>
+      <key>PayloadDisplayName</key>
+      <string>SafeNest DNS filter</string>
+      <key>PayloadIdentifier</key>
+      <string>com.safenest.dns.settings</string>
+      <key>PayloadType</key>
+      <string>com.apple.dnsSettings.managed</string>
+      <key>PayloadUUID</key>
+      <string>5C0E7A9E-3B1D-4F52-9C61-2E6A5B8D7F10</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+    </dict>
+  </array>
+  <key>PayloadDescription</key>
+  <string>SafeNest blocks known gambling websites on this device through encrypted DNS. Remove it any time in Settings › General › VPN &amp; Device Management.</string>
+  <key>PayloadDisplayName</key>
+  <string>SafeNest gambling blocker</string>
+  <key>PayloadIdentifier</key>
+  <string>com.safenest.dns</string>
+  <key>PayloadOrganization</key>
+  <string>SafeNest</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>9A4F2C61-7D3E-4B8A-A1C5-6F0E2D9B3C47</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>
+`;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const out = new URL('../website/ios/safenest-dns.mobileconfig', import.meta.url);
+  writeFileSync(out, profileXml(process.argv[2] || DEFAULT_SERVER));
+  console.log('wrote website/ios/safenest-dns.mobileconfig');
+}

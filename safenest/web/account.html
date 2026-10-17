@@ -113,12 +113,23 @@
           <h2 id="billing-title" data-en="Payments" data-bn="পেমেন্ট">Payments</h2>
           <p id="billing-status" role="status" aria-live="polite">Checkout is not open yet. / চেকআউট এখনো চালু হয়নি।</p>
           <form id="billing-form" hidden>
+            <fieldset class="billing-region"><legend data-en="Edition" data-bn="সংস্করণ">Edition</legend>
+              <label><input type="radio" name="region" value="bd" checked> <span data-en="SafeNest Bangladesh (৳ BDT)" data-bn="SafeNest বাংলাদেশ (৳ টাকা)">SafeNest Bangladesh (৳ BDT)</span></label>
+              <label><input type="radio" name="region" value="global"> <span data-en="SafeNest Global ($ USD)" data-bn="SafeNest Global ($ মার্কিন ডলার)">SafeNest Global ($ USD)</span></label>
+            </fieldset>
             <label>Plan / প্ল্যান<select name="product_code" required></select></label>
-            <label>Billing name / বিলিং নাম<input name="name" autocomplete="name" maxlength="100" required></label>
-            <label>Phone / ফোন<input name="phone" autocomplete="tel" type="tel" maxlength="30" required></label>
-            <label>Billing address / বিলিং ঠিকানা<input name="address" autocomplete="street-address" maxlength="200" required></label>
-            <label>City / শহর<input name="city" autocomplete="address-level2" maxlength="100" required></label>
-            <p class="note">When checkout opens, your billing details and confirmed email will be sent to the payment provider identified before payment. Enter card or wallet details only on its hosted checkout. / পেমেন্ট চালু হলে বিলিং তথ্য ও যাচাইকৃত ইমেইল পেমেন্টের আগে জানানো সেবা-প্রদানকারীকে পাঠানো হবে। কার্ড বা ওয়ালেটের তথ্য শুধু তাদের পেমেন্ট পেজে দিন।</p>
+            <fieldset class="billing-method"><legend data-en="Pay with" data-bn="পেমেন্ট মাধ্যম">Pay with</legend>
+              <label data-provider="stripe"><input type="radio" name="provider" value="stripe"> <span data-en="Card — Mastercard, Visa (Stripe)" data-bn="কার্ড — Mastercard, Visa (Stripe)">Card — Mastercard, Visa (Stripe)</span></label>
+              <label data-provider="nowpayments"><input type="radio" name="provider" value="nowpayments"> <span data-en="Cryptocurrency — USDT, BTC, ETH and more" data-bn="ক্রিপ্টোকারেন্সি — USDT, BTC, ETH ও আরও">Cryptocurrency — USDT, BTC, ETH and more</span></label>
+              <label data-provider="sslcommerz"><input type="radio" name="provider" value="sslcommerz"> <span data-en="Bangladesh cards &amp; mobile wallets (SSLCOMMERZ)" data-bn="বাংলাদেশি কার্ড ও মোবাইল ওয়ালেট (SSLCOMMERZ)">Bangladesh cards &amp; mobile wallets (SSLCOMMERZ)</span></label>
+            </fieldset>
+            <div class="billing-details" data-for="sslcommerz" hidden>
+            <label>Billing name / বিলিং নাম<input name="name" autocomplete="name" maxlength="100"></label>
+            <label>Phone / ফোন<input name="phone" autocomplete="tel" type="tel" maxlength="30"></label>
+            <label>Billing address / বিলিং ঠিকানা<input name="address" autocomplete="street-address" maxlength="200"></label>
+            <label>City / শহর<input name="city" autocomplete="address-level2" maxlength="100"></label>
+            </div>
+            <p class="note">Your confirmed email (and, for SSLCOMMERZ, the billing details above) is sent to the payment provider you choose. Enter card or wallet details only on its hosted checkout page; SafeNest never sees them. Crypto payments are final once confirmed on-chain. / আপনার যাচাইকৃত ইমেইল (SSLCOMMERZ-এর ক্ষেত্রে উপরের বিলিং তথ্যও) নির্বাচিত পেমেন্ট সেবায় পাঠানো হয়। কার্ড বা ওয়ালেটের তথ্য শুধু তাদের পেমেন্ট পেজে দিন; SafeNest তা দেখে না। ক্রিপ্টো পেমেন্ট চেইনে নিশ্চিত হলে চূড়ান্ত।</p>
             <button class="primary" type="submit" data-en="Continue to secure payment" data-bn="নিরাপদ পেমেন্টে যান">Continue to secure payment</button>
           </form>
           <button class="text-button" type="button" id="refresh-payment" data-en="Refresh payment status" data-bn="পেমেন্টের অবস্থা আবার দেখুন">Refresh payment status</button>

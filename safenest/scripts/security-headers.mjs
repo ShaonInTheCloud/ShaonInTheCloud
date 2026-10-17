@@ -11,5 +11,7 @@ export function securityHeaders(projectOrigin) {
   for (const route of ['/account', '/account/', '/account.html', '/delete-account', '/delete-account.html']) {
     headers += `${route}\n  Cache-Control: no-store\n  Referrer-Policy: no-referrer\n`;
   }
+  // iPhone only offers to install a profile when it arrives with Apple's configuration MIME type.
+  headers += '/ios/safenest-dns.mobileconfig\n  Content-Type: application/x-apple-aspen-config\n  Cache-Control: no-cache\n';
   return headers + '/account.js\n  Cache-Control: no-cache\n';
 }

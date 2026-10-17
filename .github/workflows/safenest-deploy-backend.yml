@@ -42,9 +42,9 @@ jobs:
       - name: Apply migrations
         if: ${{ inputs.apply == 'apply' }}
         run: npx --yes "$SUPABASE_CLI" db push --yes
-      - name: Deploy payment functions (verify_jwt comes from config.toml)
+      - name: Deploy payment functions and the iOS DNS filter (verify_jwt comes from config.toml)
         if: ${{ inputs.apply == 'apply' }}
         run: |
-          for fn in payment-notification payment-return payment-reconcile payment-catalogue payment-order payment-status; do
+          for fn in payment-notification payment-return payment-reconcile payment-catalogue payment-order payment-status dns-query; do
             npx --yes "$SUPABASE_CLI" functions deploy "$fn" --project-ref "$PROJECT_REF"
           done

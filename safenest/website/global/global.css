@@ -1,0 +1,9 @@
+/* SafeNest Global edition: same brand, English-only, a small edition tag and switch. */
+.global-edition .brand{display:flex;align-items:center;gap:10px}
+.edition-tag{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8e3158;background:#fce4ee;border:1px solid #e8b5ca;border-radius:999px;padding:5px 10px;line-height:1}
+.edition-switch{display:inline-flex;align-items:center;text-decoration:none;font-family:'Noto Sans Bengali',Manrope,sans-serif}
+.global-edition .nav nav a.active{background:#171419;color:#fff;border-color:#171419}
+.global-edition .footer-links{display:flex;flex-wrap:wrap;gap:10px 22px;margin:12px 0 28px}
+.global-edition .product-card p a{text-decoration:underline;text-underline-offset:3px}
+.payment-brand.crypto-brand{display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:#8e3158;background:#fff;border-radius:18px;min-height:80px}
+@media(max-width:650px){.edition-tag{display:none}}

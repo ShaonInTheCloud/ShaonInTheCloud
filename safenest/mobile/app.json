@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "SafeNest",
+    "slug": "safenest",
+    "version": "0.1.0",
+    "scheme": "safenest",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.safenest.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.safenest.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#570f2a",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#ff2d87",
+          "dark": {
+            "backgroundColor": "#1a0b1f"
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-web-browser",
+      "expo-font",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "82c4609e-c4a7-438a-ae36-8e60f6ce0120"
+      }
+    },
+    "owner": "safenesst",
+    "updates": {
+      "url": "https://u.expo.dev/82c4609e-c4a7-438a-ae36-8e60f6ce0120"
+    },
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}

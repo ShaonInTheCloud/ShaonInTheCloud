@@ -52,3 +52,7 @@ verify_jwt = false
 
 [functions.payment-catalogue]
 verify_jwt = false
+
+# DNS-over-HTTPS filter for the iOS DNS profile: iPhone DNS clients send no Supabase JWT.
+[functions.dns-query]
+verify_jwt = false
