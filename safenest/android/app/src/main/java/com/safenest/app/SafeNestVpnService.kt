@@ -46,6 +46,8 @@ class SafeNestVpnService : VpnService() {
         const val ACTION_STOP = "com.safenest.app.STOP"
         private const val CHANNEL = "safenest_protection"
         private const val NOTIFICATION_ID = 2401
+        private const val ALERT_CHANNEL = "safenest_alerts"
+        private const val ALERT_ID = 2402
         private const val DNS_IP = "10.91.0.53"
         private val DNS_ADDRESS = byteArrayOf(10, 91, 0, 53)
         private const val TAG = "SafeNestDns"
@@ -154,6 +156,7 @@ class SafeNestVpnService : VpnService() {
         lastBlockedAt.set(0L)
         try {
             startForeground(NOTIFICATION_ID, notification())
+            getSystemService(NotificationManager::class.java)?.cancel(ALERT_ID)
             val initialNetwork = physicalNetwork()
             val initialProperties = linkProperties(initialNetwork)
             updatePrivateDnsState(initialProperties)
@@ -491,11 +494,28 @@ class SafeNestVpnService : VpnService() {
     }
 
     @Synchronized private fun stopProtection(error: String? = null) {
+        val wasRunning = session != null
         disposeSession()
         dnsHealth.set(if (error == null) "waiting" else "failed")
         lastError.set(error ?: "")
         stopForeground(STOP_FOREGROUND_REMOVE)
+        // During a paid period an interruption is never silent: keep a visible alert until the
+        // user reopens SafeNest and the Accessibility guard bounces whichever VPN took over.
+        if (wasRunning && error != null && ProtectionCommitment.isActive(this)) alertInterrupted(error)
         stopSelf()
+    }
+
+    private fun alertInterrupted(reason: String) {
+        val manager = getSystemService(NotificationManager::class.java) ?: return
+        manager.createNotificationChannel(NotificationChannel(ALERT_CHANNEL, "SafeNest protection alerts", NotificationManager.IMPORTANCE_HIGH))
+        val open = PendingIntent.getActivity(this, 1, Intent().setClassName(this, "com.safenest.app.MainActivity")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        manager.notify(ALERT_ID, Notification.Builder(this, ALERT_CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("SafeNest protection interrupted")
+            .setContentText("Tap to restore website filtering. Your protection period is still active.")
+            .setStyle(Notification.BigTextStyle().bigText("$reason Your protection period is still active; tap to restore filtering."))
+            .setAutoCancel(true).setContentIntent(open).build())
     }
 
     @Synchronized private fun disposeSession() {

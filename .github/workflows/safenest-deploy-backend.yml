@@ -45,6 +45,6 @@ jobs:
       - name: Deploy payment functions (verify_jwt comes from config.toml)
         if: ${{ inputs.apply == 'apply' }}
         run: |
-          for fn in payment-notification payment-return payment-reconcile payment-catalogue payment-order payment-status; do
+          for fn in payment-notification payment-return payment-reconcile payment-catalogue payment-order payment-status play-billing-verify play-billing-rtdn; do
             npx --yes "$SUPABASE_CLI" functions deploy "$fn" --project-ref "$PROJECT_REF"
           done

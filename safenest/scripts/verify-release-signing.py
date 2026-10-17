@@ -54,9 +54,12 @@ def check_manifest(path, version):
         raise ValueError("Release backup/cleartext settings must be disabled")
     if root.find("instrumentation") is not None:
         raise ValueError("Test instrumentation cannot be released")
-    for receiver in app.findall("receiver"):
-        if receiver.get(android + "permission") == "android.permission.BIND_DEVICE_ADMIN" or "SafeNestAdminReceiver" in receiver.get(android + "name", ""):
-            raise ValueError("Device Administrator receiver is not allowed in the Play release")
+    # Owner decision 2026-10-17: the Play release ships the Device Administrator receiver
+    # (empty policy set). It must stay bound to the system permission and declare the admin metadata.
+    admins = [receiver for receiver in app.findall("receiver")
+              if "SafeNestAdminReceiver" in receiver.get(android + "name", "")]
+    if len(admins) != 1 or admins[0].get(android + "permission") != "android.permission.BIND_DEVICE_ADMIN":
+        raise ValueError("Device Administrator receiver must be present exactly once and bound to BIND_DEVICE_ADMIN")
     for name, permission in (("SafeNestVpnService", "android.permission.BIND_VPN_SERVICE"),
                              ("SafeNestAccessibilityService", "android.permission.BIND_ACCESSIBILITY_SERVICE")):
         if not any(service.get(android + "name", "").endswith(name)

@@ -12,8 +12,8 @@ android {
         applicationId = "com.safenest.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 27
-        versionName = "0.4.10"
+        versionCode = 28
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "LOCAL_TEST_BUILD", "false")
         buildConfigField("String", "SUPABASE_URL", "\"https://kflenmeizngmafwnwhgv.supabase.co\"")
@@ -23,8 +23,10 @@ android {
     productFlavors {
         create("play") {
             dimension = "distribution"
-            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "false")
-            buildConfigField("boolean", "MANAGED_CONTROLS", "false")
+            // Owner decision 2026-10-17: the Play build carries the full self-exclusion guard
+            // (uninstall/Settings/installer bounce) and Device Administrator, disclosed in-app.
+            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "true")
+            buildConfigField("boolean", "MANAGED_CONTROLS", "true")
         }
         create("direct") {
             dimension = "distribution"
@@ -49,18 +51,22 @@ android {
             buildConfigField("boolean", "MANAGED_CONTROLS", "true")
         }
     }
-    val uploadKey = System.getenv("SAFENEST_UPLOAD_KEYSTORE")
-    if (!uploadKey.isNullOrBlank()) {
-        signingConfigs {
-            create("upload") {
-                storeFile = file(uploadKey)
-                storePassword = System.getenv("SAFENEST_UPLOAD_STORE_PASSWORD") ?: error("Upload store password is required")
-                keyAlias = System.getenv("SAFENEST_UPLOAD_KEY_ALIAS") ?: error("Upload key alias is required")
-                keyPassword = System.getenv("SAFENEST_UPLOAD_KEY_PASSWORD") ?: error("Upload key password is required")
-            }
+    // Release signing comes only from environment variables (never from Git):
+    //  - Play (AAB for Google Play): SAFENEST_UPLOAD_KEYSTORE + _STORE_PASSWORD / _KEY_ALIAS / _KEY_PASSWORD
+    //  - Direct (website APK, Strong lock QR): SAFENEST_DIRECT_KEYSTORE + the matching SAFENEST_DIRECT_* values
+    // Each key signs only its own flavor's release; debug builds keep the debug key.
+    fun releaseKey(prefix: String, name: String) = System.getenv("${prefix}_KEYSTORE")?.takeIf { it.isNotBlank() }?.let { path ->
+        signingConfigs.create(name) {
+            storeFile = file(path)
+            storePassword = System.getenv("${prefix}_STORE_PASSWORD") ?: error("$prefix store password is required")
+            keyAlias = System.getenv("${prefix}_KEY_ALIAS") ?: error("$prefix key alias is required")
+            keyPassword = System.getenv("${prefix}_KEY_PASSWORD") ?: error("$prefix key password is required")
         }
-        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("upload")
     }
+    val uploadSigning = releaseKey("SAFENEST_UPLOAD", "upload")
+    val directSigning = releaseKey("SAFENEST_DIRECT", "direct")
+    uploadSigning?.let { productFlavors.getByName("play").signingConfig = it }
+    directSigning?.let { productFlavors.getByName("direct").signingConfig = it }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -82,6 +88,7 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
+    "playImplementation"("com.android.billingclient:billing-ktx:7.1.1")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.10.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")

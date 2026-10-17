@@ -349,7 +349,10 @@ object ManagedProtection {
         }
         val existing = decodeList(original)
         val allowlist = decodeList(restrictionValue(currentBundle, ALLOWLIST_KEY))
-        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet()
+        // Chrome's managed list is capped; send editable/catalog rules plus the Bangladesh-researched
+        // names. DNS filtering still uses the full compact bundled list.
+        val domains = RuleCategory.entries.flatMap { RulesStore.get(context, it) }.toSet() +
+            BundledGamblingRules.priorityDomains(context)
         val plan = ChromePolicyRules.plan(existing, domains, priorityDomains = RulesStore.priorityDomains(context))
         val desired = JSONArray(plan.entries).toString()
         val warnings = listOfNotNull(
@@ -421,6 +424,24 @@ object ManagedProtection {
             }
         }
         return failures
+    }
+
+    /**
+     * After the paid period: give up device-owner rights so the customer can uninstall SafeNest
+     * normally, without a factory reset. A later Strong lock needs a fresh QR setup.
+     */
+    @Synchronized fun removeManagement(context: Context): ManagedProtectionResult {
+        if (!RemovalRules.canRemoveManagement(isDeviceOwner(context), ProtectionCommitment.isActive(context), isConfigured(context))) {
+            return ManagedProtectionResult(isConfigured(context),
+                message = "SafeNest can be removed after the paid period ends and Strong lock has been released.")
+        }
+        return try {
+            @Suppress("DEPRECATION")
+            policy(context).clearDeviceOwnerApp(context.packageName)
+            ManagedProtectionResult(false, message = if (isDeviceOwner(context)) "Android kept SafeNest as device owner. Retry." else null)
+        } catch (error: SecurityException) {
+            ManagedProtectionResult(false, message = "Android refused to remove SafeNest management: ${error.message.orEmpty()}")
+        }
     }
 
     @Synchronized fun release(context: Context): ManagedProtectionResult {
