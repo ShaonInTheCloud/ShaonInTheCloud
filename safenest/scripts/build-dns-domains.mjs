@@ -22,6 +22,7 @@ export function compile() {
     ...readdirSync(new URL('blocklists/sources/', root)).map(f => `blocklists/sources/${f}`),
     ...readdirSync(new URL('blocklists/gpl3/', root)).filter(f => /\.(txt|tsv)$/.test(f)).map(f => `blocklists/gpl3/${f}`),
     'safenest-gambling-domains.txt',
+    '../android/app/src/main/assets/blocked_apps/bypass_domains.txt', // proxies, unblockers, Tor gateways
   ].filter(f => /\.(txt|tsv)$/.test(f));
   const all = new Set(), report = [];
   for (const file of files) {

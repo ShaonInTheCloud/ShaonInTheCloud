@@ -18,3 +18,5 @@ com.cloudmosa.puffinIncognito | Puffin Incognito Browser
 com.avast.android.secure.browser | Avast Secure Browser
 com.tenta.android | Tenta Browser
 com.epicbrowser.android | Epic Privacy Browser
+pan.alexander.tordnscrypt | InviZible Pro
+info.guardianproject.orfox | Orfox
