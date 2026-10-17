@@ -28,6 +28,10 @@ The base plan ID **is** the SafeNest `plan_code`. Adding a base plan with any ot
 
 Entitlement status mapping: `ACTIVE`, `IN_GRACE_PERIOD`, `CANCELED` (still paid until expiry) → `active` while `expires_at > now`; `EXPIRED`/`ON_HOLD`/`PAUSED` → `expired`; developer-initiated cancellation (refund) → `revoked`.
 
+Pending-at-signup responses can omit `startTime` and line-item `expiryTime`. Only `SUBSCRIPTION_STATE_PENDING` permits those omissions; product/base-plan validation and the verify handler's account and test-purchase checks still apply. Pending responses have no access window and both handlers return before any ledger write or purchase acknowledgment.
+
+After payment confirmation, authenticated verification must run again to bind a previously pending token and create its entitlement. RTDN still updates only already-bound tokens; it cannot claim an unbound purchase for an account. Duplicate verification/notifications update the same entitlement, and acknowledgment follows a successful ledger write.
+
 The device-side commitment never extends itself: when a period ends, protection releases, and the user re-verifies (sign in → Restore purchase) to start the renewed period. This keeps the consent-per-period rule from `subscription-enforcement.md`.
 
 ## Secrets (Supabase → Edge Functions → Secrets)
@@ -47,4 +51,4 @@ The device-side commitment never extends itself: when a period ends, protection 
 
 ## Tests
 
-`tests/play-billing.test.mjs`: normalizer, ledger RPC against the real migration (PGlite), verify handler (auth, binding, pending, acknowledge, test-purchase gate, missing config) and RTDN handler (secret gate, envelope decoding, unbound tokens). A disposable RSA key exercises the real JWT signing path; no Google credentials are used.
+`tests/play-billing.test.mjs`: normalizer, ledger RPC against the real migration (PGlite), verify handler (auth, binding, pending, acknowledge, test-purchase gate, missing config) and RTDN handler (secret gate, envelope decoding, unbound tokens). Regressions cover missing start/expiry timestamps separately and together, pending-to-active verification against the real ledger, duplicate deliveries, account binding, and acknowledgment ordering/failure. A disposable RSA key exercises the real JWT signing path; no Google credentials are used.

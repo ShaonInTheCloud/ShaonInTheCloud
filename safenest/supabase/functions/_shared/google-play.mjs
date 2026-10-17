@@ -86,24 +86,28 @@ const STATES = {
  */
 export function normalizeSubscription(body, {packageName, basePlanToPlanCode = defaultPlanMap, now = Date.now()} = {}) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new PaymentError('play_verification_unavailable');
+  const stateRaw = String(body.subscriptionState ?? '');
+  let state = STATES[stateRaw] ?? 'UNKNOWN';
+  if (stateRaw === 'SUBSCRIPTION_STATE_EXPIRED' && body.canceledStateContext?.developerInitiatedCancellation) state = 'REVOKED';
+  const pending = state === 'PENDING';
   const items = Array.isArray(body.lineItems) ? body.lineItems : [];
   if (items.length === 0) throw new PaymentError('purchase_not_found', 404);
   // Pick the line item with the latest expiry: upgrades/downgrades can carry several.
   const item = items.map(i => ({...i, expiryMs: Date.parse(i.expiryTime ?? '')}))
-    .filter(i => Number.isFinite(i.expiryMs)).sort((a, b) => b.expiryMs - a.expiryMs)[0];
+    .filter(i => Number.isFinite(i.expiryMs)).sort((a, b) => b.expiryMs - a.expiryMs)[0]
+    ?? (pending ? items[0] : null);
   if (!item) throw new PaymentError('play_verification_unavailable');
   const productId = String(item.productId ?? '');
   const basePlanId = String(item.offerDetails?.basePlanId ?? '');
   const planCode = basePlanToPlanCode(productId, basePlanId);
   if (!PLAN_CODES.has(planCode)) throw new PaymentError('unknown_play_plan', 400);
   const startMs = Date.parse(body.startTime ?? '');
-  if (!Number.isFinite(startMs) || item.expiryMs <= startMs) throw new PaymentError('play_verification_unavailable');
-  const stateRaw = String(body.subscriptionState ?? '');
-  let state = STATES[stateRaw] ?? 'UNKNOWN';
-  if (stateRaw === 'SUBSCRIPTION_STATE_EXPIRED' && body.canceledStateContext?.developerInitiatedCancellation) state = 'REVOKED';
+  if (!pending && (!Number.isFinite(startMs) || item.expiryMs <= startMs)) throw new PaymentError('play_verification_unavailable');
   return {
     purchaseToken: null, productId, basePlanId, planCode, state,
-    startsAt: new Date(startMs).toISOString(), expiresAt: new Date(item.expiryMs).toISOString(),
+    // Pending-at-signup purchases have no access window yet. Both handlers return
+    // before the ledger/acknowledgment path; never invent entitlement timestamps.
+    startsAt: pending ? null : new Date(startMs).toISOString(), expiresAt: pending ? null : new Date(item.expiryMs).toISOString(),
     orderId: typeof body.latestOrderId === 'string' ? body.latestOrderId.slice(0, 200) : null,
     linkedPurchaseToken: typeof body.linkedPurchaseToken === 'string' ? body.linkedPurchaseToken : null,
     acknowledged: body.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED',

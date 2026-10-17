@@ -41,8 +41,19 @@ function google(overrides = {}) {
   };
 }
 
+function pendingGoogle({missingStart = true, missingExpiry = true, ...overrides} = {}) {
+  const body = google({subscriptionState: 'SUBSCRIPTION_STATE_PENDING', ...overrides});
+  if (missingStart) delete body.startTime;
+  if (missingExpiry && body.lineItems[0]) delete body.lineItems[0].expiryTime;
+  return body;
+}
+
 async function apply(db, userId, sub, {purchase = token, hash = 'b'.repeat(64)} = {}) {
   const a = rpcArguments(userId, purchase, sub, hash);
+  return applyRpc(db, a);
+}
+
+async function applyRpc(db, a) {
   const row = (await db.query(`select public.process_play_subscription($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) as result`,
     [a.p_user_id, a.p_purchase_token, a.p_product_id, a.p_base_plan_id, a.p_plan_code, a.p_state, a.p_starts_at, a.p_expires_at,
       a.p_order_id, a.p_linked_purchase_token, a.p_evidence_sha256])).rows[0];
@@ -61,6 +72,30 @@ test('normalizeSubscription maps Google state and plan; rejects unknown products
   assert.equal(defaultPlanMap('safenest_protection', 'annual'), 'annual');
   assert.equal(defaultPlanMap('safenest_protection', 'lifetime'), '');
   assert.ok(PURCHASE_TOKEN.test(token)); assert.ok(!PURCHASE_TOKEN.test('short'));
+});
+
+test('pending normalization permits absent timestamps only for PENDING and still validates the plan', () => {
+  for (const missing of [{missingStart: true, missingExpiry: false},
+    {missingStart: false, missingExpiry: true}, {missingStart: true, missingExpiry: true}]) {
+    const body = pendingGoogle(missing);
+    const sub = normalizeSubscription(body);
+    assert.equal(sub.state, 'PENDING'); assert.equal(sub.planCode, 'monthly');
+    assert.equal(sub.externalAccountId, buyer); assert.equal(sub.acknowledged, false);
+    assert.equal(sub.startsAt, null); assert.equal(sub.expiresAt, null);
+    // A paid/other state cannot reuse the pending exception to bypass evidence checks.
+    for (const state of ['ACTIVE', 'IN_GRACE_PERIOD', 'CANCELED', 'EXPIRED', 'UNSPECIFIED']) {
+      assert.throws(() => normalizeSubscription({...body, subscriptionState: `SUBSCRIPTION_STATE_${state}`}),
+        /play_verification_unavailable/);
+    }
+  }
+  assert.throws(() => normalizeSubscription(pendingGoogle({lineItems: []})), /purchase_not_found/);
+  assert.throws(() => normalizeSubscription(pendingGoogle({lineItems: [{productId: 'other',
+    offerDetails: {basePlanId: 'monthly'}}]})), /unknown_play_plan/);
+  assert.throws(() => normalizeSubscription(pendingGoogle({lineItems: [{productId: 'safenest_protection',
+    offerDetails: {basePlanId: 'lifetime'}}]})), /unknown_play_plan/);
+  const active = google();
+  active.lineItems[0].expiryTime = active.startTime;
+  assert.throws(() => normalizeSubscription(active), /play_verification_unavailable/);
 });
 
 test('ledger binds a token to one account, issues/updates one entitlement, and revokes', async () => {
@@ -97,16 +132,22 @@ test('ledger binds a token to one account, issues/updates one entitlement, and r
   } finally { await db.close(); }
 });
 
-function fakeFetch(googleBody, {userId = buyer, rpcResult, rpcStatus = 200} = {}) {
+function fakeFetch(googleBody, {userId = buyer, rpcResult, rpcStatus = 200, rpcHandler} = {}) {
   const calls = [];
   const fetcher = async (url, init = {}) => {
-    calls.push({url: String(url), method: init.method ?? 'GET'});
+    calls.push({url: String(url), method: init.method ?? 'GET', body: init.body});
     const ok = body => new Response(JSON.stringify(body), {status: 200, headers: {'Content-Type': 'application/json'}});
     if (String(url).endsWith('/auth/v1/user')) return ok({id: userId});
     if (String(url).includes('oauth2.googleapis.com/token')) return ok({access_token: 'ya29.fixture'});
     if (String(url).includes('/purchases/subscriptionsv2/tokens/')) return googleBody ? ok(googleBody) : new Response('{}', {status: 404});
     if (String(url).endsWith(':acknowledge')) return new Response('{}', {status: 200});
-    if (String(url).includes('/rest/v1/rpc/process_play_subscription')) return new Response(JSON.stringify(rpcResult), {status: rpcStatus});
+    if (String(url).includes('/rest/v1/rpc/process_play_subscription')) {
+      if (rpcHandler) {
+        try { return ok(await rpcHandler(JSON.parse(init.body))); }
+        catch (error) { return new Response(JSON.stringify({message: error.message}), {status: 400}); }
+      }
+      return new Response(JSON.stringify(rpcResult), {status: rpcStatus});
+    }
     throw new Error('unexpected fetch ' + url);
   };
   return {fetcher, calls};
@@ -150,6 +191,120 @@ const env = {SUPABASE_URL: 'https://fixture.supabase.co', SUPABASE_ANON_KEY: 'sb
 const rpcOk = {user_id: buyer, entitlement_id: '33333333-3333-4333-8333-333333333333', status: 'active', plan_code: 'monthly',
   starts_at: new Date(Date.now() - 60_000).toISOString(), ends_at: new Date(Date.now() + 30 * 86_400_000).toISOString(), state: 'ACTIVE'};
 
+const verifyRequest = () => new Request('https://fixture/functions/v1/play-billing-verify', {
+  method: 'POST', headers: {Authorization: 'Bearer fixture.jwt.token', 'Content-Type': 'application/json'},
+  body: JSON.stringify({purchase_token: token}),
+});
+const rtdnRequest = () => new Request(`https://fixture/functions/v1/play-billing-rtdn?key=${env.PLAY_RTDN_SECRET}`, {
+  method: 'POST', headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({message: {data: Buffer.from(JSON.stringify({packageName: env.PLAY_PACKAGE_NAME,
+    subscriptionNotification: {notificationType: 4, purchaseToken: token}})).toString('base64')}}),
+});
+const isRpc = call => call.url.includes('/rest/v1/rpc/process_play_subscription');
+const isAck = call => call.url.endsWith(':acknowledge');
+
+test('both handlers return pending without ledger writes or acknowledgment when timestamps are absent', async () => {
+  for (const missing of [{missingStart: true, missingExpiry: false},
+    {missingStart: false, missingExpiry: true}, {missingStart: true, missingExpiry: true}]) {
+    const verify = fakeFetch(pendingGoogle(missing), {rpcResult: rpcOk});
+    const reply = await handleVerify(verifyRequest(), env, verify);
+    assert.equal(reply.status, 200);
+    const body = await reply.json();
+    assert.equal(body.active, false); assert.equal(body.pending, true);
+    assert.equal(body.entitlement, null); assert.equal(body.user_id, buyer);
+    assert.ok(!verify.calls.some(isRpc)); assert.ok(!verify.calls.some(isAck));
+
+    const rtdn = fakeFetch(pendingGoogle(missing), {rpcResult: rpcOk});
+    const push = await handleRtdn(rtdnRequest(), env, rtdn);
+    assert.equal(push.status, 200); assert.deepEqual(await push.json(), {received: true, pending: true});
+    assert.ok(!rtdn.calls.some(isRpc)); assert.ok(!rtdn.calls.some(isAck));
+  }
+  // The early pending response must not bypass account or test-purchase checks.
+  for (const [googleBody, status] of [
+    [pendingGoogle({externalAccountIdentifiers: {obfuscatedExternalAccountId: other}}), 409],
+    [pendingGoogle({testPurchase: {}}), 403],
+  ]) {
+    const network = fakeFetch(googleBody, {rpcResult: rpcOk});
+    assert.equal((await handleVerify(verifyRequest(), env, network)).status, status);
+    assert.ok(!network.calls.some(isRpc)); assert.ok(!network.calls.some(isAck));
+  }
+});
+
+test('pending to active creates one bound entitlement; retries and RTDN stay duplicate-safe', async () => {
+  const db = await fixture();
+  try {
+    const rpcHandler = args => applyRpc(db, args);
+    const count = async table => (await db.query(`select count(*)::int as n from ${table}`)).rows[0].n;
+    const pending = fakeFetch(pendingGoogle(), {rpcHandler});
+    for (let i = 0; i < 2; i++) {
+      assert.equal((await (await handleVerify(verifyRequest(), env, pending)).json()).pending, true);
+      assert.equal((await (await handleRtdn(rtdnRequest(), env, pending)).json()).pending, true);
+    }
+    assert.equal(await count('payments.play_subscriptions'), 0);
+    assert.equal(await count('public.protection_entitlements'), 0);
+    assert.ok(!pending.calls.some(isRpc)); assert.ok(!pending.calls.some(isAck));
+
+    // RTDN cannot bind an unclaimed token, even once Google confirms payment.
+    const activeBody = google();
+    const unbound = fakeFetch(activeBody, {rpcHandler});
+    const unboundReply = await handleRtdn(rtdnRequest(), env, unbound);
+    assert.equal(unboundReply.status, 200);
+    assert.equal((await unboundReply.json()).ignored, 'purchase_not_bound');
+    assert.equal(await count('public.protection_entitlements'), 0);
+    assert.ok(!unbound.calls.some(isAck));
+
+    // The authenticated verify binds the confirmed token before acknowledging it.
+    const paid = fakeFetch(activeBody, {rpcHandler});
+    const reply = await handleVerify(verifyRequest(), env, paid);
+    assert.equal(reply.status, 200);
+    const first = await reply.json();
+    assert.equal(first.active, true); assert.equal(first.user_id, buyer);
+    assert.equal(Date.parse(first.entitlement.starts_at), Date.parse(activeBody.startTime));
+    assert.equal(Date.parse(first.entitlement.ends_at), Date.parse(activeBody.lineItems[0].expiryTime));
+    assert.ok(paid.calls.findIndex(isRpc) < paid.calls.findIndex(isAck));
+    assert.equal(paid.calls.filter(isAck).length, 1);
+
+    // Once Google reports acknowledged, duplicate verify/RTDN do not acknowledge again.
+    const acknowledged = fakeFetch({...activeBody, acknowledgementState: 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED'}, {rpcHandler});
+    const duplicate = await (await handleVerify(verifyRequest(), env, acknowledged)).json();
+    assert.equal(duplicate.entitlement.id, first.entitlement.id);
+    const notification = await handleRtdn(rtdnRequest(), env, acknowledged);
+    assert.equal(notification.status, 200); assert.equal((await notification.json()).status, 'active');
+    assert.equal(await count('payments.play_subscriptions'), 1);
+    assert.equal(await count('public.protection_entitlements'), 1);
+    assert.ok(!acknowledged.calls.some(isAck));
+    assert.equal(JSON.parse(acknowledged.calls.filter(isRpc)[1].body).p_user_id, null);
+
+    // Even without Google's external id, the ledger prevents moving a bound token.
+    const foreign = fakeFetch({...activeBody, externalAccountIdentifiers: {}}, {userId: other, rpcHandler});
+    const refused = await handleVerify(verifyRequest(), env, foreign);
+    assert.equal(refused.status, 409);
+    assert.equal((await refused.json()).error, 'purchase_bound_to_other_account');
+    assert.ok(!foreign.calls.some(isAck));
+    assert.equal((await db.query('select user_id from payments.play_subscriptions')).rows[0].user_id, buyer);
+    assert.equal((await db.query('select user_id from public.protection_entitlements')).rows[0].user_id, buyer);
+
+    // A pending RTDN for a bound token still does not mutate or acknowledge it;
+    // a later active delivery can acknowledge after a successful ledger update.
+    assert.equal((await (await handleRtdn(rtdnRequest(), env, pending)).json()).pending, true);
+    const recovered = fakeFetch(activeBody, {rpcHandler});
+    assert.equal((await (await handleRtdn(rtdnRequest(), env, recovered)).json()).status, 'active');
+    assert.ok(recovered.calls.findIndex(isRpc) < recovered.calls.findIndex(isAck));
+    assert.equal(recovered.calls.filter(isAck).length, 1);
+    assert.equal(await count('public.protection_entitlements'), 1);
+  } finally { await db.close(); }
+});
+
+test('confirmed purchases are not acknowledged when the ledger write fails', async () => {
+  for (const [handler, request] of [[handleVerify, verifyRequest], [handleRtdn, rtdnRequest]]) {
+    const network = fakeFetch(google(), {rpcStatus: 503, rpcResult: {message: 'unavailable'}});
+    const reply = await handler(request(), env, network);
+    assert.equal(reply.status, 503);
+    assert.equal((await reply.json()).error, 'payment_processing_unavailable');
+    assert.ok(network.calls.some(isRpc)); assert.ok(!network.calls.some(isAck));
+  }
+});
+
 test('verify endpoint: auth, token validation, Google re-fetch, acknowledge and entitlement reply', async () => {
   const request = (body, auth = 'Bearer fixture.jwt.token') => new Request('https://fixture/functions/v1/play-billing-verify',
     {method: 'POST', headers: {Authorization: auth, 'Content-Type': 'application/json'}, body: JSON.stringify(body)});
@@ -160,7 +315,7 @@ test('verify endpoint: auth, token validation, Google re-fetch, acknowledge and 
   assert.equal(reply.status, 200);
   const body = await reply.json();
   assert.equal(body.active, true); assert.equal(body.entitlement.plan_code, 'monthly'); assert.equal(body.user_id, buyer);
-  assert.ok(calls.some(c => c.url.endsWith(':acknowledge') && c.method === 'POST'), 'acknowledges a pending purchase');
+  assert.ok(calls.some(c => c.url.endsWith(':acknowledge') && c.method === 'POST'), 'acknowledges a confirmed, unacknowledged purchase');
   assert.ok(calls.some(c => c.url.includes('/purchases/subscriptionsv2/tokens/')), 'fetches from Google');
   // Token bought under a different account id is refused.
   const foreign = fakeFetch(google({externalAccountIdentifiers: {obfuscatedExternalAccountId: other}}), {rpcResult: rpcOk});
