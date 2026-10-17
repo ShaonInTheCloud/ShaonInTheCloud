@@ -56,6 +56,8 @@ class GuardDeviceFlowTest {
             capture("regular-app-info-before-guard")
             prepareAndStart()
 
+            // Owner's contract (17 Oct 2026): App info stays open; the TAP on Uninstall / Force stop bounces.
+            val removalReasons = setOf("destructive_tap", "test_uninstall_confirm", "test_force_stop_confirm")
             for ((index, pkg) in listOf(context.packageName, "com.safenest.app").withIndex()) {
                 if (index > 0) {
                     ownAccessibilityDetail()
@@ -64,11 +66,33 @@ class GuardDeviceFlowTest {
                     }
                 }
                 appInfo(pkg)
-                await("$pkg App info returns Home") {
-                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("test_app_control", "test_settings_detail")
+                assertSettings("$pkg App info stays open while guarded")
+                assertNotNull("$pkg App info shows Uninstall while guarded", device.wait(Until.findObject(By.text("Uninstall")), 5000))
+                capture(if (pkg == context.packageName) "test-app-info-open-while-guarded" else "regular-app-info-open-while-guarded")
+                tap("Uninstall")
+                await("$pkg Uninstall tap returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
                 }
-                capture(if (pkg == context.packageName) "test-uninstall-guard-home" else "regular-uninstall-guard-home")
-                pass("$pkg uninstall/force-stop page returns Home")
+                capture(if (pkg == context.packageName) "test-uninstall-tap-home" else "regular-uninstall-tap-home")
+                pass("$pkg App info open; Uninstall tap returns Home")
+                appInfo(pkg)
+                assertSettings("$pkg App info open again")
+                tap("Force stop")
+                await("$pkg Force stop tap returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
+                }
+                pass("$pkg Force stop tap returns Home")
+            }
+            appInfo(context.packageName)
+            assertSettings("Storage sub-page reachable")
+            if (tapVisibleText("Storage & cache") || tapVisibleText("Storage")) {
+                assertSettings("Own Storage page stays open while guarded")
+                capture("test-storage-open-while-guarded")
+                tap("Clear storage")
+                await("Clear storage tap returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("destructive_tap", "test_clear_storage_confirm")
+                }
+                pass("Own Storage page open; Clear storage tap returns Home")
             }
             start(Intent(Settings.ACTION_SETTINGS))
             assertSettings("Main Settings stays usable after redirect")
@@ -82,18 +106,22 @@ class GuardDeviceFlowTest {
                 device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
             }
             pass("Own Accessibility detail returns Home")
-            assertEquals("VPN check needs a different prior action", "test_accessibility", GuardPreferences.lastBlockReason())
             openVpnDetails()
-            await("VPN gear returns Home") {
-                // An early page event can expose the protected Forget VPN
-                // action before the other rows load: the matcher then reports
-                // test_app_control. It is a fresh action after Accessibility.
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in
-                    setOf("test_vpn_detail", "test_settings_detail", "test_app_control")
+            assertSettings("Own VPN detail page stays open while guarded")
+            assertNotNull("Always-on row visible on own VPN detail", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
+            capture("vpn-detail-open-while-guarded")
+            // Switching Always-on off is undone by the guard; the page itself stays.
+            tap("Always-on VPN")
+            await("Always-on restored by the guard") { alwaysOnPackage() == context.packageName }
+            assertSettings("Still on own VPN detail after Always-on restore")
+            pass("Own VPN detail open; Always-on VPN kept enabled")
+            tap("Forget VPN")
+            await("Forget VPN tap returns Home") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("destructive_tap", "test_forget_vpn_confirm")
             }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
-            capture("vpn-guard-home")
-            pass("VPN gear/detail returns Home and Always-on stays enabled")
+            capture("vpn-forget-tap-home")
+            pass("Forget VPN tap returns Home and Always-on stays enabled")
             start(Intent(Settings.ACTION_VPN_SETTINGS))
             assertSettings("VPN list stays available")
             assertNotNull(device.wait(Until.findObject(By.text("SafeNest Test")), 5000))

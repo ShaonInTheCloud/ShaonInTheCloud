@@ -111,6 +111,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
             } else cancelControlScan()
             return
         }
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) { onControlTapped(event); return }
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
         val name = event.packageName?.toString() ?: return
@@ -218,6 +219,41 @@ class SafeNestAccessibilityService : AccessibilityService() {
         } finally { interactive.forEach { @Suppress("DEPRECATION") it.recycle() } }
     }
 
+    // SafeNest's own Settings page (App info, Storage, VPN detail) was on screen recently.
+    // Confirmation dialogs such as "Force stop?" do not repeat the app name, so this is
+    // how they are attributed. Cleared as soon as another app's detail page is seen.
+    private var lastOwnPageAt = 0L
+    private fun recentlyOnOwnPage(now: Long) = lastOwnPageAt != 0L && now - lastOwnPageAt < 20_000L
+
+    /** A tap on Uninstall / Force stop / Clear storage / Forget VPN on SafeNest's own page bounces at once. */
+    private fun onControlTapped(event: AccessibilityEvent) {
+        val name = event.packageName?.toString() ?: return
+        if (name == packageName || !SystemScreenGuard.isSystemSurface(name)) return
+        val testControls = GuardPreferences.testControlsActive(this)
+        if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return
+        val now = SystemClock.elapsedRealtime()
+        if (!recentlyOnOwnPage(now)) return
+        val texts = mutableListOf<String>()
+        event.text?.forEach { it?.toString()?.takeIf { t -> t.length in 1..120 }?.let(texts::add) }
+        event.contentDescription?.toString()?.takeIf { it.length in 1..120 }?.let(texts::add)
+        val source = try { event.source } catch (_: Exception) { null }
+        if (source != null) {
+            try {
+                // The tapped row plus its direct labels only; never the whole page.
+                listOfNotNull(source.text?.toString(), source.contentDescription?.toString()).forEach(texts::add)
+                for (i in 0 until minOf(source.childCount, 6)) source.getChild(i)?.let { child ->
+                    try { listOfNotNull(child.text?.toString(), child.contentDescription?.toString()).forEach(texts::add) }
+                    finally { @Suppress("DEPRECATION") child.recycle() }
+                }
+            } finally { @Suppress("DEPRECATION") source.recycle() }
+        }
+        if (texts.none { SystemScreenGuard.isDestructiveControl(it) }) return
+        cancelControlScan()
+        returnHome(now, "destructive_tap", if (LocalTestSession.enabled)
+            "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test."
+            else "SafeNest commitment is active until your paid period ends.", controlPackage = name)
+    }
+
     private fun inspectControlScreen(name: String, expectedWindowId: Int = -1): Boolean {
         if (!isConnected || !GuardPreferences.isEnabled(this)) return false
         val testControls = GuardPreferences.testControlsActive(this)
@@ -243,6 +279,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
             val screen = readControlLabels(root)
             val now = SystemClock.elapsedRealtime()
             val guardActive = BuildConfig.ALLOW_SYSTEM_GUARD || testControls
+            if (SystemScreenGuard.isForeignDetailPage(name, screen.labels, screen.detailTitles)) lastOwnPageAt = 0L
+            else if ((SystemScreenGuard.isSettingsPackage(name) || SystemScreenGuard.isInstallerPackage(name)) &&
+                SystemScreenGuard.hasOwnIdentity(screen.labels)) lastOwnPageAt = now
             // Another VPN can only start after Android's "Connection request" prompt. Refusing
             // that prompt for every app except SafeNest closes the simplest bypass.
             if (guardActive && GuardPreferences.blocksVpnApps(this) &&
@@ -258,13 +297,13 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 !SystemScreenGuard.isForgetConfirmation(screen.labels, screen.actions)) {
                 ensureAlwaysOn(root, now)
             }
-            val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions) else ""
+            val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions, recentlyOnOwnPage(now)) else ""
             if (reason.isNotEmpty()) {
                 cancelControlScan()
                 returnHome(now, reason, "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
                 return true
             }
-            if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle)) {
+            if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle, recentlyOnOwnPage(now))) {
                 returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
                 return true
             }
