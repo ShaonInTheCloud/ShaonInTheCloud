@@ -1,6 +1,5 @@
 package com.safenest.app
 
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,7 +15,14 @@ class BundledBlocklistAssetTest {
     private val data = File("../../data/blocklists")
 
     private fun load(name: String) = File(assets, name).inputStream().buffered().use { CompactDomainSet.read(it) }
-    private fun manifest(name: String) = JSONObject(File(data, name).readText())
+    /** Minimal flat-JSON reader: Android's org.json is a stub in JVM unit tests. */
+    private class Manifest(private val text: String) {
+        fun getString(key: String): String = Regex("\"" + Regex.escape(key) + "\"\\s*:\\s*\"([^\"]*)\"").find(text)?.groupValues?.get(1)
+            ?: error("$key missing from manifest")
+        fun getInt(key: String): Int = Regex("\"" + Regex.escape(key) + "\"\\s*:\\s*(\\d+)").find(text)?.groupValues?.get(1)?.toInt()
+            ?: error("$key missing from manifest")
+    }
+    private fun manifest(name: String) = Manifest(File(data, name).readText())
 
     @Test fun assetsMatchTheirManifests() {
         for ((asset, manifest) in listOf(

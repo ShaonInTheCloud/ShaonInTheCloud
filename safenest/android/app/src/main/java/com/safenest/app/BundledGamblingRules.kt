@@ -42,7 +42,9 @@ object BundledGamblingRules {
     /** The host or any parent domain is listed. */
     fun isBlocked(context: Context, hostname: String): Boolean {
         val host = DomainRules.normalizeHostname(hostname) ?: return false
-        return load(context).any { it.blocksNormalized(host) }
+        // Fail closed: a missing or damaged bundled list must never silently turn into "allow everything".
+        return try { load(context).any { it.blocksNormalized(host) } }
+        catch (error: Exception) { android.util.Log.e("SafeNestRules", "Bundled blocklist unavailable: ${error.javaClass.simpleName}"); true }
     }
 
     /** Bangladesh-researched names, readable as text, used where a capped plain list is needed (Chrome policy). */
