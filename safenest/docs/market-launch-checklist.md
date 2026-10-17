@@ -11,6 +11,10 @@ Done in source (unit tests green on play+direct, 80 backend tests green):
 - Play flavor: `ALLOW_SYSTEM_GUARD=true`, `MANAGED_CONTROLS=true`, Device Admin receiver kept, full Accessibility XML, truthful disclosure strings.
 - Guard hardening: any-VPN install detection (generic "VPN/proxy" titles + 30 brands, OEM stores), Private DNS dialog guard, other-VPN connect dialog guard, encrypted-DNS bypass forced on at commit, "protection interrupted" alert when another VPN takes over, lock-aware Device Admin deactivation message, wider OEM Settings/installer package coverage.
 - Edition setting (`Region.kt`, Settings screen), privacy page copy for Play purchases and the guard scope, submission pack rewritten.
+- Consolidated from open PRs (17 Oct): PR #17 card (Stripe) + crypto (NOWPayments) website checkout and the Global website edition (merged); from draft PR #8 only the 541,485-domain compact blocklist and the two-key release signing / post-period removal commits (cherry-picked; the migration renames and payment-recovery rework in that PR were **not** taken).
+- Website launch switch: build with `SAFENEST_PLAY_STORE_URL=https://play.google.com/store/apps/details?id=com.safenest.app` and every page's banner becomes "Get it on Google Play".
+- `SafeNest signed direct APK` workflow for the website download (needs `SAFENEST_DIRECT_*` secrets).
+- Open question for the owner's legal review: the optional HaGeZi blocklist layer (195k domains) is GPL-3.0 data shipped as a separately attributed asset with its licence; drop `gambling_hagezi_gpl3.snbl` from the build if that is not acceptable (core list still has 346k names).
 
 **Owner must do (nothing below can be done from source):**
 - [ ] Play Console developer account verified; check whether the 12-tester/14-day closed-test rule applies.
@@ -20,7 +24,8 @@ Done in source (unit tests green on play+direct, 80 backend tests green):
 - [ ] RTDN Pub/Sub topic + push subscription to `play-billing-rtdn?key=<secret>`.
 - [ ] Licence testers; reviewer account; support email; Data safety; Accessibility/VPN/foreground-service declarations and video.
 - [ ] Physical-phone matrix (Samsung, Xiaomi, Pixel) per `play-submission-pack.md` release gates.
-- [ ] Website: switch pricing/checkout copy to "Get it on Google Play" only once the listing is live.
+- [ ] Website: rebuild with `SAFENEST_PLAY_STORE_URL` once the listing is live; enable Stripe/NOWPayments per `payments-card-crypto-2026-10-16.md` for the direct-APK customers.
+- [ ] Direct-APK signing key (`SAFENEST_DIRECT_*` secrets) and run `SafeNest signed direct APK` from main.
 
 
 Latest continuation: 0.4.6 Test/source CI and thirteen Settings-guard emulator checks passed. 0.4.7 adds encrypted DNS, ordinary-internet/blocked-domain device checks and the manual signed Play bundle workflow. See `encrypted-dns-0.4.7.md` and `release-signing.md`; fresh full Android CI and the owner's signing configuration are required before calling the new release verified. The APK remains a testing artifact and paid/store launch remains blocked.
