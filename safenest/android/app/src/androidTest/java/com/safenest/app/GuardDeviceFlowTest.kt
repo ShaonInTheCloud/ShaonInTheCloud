@@ -116,30 +116,27 @@ class GuardDeviceFlowTest {
             assertSettings("Own VPN detail page stays open while guarded")
             assertNotNull("Always-on row visible on own VPN detail", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
             capture("vpn-detail-open-while-guarded")
-            // Switching Always-on off is undone by the guard; the page itself stays.
+            // Android hides the Always-on switch from non-accessibility-tool services, so the
+            // guard reacts to the consequence instead: Android drops the VPN the moment the switch
+            // goes off, and that revoke sends the screen Home and raises the restore flow.
             tap("Always-on VPN")
-            // Android clears the setting (and drops the VPN) ~200 ms after the tap; wait for that
-            // first so the restore below is a real one, not a stale read.
-            val turnedOffAt = SystemClock.elapsedRealtime()
-            while (alwaysOnPackage() == context.packageName && SystemClock.elapsedRealtime() - turnedOffAt < 3000) SystemClock.sleep(100)
-            capture("vpn-always-on-after-tap")
-            run {
-                val deadline = SystemClock.elapsedRealtime() + 15_000
-                var ticks = 0
-                while (SystemClock.elapsedRealtime() < deadline && alwaysOnPackage() != context.packageName) {
-                    if (ticks++ % 10 == 0) {
-                        var state = ""
-                        instrumentation.runOnMainSync { state = SafeNestAccessibilityService.windowStatusForQa() }
-                        println("SafeNest device QA window state: $state lastReason=${GuardPreferences.lastBlockReason()}")
-                    }
-                    SystemClock.sleep(200)
-                }
+            await("Switching Always-on off sends the screen Home") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("vpn_revoked", "always_on_restored")
             }
-            await("Always-on restored by the guard") { alwaysOnPackage() == context.packageName }
-            SystemClock.sleep(1500)
-            assertEquals("Always-on stays restored", context.packageName, alwaysOnPackage())
-            assertSettings("Still on own VPN detail after Always-on restore")
-            pass("Own VPN detail open; Always-on VPN kept enabled")
+            capture("vpn-always-on-off-home")
+            pass("Always-on switched off: screen sent Home, protection marked interrupted")
+            // Restore: SafeNest re-requests its VPN slot as soon as it is in front.
+            openApp()
+            if (android.net.VpnService.prepare(context) != null) tap("OK")
+            await("Protection restored after the Always-on interruption") { SafeNestVpnService.isRunning.get() }
+            pass("Protection restored through SafeNest's own prompt")
+            openVpnDetails()
+            assertSettings("Own VPN detail open again")
+            if (alwaysOnPackage() != context.packageName) {
+                tap("Always-on VPN")
+                await("Always-on re-enabled through Android UI") { alwaysOnPackage() == context.packageName }
+            }
+            assertSettings("Still on own VPN detail after re-enabling Always-on")
             tap("Forget VPN")
             await("Forget VPN tap returns Home") {
                 device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("destructive_tap", "test_forget_vpn_confirm")

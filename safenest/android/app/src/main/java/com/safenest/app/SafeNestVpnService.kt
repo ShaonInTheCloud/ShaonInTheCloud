@@ -112,8 +112,10 @@ class SafeNestVpnService : VpnService() {
             // OEMs may leave a service/notification alive briefly after another VPN wins.
             // Do not report protection if Android no longer grants this app VPN ownership.
             if (session != null && VpnService.prepare(this@SafeNestVpnService) != null) {
+                val committed = ProtectionCommitment.isActive(this@SafeNestVpnService)
                 stopProtection("Another VPN replaced SafeNest or its VPN permission was revoked. Websites are not filtered; reopen SafeNest and restore protection.")
                 notifyTakeover()
+                if (committed) SafeNestAccessibilityService.protectionRevoked("vpn_revoked")
                 return
             }
             samplePlatformStatus()
@@ -520,8 +522,10 @@ class SafeNestVpnService : VpnService() {
     }
 
     override fun onRevoke() {
+        val committed = ProtectionCommitment.isActive(this)
         stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it.")
         notifyTakeover()
+        if (committed) SafeNestAccessibilityService.protectionRevoked("vpn_revoked")
         super.onRevoke()
     }
 

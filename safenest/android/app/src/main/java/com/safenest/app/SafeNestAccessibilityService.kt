@@ -26,6 +26,23 @@ class SafeNestAccessibilityService : AccessibilityService() {
         @Volatile var lastControlExitOutcome: String? = null
             private set
         private var connectedService: SafeNestAccessibilityService? = null
+        /**
+         * Called by the VPN service when Android revokes SafeNest's VPN during committed
+         * protection (Always-on switched off in Settings, or another VPN taking over).
+         * Android hides the Always-on switch itself from non-accessibility-tool services on
+         * recent versions, so the consequence is guarded instead of the control: leave the
+         * screen for Home at once. The restore notification and SafeNest's own prompt follow.
+         */
+        fun protectionRevoked(reason: String) {
+            val service = connectedService ?: return
+            service.handler.post {
+                if (!isConnected || !GuardPreferences.isEnabled(service)) return@post
+                val testControls = GuardPreferences.testControlsActive(service)
+                if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return@post
+                service.hardExit(SystemClock.elapsedRealtime(), reason,
+                    "SafeNest protection was switched off. Open SafeNest to restore it.")
+            }
+        }
         internal fun windowStatusForQa(): String = if (BuildConfig.DEBUG && LocalTestSession.enabled)
             connectedService?.windowStatusForQa().orEmpty() else "disabled"
     }
