@@ -271,9 +271,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
             return
         }
         cancelControlScan()
-        returnHome(now, "destructive_tap", if (LocalTestSession.enabled)
+        hardExit(now, "destructive_tap", if (LocalTestSession.enabled)
             "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test."
-            else "SafeNest commitment is active until your paid period ends.", controlPackage = name)
+            else "SafeNest commitment is active until your paid period ends.")
     }
 
     private fun inspectControlScreen(name: String, expectedWindowId: Int = -1): Boolean {
@@ -309,8 +309,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
             if (guardActive && GuardPreferences.blocksVpnApps(this) &&
                 SystemScreenGuard.blocksForeignVpnConsent(name, screen.labels)) {
                 cancelControlScan()
-                performGlobalAction(GLOBAL_ACTION_BACK)
-                returnHome(now, "vpn_consent", "SafeNest blocked another VPN from taking over the connection.")
+                hardExit(now, "vpn_consent", "SafeNest blocked another VPN from taking over the connection.")
                 return true
             }
             // SafeNest's own VPN page stays open so Always-on can be switched on; if the switch
@@ -322,11 +321,13 @@ class SafeNestAccessibilityService : AccessibilityService() {
             val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions, recentlyOnOwnPage(now)) else ""
             if (reason.isNotEmpty()) {
                 cancelControlScan()
-                returnHome(now, reason, "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
+                val message = "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test."
+                if (reason.endsWith("_confirm")) hardExit(now, reason, message)
+                else returnHome(now, reason, message, controlPackage = name)
                 return true
             }
             if (BuildConfig.ALLOW_SYSTEM_GUARD && SystemScreenGuard.blocksSafeNestControl(name, screen.labels, screen.actions, screen.checkedToggle, recentlyOnOwnPage(now))) {
-                returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
+                hardExit(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
                 return true
             }
             if (guardActive && GuardPreferences.blocksVpnApps(this) &&
@@ -464,6 +465,26 @@ class SafeNestAccessibilityService : AccessibilityService() {
             lastHomeAction = now
             finishHome(reason, message)
         }
+    }
+
+    private var lastHardExit = 0L
+    /**
+     * A destructive action (Uninstall / Force stop / Clear storage / Forget VPN / foreign VPN
+     * consent) always ends on Home: close whatever dialog opened, then go Home, regardless of
+     * which package ends up in front in between.
+     */
+    private fun hardExit(now: Long, reason: String, message: String) {
+        if (!GuardPreferences.isEnabled(this)) return
+        if (now - lastHardExit < 700L) return
+        lastHardExit = now
+        controlExit?.cancel()
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        handler.postDelayed({
+            if (!isConnected || !GuardPreferences.isEnabled(this)) return@postDelayed
+            if (performGlobalAction(GLOBAL_ACTION_HOME)) recordHome(reason, message)
+            // Belt and braces: a second Home after the first settles catches a late dialog.
+            handler.postDelayed({ if (isConnected && GuardPreferences.isEnabled(this)) performGlobalAction(GLOBAL_ACTION_HOME) }, 400)
+        }, 250)
     }
 
     private fun finishHome(reason: String, message: String) {
