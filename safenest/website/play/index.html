@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="referrer" content="no-referrer"><title>Nest Run — a free browser game by SafeNest</title><meta name="description" content="Nest Run: help the SafeNest rabbit get home through a neon night while betting pop-ups and win-big banners try to grab it. Free, no sign-up. In real life, the SafeNest Android app does the dodging for you."><meta name="theme-color" content="#1a0b1f"><link rel="icon" href="../assets/brand/favicon.png" type="image/png"><link rel="apple-touch-icon" href="../assets/brand/apple-touch-icon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700;800&family=Manrope:wght@400;600;700&display=swap"><link rel="stylesheet" href="../brand.css"><link rel="stylesheet" href="play.css"></head>
+<body>
+<a class="skip" href="#about"><span data-en="Skip the game" data-bn="গেম বাদ দিন">Skip the game</span></a>
+<header class="arena-nav"><a class="brand" href="../" aria-label="SafeNest home"><img class="brand-mark" src="../assets/brand/safenest-mark.webp" alt="" width="44" height="44"><img class="brand-wordmark" src="../assets/brand/safenest-wordmark.webp" alt="SafeNest" width="880" height="190"></a><nav aria-label="Site"><a href="../how-it-works.html"><span data-en="How the app works" data-bn="অ্যাপ যেভাবে কাজ করে">How the app works</span></a><a href="../pricing.html"><span data-en="Pricing" data-bn="মূল্য">Pricing</span></a><a class="nav-account" href="../account.html"><span data-en="Log in" data-bn="লগইন">Log in</span></a></nav><div class="lang-switch" role="group" aria-label="Language"><button class="lang" type="button" data-lang="en">English</button><button class="lang" type="button" data-lang="bn">বাংলা</button></div></header>
+
+<main>
+<section class="arena" id="arena" aria-label="Nest Run game">
+  <canvas id="game" width="1280" height="720" aria-label="Nest Run: the SafeNest rabbit running through a neon city" role="img"></canvas>
+  <div class="overlay" id="overlay" data-state="title">
+    <div class="title-card">
+      <p class="game-kicker"><span data-en="A free browser game by SafeNest" data-bn="SafeNest-এর বিনামূল্যের ব্রাউজার গেম">A free browser game by SafeNest</span></p>
+      <h1>Nest Run</h1>
+      <p class="tagline"><span data-en="Get the rabbit home. The pop-ups want it to stop and play." data-bn="খরগোশকে ঘরে পৌঁছে দিন। পপ-আপগুলো চায় সে থেমে জুয়া খেলুক।">Get the rabbit home. The pop-ups want it to stop and play.</span></p>
+      <button class="play-button" id="start" type="button"><span data-en="Tap to run" data-bn="দৌড় শুরু করতে চাপুন">Tap to run</span></button>
+      <p class="controls-hint"><span data-en="Space or tap: jump · Down arrow or swipe down: slide · Shields block the next pop-up for you" data-bn="Space বা ট্যাপ: লাফ · নিচের তীর বা নিচে সোয়াইপ: স্লাইড · শিল্ড পরের পপ-আপ আপনার হয়ে আটকে দেয়">Space or tap: jump · Down arrow or swipe down: slide · Shields block the next pop-up for you</span></p>
+      <p class="best" id="best" hidden></p>
+    </div>
+    <div class="over-card" hidden>
+      <p class="game-kicker" id="over-kicker"><span data-en="Caught by a pop-up" data-bn="পপ-আপে ধরা পড়ল">Caught by a pop-up</span></p>
+      <h2 id="over-title">You kept the nest safe for <span id="over-seconds">0</span>&nbsp;s</h2>
+      <dl class="stats"><div><dt><span data-en="Pop-ups dodged" data-bn="এড়ানো পপ-আপ">Pop-ups dodged</span></dt><dd id="stat-dodged">0</dd></div><div><dt><span data-en="Blocked by shields" data-bn="শিল্ডে আটকানো">Blocked by shields</span></dt><dd id="stat-blocked">0</dd></div><div><dt><span data-en="Best run" data-bn="সেরা দৌড়">Best run</span></dt><dd id="stat-best">0 s</dd></div></dl>
+      <p class="honest"><span data-en="In the game you do the dodging. On your phone, the SafeNest app does it for you: a blocklist on the device stops gambling and adult sites before they load, with nothing sent anywhere." data-bn="গেমে আপনি নিজে এড়ান। ফোনে SafeNest অ্যাপ এটা আপনার হয়ে করে: ডিভাইসের ব্লক তালিকা জুয়া ও প্রাপ্তবয়স্ক সাইট লোড হওয়ার আগেই থামিয়ে দেয়, কোথাও কিছু পাঠানো ছাড়াই।">In the game you do the dodging. On your phone, the SafeNest app does it for you: a blocklist on the device stops gambling and adult sites before they load, with nothing sent anywhere.</span></p>
+      <div class="over-actions"><button class="play-button" id="again" type="button"><span data-en="Run again" data-bn="আবার দৌড়ান">Run again</span></button><a class="ghost-button" href="../account.html"><span data-en="Get SafeNest for Android" data-bn="Android-এ SafeNest নিন">Get SafeNest for Android</span></a></div>
+    </div>
+    <div class="paused-card" hidden><h2><span data-en="Paused" data-bn="বিরতি">Paused</span></h2><button class="play-button" id="resume" type="button"><span data-en="Keep running" data-bn="দৌড় চালিয়ে যান">Keep running</span></button></div>
+  </div>
+  <div class="hud" id="hud" aria-live="off"><span class="hud-item"><span class="hud-label"><span data-en="Safe for" data-bn="নিরাপদ">Safe for</span></span> <output id="hud-time">0 s</output></span><span class="hud-item"><span class="hud-label"><span data-en="Dodged" data-bn="এড়ানো">Dodged</span></span> <output id="hud-dodged">0</output></span><span class="hud-item"><span class="hud-label"><span data-en="Shields" data-bn="শিল্ড">Shields</span></span> <output id="hud-shields">0</output></span><button class="hud-button" id="pause" type="button" aria-label="Pause">II</button><button class="hud-button" id="mute" type="button" aria-pressed="false" aria-label="Sound on">♪</button></div>
+  <div class="touch-controls" aria-hidden="true"><button type="button" id="touch-slide">⤓</button><button type="button" id="touch-jump">⤒</button></div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <div>
+      <h2><span data-en="What the game is pretending to do" data-bn="গেমটা যা করার ভান করে">What the game is pretending to do</span></h2>
+      <p><span data-en="Every pop-up in Nest Run is a copy of the ones that reach phones in Bangladesh and everywhere else: a bonus that must be claimed in sixty seconds, a jackpot banner, a casino that looks like a sports site. The rabbit has to jump, slide and keep going. That is tiring, which is the point." data-bn="Nest Run-এর প্রতিটি পপ-আপ বাংলাদেশসহ সব জায়গার ফোনে যে পপ-আপগুলো আসে তারই নকল: ষাট সেকেন্ডে নিতে হবে এমন বোনাস, জ্যাকপট ব্যানার, খেলার সাইটের মতো দেখতে ক্যাসিনো। খরগোশকে লাফাতে হয়, স্লাইড করতে হয়, চালিয়ে যেতে হয়। এটা ক্লান্তিকর — সেটাই আসল কথা।">Every pop-up in Nest Run is a copy of the ones that reach phones in Bangladesh and everywhere else: a bonus that must be claimed in sixty seconds, a jackpot banner, a casino that looks like a sports site. The rabbit has to jump, slide and keep going. That is tiring, which is the point.</span></p>
+    </div>
+    <div>
+      <h2><span data-en="What the app actually does" data-bn="অ্যাপটা আসলে যা করে">What the app actually does</span></h2>
+      <p><span data-en="SafeNest for Android keeps a signed list of gambling and adult-content domains on your phone and answers their DNS requests with nothing. Sites never load, so there is nothing to dodge. Matching happens on the device; your browsing history is not uploaded. It is a help for people who want to stay away, not a locked door, and it will never claim to block everything." data-bn="Android-এর SafeNest আপনার ফোনে জুয়া ও প্রাপ্তবয়স্ক সাইটের একটি স্বাক্ষরিত তালিকা রাখে এবং তাদের DNS অনুরোধের উত্তর দেয় না। সাইট লোডই হয় না, তাই এড়ানোর কিছু থাকে না। মিলানো হয় ডিভাইসেই; ব্রাউজিং ইতিহাস আপলোড হয় না। যারা দূরে থাকতে চান এটা তাদের সহায়তা, তালাবদ্ধ দরজা নয়, এবং এটা কখনো সব ব্লক করার দাবি করবে না।">SafeNest for Android keeps a signed list of gambling and adult-content domains on your phone and answers their DNS requests with nothing. Sites never load, so there is nothing to dodge. Matching happens on the device; your browsing history is not uploaded. It is a help for people who want to stay away, not a locked door, and it will never claim to block everything.</span></p>
+      <p class="cta-row"><a class="play-button" href="../account.html"><span data-en="Open your SafeNest account" data-bn="SafeNest অ্যাকাউন্ট খুলুন">Open your SafeNest account</span></a><a class="text-link" href="../global/"><span data-en="Outside Bangladesh? SafeNest Global" data-bn="বাংলাদেশের বাইরে? SafeNest Global">Outside Bangladesh? SafeNest Global</span></a></p>
+    </div>
+  </div>
+  <p class="fine-print"><span data-en="Nest Run stores your best time in this browser only. No account, no tracking, no sound until you turn it on. Playing the game does not start device protection." data-bn="Nest Run শুধু এই ব্রাউজারে আপনার সেরা সময় রাখে। কোনো অ্যাকাউন্ট নয়, ট্র্যাকিং নয়, আপনি চালু না করলে শব্দ নয়। গেম খেললে ডিভাইসের সুরক্ষা চালু হয় না।">Nest Run stores your best time in this browser only. No account, no tracking, no sound until you turn it on. Playing the game does not start device protection.</span></p>
+</section>
+</main>
+<footer class="arena-footer"><a href="../">SafeNest</a><a href="../privacy.html"><span data-en="Privacy" data-bn="গোপনীয়তা">Privacy</span></a><a href="../contact.html"><span data-en="Contact" data-bn="যোগাযোগ">Contact</span></a><a href="../global/">Global</a></footer>
+<script src="../app.js" defer></script>
+<script src="play.js" defer></script>
+</body></html>
