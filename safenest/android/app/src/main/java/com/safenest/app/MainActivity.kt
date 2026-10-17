@@ -19,6 +19,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -49,17 +50,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val Ink = Color(0xFF28111F)
-private val Violet = Color(0xFF982957)
-private val Sunshine = Color(0xD9F2B4CE)
-private val Lilac = Color(0xD9F6BBD2)
-private val Paper = Color(0xFFC26187)
-private val SoftText = Color(0xFF2D081C)
-private val Mint = Color(0xD9ECB0CA)
-private val Glass = Color(0xD9F6BBD2)
+// Neon Nest (see NeonNest.kt): light text on night plum, glossy pink accents, dark glass cards.
+private val Ink = Neon.Text
+private val Violet = Neon.Pink
+private val Sunshine = Color(0xF22A0820)
+private val Lilac = Color(0xF2280A22)
+private val Paper = Neon.Night
+private val SoftText = Neon.Muted
+private val Mint = Color(0xF2301024)
+private val Glass = Neon.Glass
 private val BarInk = Color(0xFFFFE3EF)
-private val Bar = Color(0xFF661431)
-private val FooterBar = Color(0xFF490B24)
+private val Bar = Neon.Plum
+private val FooterBar = Neon.Night
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,11 +108,12 @@ private fun SafeNestStartup() {
 
 @Composable
 private fun SafeNestTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = lightColorScheme(
-        primary = Violet, onPrimary = BarInk, primaryContainer = Color(0xFFF2B4CE), onPrimaryContainer = Ink,
-        secondary = Bar, onSecondary = BarInk, secondaryContainer = Color(0xFFEBA5C3), onSecondaryContainer = Ink,
-        background = Paper, onBackground = Ink, surface = Color(0xFFF6BBD2), onSurface = Ink,
-        surfaceVariant = Color(0xFFEBA5C3), onSurfaceVariant = SoftText, outline = Color(0xFF9E4369)
+    MaterialTheme(colorScheme = darkColorScheme(
+        primary = Neon.Pink, onPrimary = Color.White, primaryContainer = Color(0xFF3A0B2C), onPrimaryContainer = Neon.Text,
+        secondary = Neon.Orange, onSecondary = Color.White, secondaryContainer = Neon.Raised, onSecondaryContainer = Neon.Text,
+        tertiary = Neon.Magenta, background = Neon.Night, onBackground = Neon.Text, surface = Neon.Plum, onSurface = Neon.Text,
+        surfaceVariant = Neon.Raised, onSurfaceVariant = Neon.Muted, outline = Color(0x99FF5CE1), outlineVariant = Neon.Edge,
+        error = Color(0xFFFF5C7A)
     ), content = content)
 }
 
@@ -292,19 +295,20 @@ private fun SafeNestApp() {
     }
 
     var metalMotion by remember { mutableStateOf(prefs.getBoolean("metal_motion", true)) }
-    Box(Modifier.fillMaxSize().background(Paper)) {
-    LiquidMetalBackground(animate = metalMotion, modifier = Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize().background(Neon.Night)) {
+    NeonAurora(animate = metalMotion, modifier = Modifier.fillMaxSize())
     Scaffold(
         containerColor = Color.Transparent,
         bottomBar = {
-            Column(Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(FooterBar, Color(0xFF711B3F), FooterBar)))) {
-            NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
+            Column(Modifier.fillMaxWidth()) {
+            NavigationBar(containerColor = Color(0xFF1E0517), tonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0),
+                modifier = Modifier.padding(horizontal = 14.dp).clip(RoundedCornerShape(32.dp)).border(1.dp, Neon.Edge, RoundedCornerShape(32.dp))) {
                 listOf("home", "protect", "recover", "insights").forEach { destination ->
                     val selected = page == destination
                     NavigationBarItem(selected = selected, onClick = { page = destination },
                         icon = { Icon(when(destination){"home"->Icons.Rounded.Dashboard;"protect"->Icons.Rounded.Shield;"recover"->Icons.Rounded.Favorite;else->Icons.Rounded.ShowChart}, null) },
                         label = { Text(when(destination){"home"->t("Home","হোম");"protect"->t("Protect","সুরক্ষা");"recover"->t("Recover","পুনরুদ্ধার");else->t("Insights","অগ্রগতি")}, fontSize=10.sp) },
-                        colors = NavigationBarItemDefaults.colors(selectedIconColor=Ink, selectedTextColor=BarInk, indicatorColor=Color(0xFFF6BBD2), unselectedIconColor=BarInk, unselectedTextColor=BarInk))
+                        colors = NavigationBarItemDefaults.colors(selectedIconColor=Color.White, selectedTextColor=Neon.Magenta, indicatorColor=Neon.Pink, unselectedIconColor=Neon.Muted, unselectedTextColor=Neon.Muted))
                 }
             }
             Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom=4.dp), horizontalArrangement=Arrangement.Center) {
@@ -317,7 +321,7 @@ private fun SafeNestApp() {
             }
         },
         topBar = {
-            Row(Modifier.fillMaxWidth().background(Brush.horizontalGradient(listOf(Bar, Color(0xFF842347), Color(0xFF58112E)))).statusBarsPadding().heightIn(min=60.dp).padding(horizontal=12.dp,vertical=4.dp), verticalAlignment=Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min=60.dp).padding(horizontal=12.dp,vertical=4.dp), verticalAlignment=Alignment.CenterVertically) {
                 Image(painterResource(R.drawable.safenest_brand), null, Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)))
                 Spacer(Modifier.width(8.dp))
                 Box(Modifier.weight(1f)) { Image(painterResource(R.drawable.safenest_wordmark), "SafeNest", Modifier.width(105.dp).height(25.dp).clip(RoundedCornerShape(4.dp))) }
@@ -413,7 +417,8 @@ private fun SafeNestApp() {
     Text(t("A little space to breathe.","একটু স্বস্তির জায়গা।"),fontSize=29.sp,fontWeight=FontWeight.Bold,color=Ink,letterSpacing=(-1).sp,modifier=Modifier.padding(top=4.dp))
     Text(t("Small steps count. Showing up is one.","ছোট পদক্ষেপও গুরুত্বপূর্ণ। এখানে আসাই একটি পদক্ষেপ।"),fontSize=13.sp,color=SoftText,modifier=Modifier.padding(top=4.dp))
     Spacer(Modifier.height(3.dp))
-    Surface(shape=RoundedCornerShape(22.dp),color=Ink,modifier=Modifier.fillMaxWidth()) { Column(Modifier.padding(20.dp)) {
+    Box(Modifier.fillMaxWidth(), contentAlignment=Alignment.Center) { NestOrb(active = active && dnsState != "failed" && !lockdown, size = 230.dp) }
+    GlossCard(Modifier.fillMaxWidth()) { Column {
         Row(verticalAlignment=Alignment.CenterVertically){Icon(Icons.Rounded.Shield,null,tint=Color(0xFFFFB7D4),modifier=Modifier.size(20.dp));Spacer(Modifier.width(8.dp));Text(when { !active -> t("DNS FILTER IS OFF","DNS ফিল্টার বন্ধ"); lockdown -> t("CHECK VPN LOCKDOWN","VPN LOCKDOWN পরীক্ষা করুন"); dnsState == "failed" -> t("DNS NEEDS ATTENTION","DNS-এ সমস্যা আছে"); dnsState == "ok" -> t("DNS LOOKUP SUCCEEDED","DNS ঠিকানা পাওয়া গেছে"); else -> t("DNS AWAITING TEST","DNS পরীক্ষার অপেক্ষায়") },color=Color.White,fontSize=9.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Box(Modifier.size(8.dp).clip(CircleShape).background(if(active && dnsState=="ok" && !lockdown)Color(0xFF7DD1AA) else Color(0xFFFFC185))) }
         Spacer(Modifier.height(12.dp))
         Text(t("Breathe. You're choosing a safer moment.","শ্বাস নিন। নিরাপদ মুহূর্ত বেছে নিচ্ছেন।"), color=Color.White,fontSize=24.sp,lineHeight=30.sp,fontWeight=FontWeight.Bold)
@@ -424,7 +429,7 @@ private fun SafeNestApp() {
     } }
     StatCard(t("CHECK-INS","চেক-ইন"),"$checkins",t("Saved on this device","এই ডিভাইসে সংরক্ষিত"),Lilac,Modifier.fillMaxWidth())
     Surface(shape=RoundedCornerShape(18.dp),color=Mint,modifier=Modifier.fillMaxWidth().clickable{onReset()}){Column(Modifier.padding(18.dp)){Text(t("YOUR MOMENT","আপনার মুহূর্ত"),fontSize=9.sp,color=Violet,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(8.dp));Text(t("The urge will pass. Give it a minute.","তাড়না চলে যাবে। একটু সময় দিন।"),fontSize=19.sp,fontWeight=FontWeight.Bold,color=Ink);Spacer(Modifier.height(10.dp));Button(onClick=onReset,shape=RoundedCornerShape(11.dp),colors=ButtonDefaults.buttonColors(containerColor=Glass,contentColor=Ink)){Text(t("Start a 60-second reset ↗","৬০ সেকেন্ডের বিরতি নিন ↗"),fontSize=10.sp)} } }
-    Button(onClick=onCheckin,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp),colors=ButtonDefaults.buttonColors(containerColor=Ink)){Text(t("＋  Log a check-in","＋  চেক-ইন লিখুন"),fontSize=11.sp)}
+    Button(onClick=onCheckin,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp),colors=ButtonDefaults.buttonColors(containerColor=Violet,contentColor=Color.White)){Text(t("＋  Log a check-in","＋  চেক-ইন লিখুন"),fontSize=11.sp)}
     RecoveryDisclaimer(lang)
 }
 
@@ -435,7 +440,7 @@ private fun SafeNestApp() {
     Text(t("Website rules run quietly in the background.","ওয়েবসাইটের নিয়ম ব্যাকগ্রাউন্ডে কাজ করে।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp,bottom=6.dp))
     Surface(shape=RoundedCornerShape(14.dp),color=Lilac){Row(Modifier.padding(13.dp),verticalAlignment=Alignment.Top){Icon(Icons.Rounded.Info,null,tint=Violet,modifier=Modifier.size(18.dp));Spacer(Modifier.width(9.dp));Text(t("Android allows one active VPN. SafeNest can use Always-on, but this DNS-only prototype should not use Lockdown because it does not carry all internet traffic.","Android-এ একটি VPN সক্রিয় থাকে। SafeNest Always-on ব্যবহার করতে পারে, তবে DNS-only prototype সব internet traffic বহন করে না বলে Lockdown ব্যবহার করবেন না।"),fontSize=10.sp,color=SoftText,lineHeight=15.sp)} }
     Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) { RuleCategory.entries.forEach { item -> FilterChip(selected=category==item,onClick={onCategory(item)},label={Text(when(item){RuleCategory.GAMBLING->t("Gambling","জুয়া");RuleCategory.ADULT->t("Adult","প্রাপ্তবয়স্ক");RuleCategory.PERSONAL->t("My list","আমার তালিকা")},fontSize=9.sp)},shape=RoundedCornerShape(10.dp)) } }
-    Surface(shape=RoundedCornerShape(18.dp),color=Color.White,tonalElevation=0.dp,modifier=Modifier.fillMaxWidth()){Column(Modifier.padding(15.dp)){
+    Surface(shape=RoundedCornerShape(18.dp),color=Glass,tonalElevation=0.dp,modifier=Modifier.fillMaxWidth().border(1.dp,Neon.Edge,RoundedCornerShape(18.dp))){Column(Modifier.padding(15.dp)){
         Text(t("Website filtering", "ওয়েবসাইট ফিল্টার"),fontWeight=FontWeight.Bold,fontSize=13.sp)
         Spacer(Modifier.height(8.dp))
         Text(t("The built-in website list is hidden. Filtering stays enabled, and you can add your own websites below.", "অন্তর্ভুক্ত ওয়েবসাইটের তালিকা লুকানো। ফিল্টার কাজ করে; নিচে নিজের ওয়েবসাইট যোগ করতে পারেন।"),color=SoftText,fontSize=11.sp)
@@ -456,7 +461,7 @@ private fun SafeNestApp() {
     Text(t("SUPPORT FOR THE HUMAN SIDE","মানসিক সহায়তা"),fontSize=9.sp,letterSpacing=1.sp,color=SoftText,fontWeight=FontWeight.Bold)
     Text(t("Recovery isn’t a straight line.","পুনরুদ্ধার সবসময় সরল পথ নয়।"),fontSize=23.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.padding(top=4.dp))
     Text(t("No judgement. Just tools for the next moment.","কোনো বিচার নয়। শুধু পরবর্তী মুহূর্তের জন্য কিছু উপায়।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp))
-    Surface(shape=RoundedCornerShape(18.dp),color=Color(0xFFFFD6E5)){Column(Modifier.padding(17.dp)){Text(t("Struggling right now?","কঠিন সময় যাচ্ছে?"),fontSize=16.sp,fontWeight=FontWeight.Bold);Text(t("Free, confidential help for gambling, debt and crisis.","জুয়া, ঋণ বা মানসিক চাপে বিনামূল্যের গোপন সাহায্য আছে।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp));Button(onClick=onHelp,modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Get help","সাহায্য দেখুন"),fontSize=11.sp)} } }
+    Surface(shape=RoundedCornerShape(18.dp),color=Color(0xFF3A0B2C)){Column(Modifier.padding(17.dp)){Text(t("Struggling right now?","কঠিন সময় যাচ্ছে?"),fontSize=16.sp,fontWeight=FontWeight.Bold);Text(t("Free, confidential help for gambling, debt and crisis.","জুয়া, ঋণ বা মানসিক চাপে বিনামূল্যের গোপন সাহায্য আছে।"),fontSize=11.sp,color=SoftText,modifier=Modifier.padding(top=4.dp));Button(onClick=onHelp,modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Get help","সাহায্য দেখুন"),fontSize=11.sp)} } }
     Surface(shape=RoundedCornerShape(20.dp),color=Lilac){Column(Modifier.padding(19.dp)){Text(t("YOUR PLAN FOR A HARD MOMENT","কঠিন মুহূর্তের পরিকল্পনা"),fontSize=9.sp,color=Violet,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(12.dp));Text(t("Pause. Name it. Choose your next step.","একটু থামুন। অনুভব করুন। পরের পদক্ষেপ বেছে নিন।"),fontSize=22.sp,fontWeight=FontWeight.Bold,color=Ink,lineHeight=27.sp);Spacer(Modifier.height(9.dp));Text(t("An urge is a feeling, not an instruction. Try a short reset or reach out to someone you trust.","তাড়না একটি অনুভূতি, নির্দেশ নয়। একটু বিরতি নিন বা বিশ্বাসের কাউকে জানান।"),fontSize=11.sp,color=SoftText,lineHeight=16.sp);Spacer(Modifier.height(14.dp));Button(onClick=onReset,shape=RoundedCornerShape(11.dp),colors=ButtonDefaults.buttonColors(containerColor=Glass,contentColor=Ink)){Text(t("Help me through this urge","এই তাড়না সামলাতে সাহায্য করুন"),fontSize=10.sp)} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("A QUICK CHECK-IN","একটি ছোট চেক-ইন"),fontSize=9.sp,color=SoftText,letterSpacing=1.sp,fontWeight=FontWeight.Bold);Text(t("How are you, really?","সত্যি করে বলুন, কেমন আছেন?"),fontSize=16.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp));Text(t("$checkins saved check-ins","${checkins}টি সংরক্ষিত চেক-ইন"),fontSize=10.sp,color=SoftText,modifier=Modifier.padding(top=4.dp));Button(onClick=onCheckin,modifier=Modifier.fillMaxWidth().padding(top=10.dp),shape=RoundedCornerShape(10.dp)){Text(t("Log a check-in","চেক-ইন লিখুন"),fontSize=10.sp)} } }
     Surface(shape=RoundedCornerShape(18.dp),color=Glass){Column(Modifier.padding(17.dp)){Text(t("A private reflection","একটি ব্যক্তিগত ভাবনা"),fontSize=14.sp,fontWeight=FontWeight.Bold);Text(t("Notice what was happening before the urge. No blame, just curiosity.","তাড়নার আগে কী ঘটছিল খেয়াল করুন। দোষ নয়, শুধু কৌতূহল।"),fontSize=10.sp,color=SoftText,modifier=Modifier.padding(top=5.dp));OutlinedTextField(value=reflection,onValueChange={reflection=it},modifier=Modifier.fillMaxWidth().padding(top=8.dp),minLines=3,label={Text(t("A note to future me","ভবিষ্যতের নিজের জন্য নোট"))});TextButton(onClick={recoveryPrefs.edit().putString("reflection",reflection).apply()}){Text(t("Save privately on this device","এই ডিভাইসে ব্যক্তিগতভাবে সংরক্ষণ করুন"),fontSize=10.sp)} } }

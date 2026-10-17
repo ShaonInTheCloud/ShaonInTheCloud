@@ -37,32 +37,32 @@ fun HelpScreen(language: String, onBack: () -> Unit) {
             }
         }
         HelpContent.sections(region).forEachIndexed { index, section ->
-            Surface(shape = RoundedCornerShape(18.dp), color = if (index == 0) Color(0xFFFFD6E5) else Color(0xF2FFFFFF)) {
+            Surface(shape = RoundedCornerShape(18.dp), color = if (index == 0) Color(0xFF3A0B2C) else Neon.Glass) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(section.title.of(language), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     section.body?.let { Text(it.of(language), fontSize = 12.sp) }
                     section.contacts.forEach { c ->
-                        Surface(shape = RoundedCornerShape(12.dp), color = Color.White, modifier = Modifier.fillMaxWidth().clickable { open(c) }) {
+                        Surface(shape = RoundedCornerShape(12.dp), color = Neon.Night, modifier = Modifier.fillMaxWidth().clickable { open(c) }) {
                             Column(Modifier.padding(12.dp)) {
                                 Row {
                                     Text(c.name, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                                     Text(if (c.tel != null) t("Call ${c.tel}", "কল ${c.tel}") else t("Open ›", "খুলুন ›"), fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold, color = Color(0xFFB0145A))
+                                        fontWeight = FontWeight.Bold, color = Neon.PinkSoft)
                                 }
-                                Text(c.detail.of(language), fontSize = 11.sp, color = Color(0xFF5C5466))
+                                Text(c.detail.of(language), fontSize = 11.sp, color = Neon.Muted)
                             }
                         }
                     }
                 }
             }
         }
-        Surface(shape = RoundedCornerShape(18.dp), color = Color(0xFFEDE7FF)) {
+        Surface(shape = RoundedCornerShape(18.dp), color = Neon.Raised) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(t("Steps that help", "যে পদক্ষেপগুলো সাহায্য করে"), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 HelpContent.steps.forEachIndexed { i, step -> Text("${i + 1}. ${step.of(language)}", fontSize = 12.sp) }
             }
         }
         Text(t("SafeNest is not a medical or crisis service. Numbers checked October 2026; hours can change.",
-            "SafeNest কোনো চিকিৎসা বা জরুরি সেবা নয়। নম্বরগুলো অক্টোবর ২০২৬-এ যাচাই করা; সময় বদলাতে পারে।"), fontSize = 10.sp, color = Color(0xFF5C5466))
+            "SafeNest কোনো চিকিৎসা বা জরুরি সেবা নয়। নম্বরগুলো অক্টোবর ২০২৬-এ যাচাই করা; সময় বদলাতে পারে।"), fontSize = 10.sp, color = Neon.Muted)
     }
 }
