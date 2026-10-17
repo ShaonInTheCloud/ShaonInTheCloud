@@ -281,7 +281,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (!isConnected || !GuardPreferences.isEnabled(this)) return false
         val testControls = GuardPreferences.testControlsActive(this)
         if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return false
+        // The Settings window title names the selected app on pages whose content does not
+        // (the VPN detail page shows it only in a collapsing toolbar). Use it as identity.
+        var windowTitle: String? = null
         if (testControls) focusedControlWindow()?.let { focus ->
+            if (focus.pkg == name) windowTitle = focus.title
             if (focus.pkg == name && (expectedWindowId < 0 || focus.id == expectedWindowId)) {
                 val reason = SystemScreenGuard.testFocusedWindowReason(name, focus.title)
                 if (reason.isNotEmpty()) {
@@ -299,9 +303,12 @@ class SafeNestAccessibilityService : AccessibilityService() {
             // Settings page is still the active root. Package equality alone
             // must not let that older page trigger navigation for this event.
             if (expectedWindowId >= 0 && root.windowId != expectedWindowId) return false
-            val screen = readControlLabels(root)
+            val read = readControlLabels(root)
+            if (windowTitle == null && !testControls) windowTitle = root.window?.title?.toString()?.takeIf { it.length <= 240 }
+            val screen = if (windowTitle != null) read.copy(labels = read.labels + windowTitle!!, detailTitles = read.detailTitles + windowTitle!!) else read
             val now = SystemClock.elapsedRealtime()
             val guardActive = BuildConfig.ALLOW_SYSTEM_GUARD || testControls
+            qa("inspect pkg=$name title=$windowTitle own=${SystemScreenGuard.hasOwnIdentity(screen.labels)} vpnDetail=${SystemScreenGuard.isOwnVpnDetail(name, screen.labels)} labels=${screen.labels.size}")
             if (SystemScreenGuard.isForeignDetailPage(name, screen.labels, screen.detailTitles)) lastOwnPageAt = 0L
             else if ((SystemScreenGuard.isSettingsPackage(name) || SystemScreenGuard.isInstallerPackage(name)) &&
                 SystemScreenGuard.hasOwnIdentity(screen.labels)) lastOwnPageAt = now
