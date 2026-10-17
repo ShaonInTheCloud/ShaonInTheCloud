@@ -54,7 +54,7 @@ export function Card({children, style, tone = 'surface'}: {children: React.React
   return (
     <LinearGradient colors={tone === 'alt' ? ['#FF8A1F66', '#FF5CE122'] : ['#FF5CE155', '#FFFFFF10', '#FF8A1F33']} start={{x: 0, y: 0}} end={{x: 1, y: 1}}
       style={[{borderRadius: radius.card, padding: 1}]}>
-      <View style={[{backgroundColor: tone === 'alt' ? '#2A0820F2' : '#1E0517E6', borderRadius: radius.card - 1, padding: 20, gap: 10}, style]}>{children}</View>
+      <View style={[{backgroundColor: tone === 'alt' ? '#2E0A24' : '#22061A', borderRadius: radius.card - 1, padding: 20, gap: 10}, style]}>{children}</View>
     </LinearGradient>
   );
 }
@@ -82,7 +82,7 @@ export function Button({label, kind = 'primary', busy, disabled, style, onPress,
           {content}
         </LinearGradient>
       ) : (
-        <View style={[base, kind === 'ghost' ? {borderWidth: 1.5, borderColor: theme.neon, backgroundColor: '#FF5CE10F'} : {minHeight: 44, paddingHorizontal: 8}]}>{content}</View>
+        <View style={[base, kind === 'ghost' ? {borderWidth: 1.5, borderColor: theme.neon, backgroundColor: '#22061A'} : {minHeight: 44, paddingHorizontal: 8}]}>{content}</View>
       )}
     </Pressable>
   );
@@ -95,7 +95,7 @@ export function Field(props: TextInputProps & {label: string; hint?: string}) {
     <View style={{gap: 6}}>
       <Label>{label}</Label>
       <TextInput placeholderTextColor={theme.muted} {...rest}
-        style={[{fontFamily: fonts.body, fontSize: 17, color: theme.ink, backgroundColor: '#FFFFFF0D', borderWidth: 1, borderColor: theme.line,
+        style={[{fontFamily: fonts.body, fontSize: 17, color: theme.ink, backgroundColor: '#2A0820', borderWidth: 1, borderColor: theme.line,
           borderRadius: radius.input, paddingHorizontal: 16, paddingVertical: 14}, style]} />
       {hint ? <Label>{hint}</Label> : null}
     </View>
@@ -107,7 +107,7 @@ export function Choice({selected, title, note, onPress}: {selected: boolean; tit
   return (
     <Pressable accessibilityRole="radio" accessibilityState={{selected}} onPress={onPress}
       style={({pressed}) => [{flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 18, borderWidth: 2,
-        borderColor: selected ? theme.neon : theme.line, backgroundColor: selected ? '#FF1E8A26' : '#FFFFFF08', opacity: pressed ? 0.85 : 1,
+        borderColor: selected ? theme.neon : theme.line, backgroundColor: selected ? '#3A0B2C' : '#22061A', opacity: pressed ? 0.85 : 1,
         shadowColor: theme.neon, shadowOpacity: selected ? 0.5 : 0, shadowRadius: 12}]}>
       <View style={{width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: selected ? theme.pink : theme.muted, alignItems: 'center', justifyContent: 'center'}}>
         {selected ? <View style={{width: 11, height: 11, borderRadius: 6, backgroundColor: theme.pink}} /> : null}

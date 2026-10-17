@@ -30,7 +30,7 @@ internal object Neon {
     val Night = Color(0xFF14030F)
     val Plum = Color(0xFF22061A)
     val Raised = Color(0xFF2E0A24)
-    val Glass = Color(0xE61E0517)
+    val Glass = Color(0xFF22061A)
     val Pink = Color(0xFFFF1E8A)
     val PinkSoft = Color(0xFFFF6FB4)
     val Orange = Color(0xFFFF8A1F)

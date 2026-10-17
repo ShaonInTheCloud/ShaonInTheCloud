@@ -53,11 +53,11 @@ import kotlinx.coroutines.withContext
 // Neon Nest (see NeonNest.kt): light text on night plum, glossy pink accents, dark glass cards.
 private val Ink = Neon.Text
 private val Violet = Neon.Pink
-private val Sunshine = Color(0xF22A0820)
-private val Lilac = Color(0xF2280A22)
+private val Sunshine = Color(0xFF2A0820)
+private val Lilac = Color(0xFF2E0A24)
 private val Paper = Neon.Night
 private val SoftText = Neon.Muted
-private val Mint = Color(0xF2301024)
+private val Mint = Color(0xFF301024)
 private val Glass = Neon.Glass
 private val BarInk = Color(0xFFFFE3EF)
 private val Bar = Neon.Plum
