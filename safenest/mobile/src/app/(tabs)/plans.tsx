@@ -29,7 +29,7 @@ function read(key: string) { try { return localStorage.getItem(key); } catch { r
 function write(key: string, value: string | null) { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch {} }
 
 export default function Plans() {
-  const {t, edition, session, testMode} = useStore();
+  const {t, edition, session, testMode, testPlan, setTestPlan, lang} = useStore();
   const testGuest = testMode && !session;
   const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
   const [busy, setBusy] = useState(''), [note, setNote] = useState(''), [tone, setTone] = useState<'good' | 'bad' | 'neutral'>('neutral');
@@ -50,6 +50,14 @@ export default function Plans() {
     }
   }, [pendingKey, t]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  /** Lab build: the whole purchase flow with a simulated checkout. Nothing is charged or sent to a provider. */
+  async function testPay(product: Product, provider: string) {
+    setBusy(product.code + provider); setNote('');
+    await new Promise(r => setTimeout(r, 900));
+    setTestPlan({plan: product.plan, provider, ends_at: new Date(Date.now() + product.duration_seconds * 1000).toISOString()});
+    setBusy(''); setNote(lang === 'bn' ? `টেস্ট পেমেন্ট সফল (${providerLabel(t, provider)}) — কোনো টাকা কাটা হয়নি।` : `Test payment successful (${providerLabel(t, provider)}). Nothing was charged.`); setTone('good');
+  }
 
   async function pay(product: Product, provider: string) {
     setBusy(product.code + provider); setNote('');
@@ -76,7 +84,9 @@ export default function Plans() {
     <Screen>
       <Display>{t.plansTitle}</Display>
       <Label>{edition === 'bd' ? `${t.editionBd} · ৳ BDT` : `${t.editionGlobal} · $ USD`}</Label>
-      {testGuest ? <Notice text={t.testUnlocked} tone="good" /> : !live ? <Notice text={t.plansClosed} /> : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
+      {testGuest ? <Notice text={testPlan && Date.parse(testPlan.ends_at) > Date.now()
+          ? (lang === 'bn' ? `টেস্ট প্ল্যান চালু: ${t.perPlan[testPlan.plan] ?? testPlan.plan}` : `Test plan active: ${t.perPlan[testPlan.plan] ?? testPlan.plan}`)
+          : (lang === 'bn' ? 'টেস্ট বিল্ড: যেকোনো পেমেন্ট চেষ্টা করুন — টাকা কাটা হবে না।' : 'Test build: try any payment method. Nothing is charged.')} tone="good" /> : !live ? <Notice text={t.plansClosed} /> : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
       <Notice text={note} tone={tone} />
       {products.map(p => (
         <Card key={p.code}>
@@ -85,10 +95,13 @@ export default function Plans() {
             <Display size={30}>{price(p)}</Display>
           </View>
           <Label>{fill(t.days, {n: Math.round(p.duration_seconds / 86400)})}</Label>
-          {live ? p.providers.map(name => (
+          {testGuest ? (edition === 'bd' ? ['sslcommerz', 'stripe', 'nowpayments'] : ['stripe', 'nowpayments']).map(name => (
+            <Button key={name} label={providerLabel(t, name)} kind={name === 'stripe' ? 'primary' : name === 'sslcommerz' ? 'orange' : 'ghost'}
+              busy={busy === p.code + name} disabled={!!busy} onPress={() => testPay(p, name)} />
+          )) : live ? p.providers.map(name => (
             <Button key={name} label={providerLabel(t, name)} kind={name === 'stripe' ? 'primary' : 'ghost'}
               busy={busy === p.code + name} disabled={!!busy} onPress={() => pay(p, name)} />
-          )) : <Pill text={testGuest ? t.testUnlocked : t.plansClosed.split('.')[0]} tone={testGuest ? 'good' : 'neutral'} />}
+          )) : <Pill text={t.plansClosed.split('.')[0]} tone="neutral" />}
         </Card>
       ))}
       <Button kind="text" label={t.refreshStatus} onPress={load} />

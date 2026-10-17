@@ -30,7 +30,7 @@ function Poster({title, note, color, ink = '#FFFFFF', onPress}: {title: string; 
 }
 
 export default function Home() {
-  const {t, lang, theme, session, edition, email} = useStore();
+  const {t, lang, theme, session, edition, email, testPlan} = useStore();
   const testGuest = !session;
   const [access, setAccess] = useState<AccessResult | null>(null);
   const [state, setState] = useState<'checking' | 'ok' | 'offline'>('checking');
@@ -39,13 +39,14 @@ export default function Home() {
     setState(access ? 'ok' : 'checking');
     if (testGuest) {
       const now = new Date();
+      const live = testPlan && Date.parse(testPlan.ends_at) > +now ? testPlan : null;
       setAccess({active: true, user_id: 'test', server_now: now.toISOString(),
-        entitlement: {id: 'test', plan_code: 'test', starts_at: now.toISOString(), ends_at: new Date(now.getTime() + 30 * 86400_000).toISOString()}});
+        entitlement: {id: 'test', plan_code: live ? live.plan : 'test', starts_at: now.toISOString(), ends_at: live ? live.ends_at : new Date(now.getTime() + 30 * 86400_000).toISOString()}});
       setState('ok'); return;
     }
     try { setAccess(await api.access()); setState('ok'); } catch { setState('offline'); }
-  }, [access, testGuest]);
-  useFocusEffect(useCallback(() => { load(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [access, testGuest, testPlan]);
+  useFocusEffect(useCallback(() => { load(); }, [testPlan])); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const id = setInterval(load, 60_000); return () => clearInterval(id); }, [load]);
 
   async function startTrial() {

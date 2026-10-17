@@ -30,7 +30,7 @@ export default function Welcome() {
       </View>
       <View style={{gap: 10, marginTop: 16}}>
         {testMode ? <Button label={t.testEnter} onPress={() => { setGuest(true); router.replace('/(tabs)'); }} /> : null}
-        <Button label={t.signIn} kind={testMode ? 'ghost' : 'primary'} onPress={() => router.push('/(auth)/sign-in')} />
+        {testMode ? null : <Button label={t.signIn} onPress={() => router.push('/(auth)/sign-in')} />}
         {testMode ? null : <Button label={t.signUp} kind="ghost" onPress={() => router.push('/(auth)/sign-up')} />}
       </View>
       <Body muted size={14} style={{marginTop: 8, color: theme.muted}}>{t.honest}</Body>
