@@ -27,6 +27,17 @@ public final class CommitmentGuardRegression {
         check(!SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("Facebook"), List.of("Install")), "normal Play install");
         check(!SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("NordVPN"), List.of("Uninstall")), "removing competing VPN remains allowed");
         check(!SystemScreenGuard.blocksVpnInstall("com.android.chrome", List.of("NordVPN"), List.of("Install")), "web page text not inspected");
+        check(SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("1.1.1.1 + WARP: Safer Internet"), List.of("Install")), "WARP install by name");
+        check(SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("Unknown Fast VPN Proxy"), List.of("Install")), "any app calling itself a VPN");
+        check(SystemScreenGuard.blocksVpnInstall("com.sec.android.app.samsungapps", List.of("Proton VPN"), List.of("Install")), "Galaxy Store install");
+        check(!SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("WhatsApp Messenger"), List.of("Install")), "non-VPN app installs normally");
+        check(!SystemScreenGuard.blocksVpnInstall("com.android.vending", List.of("Vpnalytics Dashboard"), List.of("Install")), "vpn inside a longer word is not a VPN");
+        check(SystemScreenGuard.blocksPrivateDns("com.android.settings", List.of("Private DNS", "Off", "Automatic", "Private DNS provider hostname"), List.of("Cancel", "Save")), "Private DNS dialog");
+        check(!SystemScreenGuard.blocksPrivateDns("com.android.settings", List.of("Network & internet", "Private DNS", "Wi-Fi"), List.of("Wi-Fi")), "Private DNS row in the network list stays usable");
+        check(SystemScreenGuard.blocksOtherVpnControl("com.android.settings", List.of("Another VPN", "Always-on VPN"), List.of("Cancel", "Connect")), "other VPN connect dialog");
+        check(SystemScreenGuard.blocksOtherVpnControl("com.android.settings", List.of("Connection request", "Another VPN wants to set up a VPN connection"), List.of("Cancel", "OK")), "VPN consent dialog for another app");
+        check(!SystemScreenGuard.blocksOtherVpnControl("com.android.settings", List.of("SafeNest local DNS filter", "Always-on VPN"), List.of("Connect")), "SafeNest own VPN dialog is not another VPN");
+        check(!SystemScreenGuard.blocksOtherVpnControl("com.android.settings", List.of("Wi-Fi", "Bluetooth"), List.of("Connect")), "ordinary connect buttons unaffected");
         for (String action : List.of("Disconnect", "Forget VPN", "Uninstall", "Force stop")) {
             check(SystemScreenGuard.blocksTestControl("com.android.settings", List.of("SafeNest Test", "0.4.5-test"), List.of("SafeNest Test"), List.of(action)), "test Settings: " + action);
         }

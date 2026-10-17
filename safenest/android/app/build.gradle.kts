@@ -23,8 +23,10 @@ android {
     productFlavors {
         create("play") {
             dimension = "distribution"
-            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "false")
-            buildConfigField("boolean", "MANAGED_CONTROLS", "false")
+            // Owner decision 2026-10-17: the Play build carries the full self-exclusion guard
+            // (uninstall/Settings/installer bounce) and Device Administrator, disclosed in-app.
+            buildConfigField("boolean", "ALLOW_SYSTEM_GUARD", "true")
+            buildConfigField("boolean", "MANAGED_CONTROLS", "true")
         }
         create("direct") {
             dimension = "distribution"
@@ -82,6 +84,7 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
+    "playImplementation"("com.android.billingclient:billing-ktx:7.1.1")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.10.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")

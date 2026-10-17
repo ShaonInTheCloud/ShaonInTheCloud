@@ -36,6 +36,13 @@ public final class AccessErrors {
                 return INVALID_PLAN;
             case "trial_unavailable":
                 return SERVER;
+            // Google Play verification outcomes the screen explains individually.
+            case "purchase_bound_to_other_account":
+            case "purchase_not_found":
+            case "invalid_purchase_token":
+            case "test_purchase_not_allowed":
+            case "unknown_play_plan":
+                return code;
             default:
                 break;
         }

@@ -13,11 +13,15 @@ public final class SystemScreenGuard {
     private static Set<String> set(String... entries) { return new HashSet<>(Arrays.asList(entries)); }
     private static final Set<String> SETTINGS = set(
         "com.android.settings", "com.hihonor.settings", "com.huawei.systemmanager",
-        "com.hihonor.systemmanager", "com.miui.securitycenter");
+        "com.hihonor.systemmanager", "com.miui.securitycenter", "com.samsung.android.lool",
+        "com.coloros.safecenter", "com.oplus.safecenter", "com.vivo.permissionmanager",
+        "com.iqoo.secure", "com.oneplus.security", "com.transsion.phonemaster");
     private static final Set<String> INSTALLERS = set(
         "com.android.packageinstaller", "com.google.android.packageinstaller",
         "com.samsung.android.packageinstaller", "com.miui.packageinstaller",
-        "com.huawei.appmarket", "com.hihonor.appmarket");
+        "com.huawei.appmarket", "com.hihonor.appmarket", "com.sec.android.app.samsungapps",
+        "com.xiaomi.market", "com.xiaomi.mipicks", "com.oppo.market", "com.heytap.market",
+        "com.bbk.appstore", "com.vivo.appstore", "com.transsnet.store", "com.aurora.store");
     private static final Set<String> PAGE_CHROME = set(
         "settings", "app info", "vpn", "accessibility", "version", "always-on vpn",
         "block connections without vpn", "forget vpn");
@@ -27,10 +31,19 @@ public final class SystemScreenGuard {
         "remove", "remove profile", "delete", "turn off", "stop",
         "সংযোগ বিচ্ছিন্ন", "আনইনস্টল", "নিষ্ক্রিয়", "নিষ্ক্রিয়", "বন্ধ করুন",
         "poista", "poista asennus", "katkaise yhteys", "poista käytöstä");
+    // Known brands only: used by the lab test-control classifier, which must not treat the
+    // generic word VPN as a brand.
     private static final Pattern VPN_NAME = Pattern.compile(
         "(?i)(?<![a-z0-9])(nordvpn|surfshark|expressvpn|proton\\s?vpn|psiphon|turbo\\s?vpn|" +
         "thunder\\s?vpn|supervpn|windscribe|tunnelbear|hotspot\\s?shield|private internet access|" +
         "cyberghost|1\\.1\\.1\\.1)(?![a-z0-9])");
+    // Install guard: any app that calls itself a VPN/proxy/tunnel, plus brands that do not say so.
+    private static final Pattern VPN_ANY = Pattern.compile(
+        "(?i)(?<![a-z0-9])(vpn|proxy|nordvpn|surfshark|expressvpn|proton\\s?vpn|psiphon|turbo\\s?vpn|" +
+        "thunder\\s?vpn|supervpn|windscribe|tunnelbear|hotspot\\s?shield|private internet access|" +
+        "cyberghost|1\\.1\\.1\\.1|warp|orbot|tor browser|outline|wireguard|openvpn|shadowsocks|" +
+        "v2ray|v2rayng|clash|hiddify|nekobox|sing-box|betternet|hola|zenmate|speedify|ivacy|purevpn|" +
+        "atlas\\s?vpn|mullvad|ultrasurf|intra|dns\\s?changer|secure\\s?dns|ভিপিএন)(?![a-z0-9])");
 
     public static boolean isSystemSurface(String pkg) {
         return SETTINGS.contains(pkg) || INSTALLERS.contains(pkg) || "com.android.vending".equals(pkg);
@@ -51,7 +64,31 @@ public final class SystemScreenGuard {
         if (!INSTALLERS.contains(pkg) && !"com.android.vending".equals(pkg)) return false;
         boolean install = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("install") || s.equals("update") || s.equals("ইনস্টল") || s.equals("asenna"));
-        return install && titles.stream().anyMatch(s -> s.length() <= 140 && VPN_NAME.matcher(s).find());
+        return install && titles.stream().anyMatch(s -> s.length() <= 140 && VPN_ANY.matcher(s).find());
+    }
+    /** Private DNS dialog/page: switching it would route DNS around the local filter. */
+    public static boolean blocksPrivateDns(String pkg, Collection<String> labels, Collection<String> actions) {
+        if (!SETTINGS.contains(pkg)) return false;
+        boolean page = labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("private dns") || s.equals("select private dns mode") || s.equals("private dns provider hostname") ||
+            s.equals("ব্যক্তিগত dns") || s.equals("private dns mode"));
+        if (!page) return false;
+        // The dialog is the only place the mode changes; the network-settings row alone stays usable.
+        return labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("private dns provider hostname") || s.equals("automatic") || s.equals("off") || s.equals("বন্ধ"))
+            || actions.stream().map(SystemScreenGuard::normalize).anyMatch(s -> s.equals("save") || s.equals("সংরক্ষণ"));
+    }
+    /** Another VPN's connect/always-on dialog in Settings while SafeNest holds the protection period. */
+    public static boolean blocksOtherVpnControl(String pkg, Collection<String> labels, Collection<String> actions) {
+        if (!SETTINGS.contains(pkg)) return false;
+        boolean safeNest = labels.stream().map(SystemScreenGuard::normalize).anyMatch(s -> s.contains("safenest"));
+        if (safeNest) return false;
+        boolean vpn = labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("always-on vpn") || s.equals("block connections without vpn") || s.endsWith(" vpn") || s.equals("vpn") ||
+            s.contains("connection request") || s.contains("wants to set up a vpn connection"));
+        if (!vpn) return false;
+        return actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("connect") || s.equals("ok") || s.equals("always-on vpn") || s.equals("সংযোগ") || s.equals("ঠিক আছে"));
     }
     /** Lab-only detail pages. Never matches Settings home, Accessibility list or the VPN list. */
     public static boolean blocksTestControl(String pkg, Collection<String> labels,

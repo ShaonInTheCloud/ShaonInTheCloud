@@ -52,3 +52,10 @@ verify_jwt = false
 
 [functions.payment-catalogue]
 verify_jwt = false
+
+[functions.play-billing-verify]
+verify_jwt = true
+
+# Pub/Sub push from Google carries no Supabase JWT; the handler checks PLAY_RTDN_SECRET.
+[functions.play-billing-rtdn]
+verify_jwt = false
