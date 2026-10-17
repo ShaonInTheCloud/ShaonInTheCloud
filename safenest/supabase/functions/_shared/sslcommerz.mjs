@@ -66,6 +66,7 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
   }
   return {
     provider:'sslcommerz',environment,checkoutOrigins:[base],
+    checkoutOpen:env.SSLCOMMERZ_CHECKOUT_ENABLED==='true',
     async createHostedSession(order,customer) {
       if (env.SSLCOMMERZ_CHECKOUT_ENABLED!=='true') throw new PaymentError('checkout_not_open');
       if (order.provider!=='sslcommerz' || order.environment!==environment || order.currency!=='BDT' ||
@@ -104,7 +105,7 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
       if (new Set(fields.keys()).size!==Array.from(fields.keys()).length ||
         !token(fields.get('tran_id'),30) || !token(fields.get('val_id')))
         throw new PaymentError('invalid_notification',400);
-      const order=await rpc('payment_order_lookup',{p_reference:fields.get('tran_id'),p_environment:environment});
+      const order=await rpc('payment_order_lookup',{p_reference:fields.get('tran_id'),p_provider:'sslcommerz',p_environment:environment});
       if (!order) throw new PaymentError('order_not_found',404);
       return normalize(order,fields.get('val_id'));
     },
