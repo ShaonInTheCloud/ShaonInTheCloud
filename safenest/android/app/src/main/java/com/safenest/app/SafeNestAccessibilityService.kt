@@ -111,6 +111,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
             } else cancelControlScan()
             return
         }
+        if (BuildConfig.DEBUG && SystemScreenGuard.isSystemSurface(event.packageName?.toString().orEmpty()))
+            qa("event type=${event.eventType} pkg=${event.packageName} win=${event.windowId} cls=${event.className}")
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) { onControlTapped(event); return }
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
@@ -296,13 +298,14 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 }
             }
         }
-        val root = controlForegroundRoot() ?: return false
+        val root = controlForegroundRoot()
+        if (root == null) { qa("inspect pkg=$name win=$expectedWindowId root=null active=${rootInActiveWindow?.packageName}"); return false }
         try {
-            if (root.packageName?.toString() != name) return false
+            if (root.packageName?.toString() != name) { qa("inspect pkg=$name root belongs to ${root.packageName}"); return false }
             // A new Settings activity can report its event while the previous
             // Settings page is still the active root. Package equality alone
             // must not let that older page trigger navigation for this event.
-            if (expectedWindowId >= 0 && root.windowId != expectedWindowId) return false
+            if (expectedWindowId >= 0 && root.windowId != expectedWindowId) { qa("inspect pkg=$name win=$expectedWindowId rootWin=${root.windowId} mismatch"); return false }
             val read = readControlLabels(root)
             if (windowTitle == null && !testControls) windowTitle = root.window?.title?.toString()?.takeIf { it.length <= 240 }
             val screen = if (windowTitle != null) read.copy(labels = read.labels + windowTitle!!, detailTitles = read.detailTitles + windowTitle!!) else read
@@ -349,7 +352,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private var lastAlwaysOnClick = 0L
     private var alwaysOnAttempt = 0
-    private fun qa(message: String) { if (BuildConfig.DEBUG) android.util.Log.d("SafeNestGuard", message) }
+    private fun qa(message: String) { if (BuildConfig.DEBUG) android.util.Log.i("SafeNestGuard", message) }
     /**
      * On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Android
      * disconnects the VPN the moment Always-on is switched off, so this must succeed; it

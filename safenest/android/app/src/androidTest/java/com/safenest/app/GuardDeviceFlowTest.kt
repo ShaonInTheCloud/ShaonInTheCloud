@@ -123,6 +123,18 @@ class GuardDeviceFlowTest {
             val turnedOffAt = SystemClock.elapsedRealtime()
             while (alwaysOnPackage() == context.packageName && SystemClock.elapsedRealtime() - turnedOffAt < 3000) SystemClock.sleep(100)
             capture("vpn-always-on-after-tap")
+            run {
+                val deadline = SystemClock.elapsedRealtime() + 15_000
+                var ticks = 0
+                while (SystemClock.elapsedRealtime() < deadline && alwaysOnPackage() != context.packageName) {
+                    if (ticks++ % 10 == 0) {
+                        var state = ""
+                        instrumentation.runOnMainSync { state = SafeNestAccessibilityService.windowStatusForQa() }
+                        println("SafeNest device QA window state: $state lastReason=${GuardPreferences.lastBlockReason()}")
+                    }
+                    SystemClock.sleep(200)
+                }
+            }
             await("Always-on restored by the guard") { alwaysOnPackage() == context.packageName }
             SystemClock.sleep(1500)
             assertEquals("Always-on stays restored", context.packageName, alwaysOnPackage())
