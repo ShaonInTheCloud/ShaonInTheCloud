@@ -201,7 +201,7 @@ test('catalogue exposes only providers with open checkout and prices they can se
   const batches=[];const key='k'.repeat(40);
   const reconcile=await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key}}),{PAYMENT_RECONCILE_KEY:key},
     {rpc:async(name,args)=>{batches.push(args.p_provider);return [];},adapters});
-  assert.deepEqual(await reconcile.json(),{processed:0,review:0});assert.deepEqual(batches,['stripe','nowpayments']);
+  assert.deepEqual(await reconcile.json(),{processed:0,review:0,failed:0});assert.deepEqual(batches,['stripe','nowpayments']);
 });
 
 test('gateway SQL: regions, provider currencies, payment windows, checkout patterns and provider-scoped lookups',async()=>{
