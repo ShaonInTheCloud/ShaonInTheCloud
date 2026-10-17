@@ -18,12 +18,22 @@ public final class SystemScreenGuard {
         "com.android.packageinstaller", "com.google.android.packageinstaller",
         "com.samsung.android.packageinstaller", "com.miui.packageinstaller",
         "com.huawei.appmarket", "com.hihonor.appmarket");
+    // Headings that name a Settings page, not an application: they never hide the
+    // selected app's own identity. Storage is App info's sub-page with Clear storage.
     private static final Set<String> PAGE_CHROME = set(
         "settings", "app info", "vpn", "accessibility", "version", "always-on vpn",
-        "block connections without vpn", "forget vpn");
+        "block connections without vpn", "forget vpn", "storage", "storage & cache", "storage and cache",
+        "space used", "manage storage", "স্টোরেজ", "স্টোরেজ ও ক্যাশে", "tallennustila", "tallennustila ja välimuisti");
+    // Wiping app data ends the commitment as surely as uninstalling, so Storage
+    // controls are guarded like Uninstall on both the consumer and lab paths.
+    private static final Set<String> STORAGE_ACTIONS = set(
+        "clear storage", "clear data", "clear cache", "clear all data", "manage space", "delete app data",
+        "স্টোরেজ সাফ করুন", "ডেটা সাফ করুন", "ক্যাশে সাফ করুন", "স্টোরেজ মুছুন", "ডেটা মুছুন", "ক্যাশে মুছুন",
+        "tyhjennä tallennustila", "tyhjennä tiedot", "tyhjennä välimuisti", "poista tiedot");
     private static final Set<String> PROTECTED_ACTIONS = set(
         "disconnect", "uninstall", "deactivate", "deactivate and uninstall", "disable",
-        "force stop", "clear storage", "clear data", "delete vpn", "forget vpn", "forget",
+        "force stop", "clear storage", "clear data", "clear cache", "clear all data", "delete app data",
+        "delete vpn", "forget vpn", "forget",
         "remove", "remove profile", "delete", "turn off", "stop",
         "সংযোগ বিচ্ছিন্ন", "আনইনস্টল", "নিষ্ক্রিয়", "নিষ্ক্রিয়", "বন্ধ করুন",
         "poista", "poista asennus", "katkaise yhteys", "poista käytöstä");
@@ -101,7 +111,10 @@ public final class SystemScreenGuard {
             s.equals("forget") || s.equals("uninstall") || s.equals("force stop") ||
             s.equals("সংযোগ বিচ্ছিন্ন") || s.equals("আনইনস্টল") ||
             s.equals("katkaise yhteys") || s.equals("poista asennus"));
-        return removal ? "test_app_control" : "";
+        if (removal) return "test_app_control";
+        // App info › Storage: Clear storage wipes the commitment, Clear cache sits beside it.
+        boolean storage = actions.stream().map(SystemScreenGuard::normalize).anyMatch(STORAGE_ACTIONS::contains);
+        return storage ? "test_app_storage" : "";
     }
     private static boolean isSafeNestIdentity(String s) {
         return s.equals("safenest test") || s.equals("com.safenest.app.lab") ||
