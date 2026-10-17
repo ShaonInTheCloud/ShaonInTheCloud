@@ -241,8 +241,24 @@ class SafeNestAccessibilityService : AccessibilityService() {
             // must not let that older page trigger navigation for this event.
             if (expectedWindowId >= 0 && root.windowId != expectedWindowId) return false
             val screen = readControlLabels(root)
-            val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions) else ""
             val now = SystemClock.elapsedRealtime()
+            val guardActive = BuildConfig.ALLOW_SYSTEM_GUARD || testControls
+            // Another VPN can only start after Android's "Connection request" prompt. Refusing
+            // that prompt for every app except SafeNest closes the simplest bypass.
+            if (guardActive && GuardPreferences.blocksVpnApps(this) &&
+                SystemScreenGuard.blocksForeignVpnConsent(name, screen.labels)) {
+                cancelControlScan()
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                returnHome(now, "vpn_consent", "SafeNest blocked another VPN from taking over the connection.")
+                return true
+            }
+            // SafeNest's own VPN page stays open so Always-on can be switched on; if the switch
+            // is off while protection is committed, switch it back on instead of leaving.
+            if (guardActive && SystemScreenGuard.isOwnVpnDetail(name, screen.labels) &&
+                !SystemScreenGuard.isForgetConfirmation(screen.labels, screen.actions)) {
+                ensureAlwaysOn(root, now)
+            }
+            val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions) else ""
             if (reason.isNotEmpty()) {
                 cancelControlScan()
                 returnHome(now, reason, "SafeNest controls are guarded. Use Stop test in SafeNest Test to end the test.", controlPackage = name)
@@ -252,13 +268,59 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 returnHome(now, "safenest_control", "SafeNest commitment is active until your paid period ends.")
                 return true
             }
-            if (BuildConfig.ALLOW_SYSTEM_GUARD && GuardPreferences.blocksVpnApps(this) &&
+            if (guardActive && GuardPreferences.blocksVpnApps(this) &&
                 SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
                 returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
                 return true
             }
             return false
         } finally { @Suppress("DEPRECATION") root.recycle() }
+    }
+
+    private var lastAlwaysOnClick = 0L
+    /** On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Bounded, label-driven, no text retained. */
+    private fun ensureAlwaysOn(root: AccessibilityNodeInfo, now: Long) {
+        if (now - lastAlwaysOnClick < 1500L) return
+        val rows = (root.findAccessibilityNodeInfosByText("Always-on VPN") ?: emptyList()) +
+            (root.findAccessibilityNodeInfosByText("সবসময় চালু VPN") ?: emptyList())
+        if (rows.isEmpty()) return
+        try {
+            for (label in rows) {
+                if (!label.isVisibleToUser) continue
+                var row: AccessibilityNodeInfo? = label.parent
+                var hops = 0
+                while (row != null && hops++ < 4) {
+                    val toggle = findToggle(row, 0)
+                    if (toggle != null) {
+                        try {
+                            if (!toggle.isChecked && toggle.isEnabled) {
+                                val target = if (toggle.isClickable) toggle else row
+                                if (target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+                                    lastAlwaysOnClick = now
+                                    recordHome("always_on_restored", "SafeNest keeps Always-on VPN switched on during protection.")
+                                }
+                            }
+                        } finally { @Suppress("DEPRECATION") toggle.recycle() }
+                        return
+                    }
+                    val next = row.parent
+                    @Suppress("DEPRECATION") row.recycle()
+                    row = next
+                }
+                @Suppress("DEPRECATION") row?.recycle()
+            }
+        } finally { rows.forEach { @Suppress("DEPRECATION") it.recycle() } }
+    }
+    private fun findToggle(node: AccessibilityNodeInfo, depth: Int): AccessibilityNodeInfo? {
+        if (depth > 3) return null
+        for (i in 0 until minOf(node.childCount, 12)) {
+            val child = node.getChild(i) ?: continue
+            if (child.isCheckable) return child
+            val nested = findToggle(child, depth + 1)
+            @Suppress("DEPRECATION") child.recycle()
+            if (nested != null) return nested
+        }
+        return null
     }
 
     /** A Settings window event can arrive before its Compose/toolbar content is ready. */

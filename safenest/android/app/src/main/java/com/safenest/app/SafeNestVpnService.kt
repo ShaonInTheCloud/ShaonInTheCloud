@@ -45,6 +45,9 @@ class SafeNestVpnService : VpnService() {
         const val ACTION_START = "com.safenest.app.START"
         const val ACTION_STOP = "com.safenest.app.STOP"
         private const val CHANNEL = "safenest_protection"
+        private const val ALERT_CHANNEL = "safenest_protection_alerts"
+        private const val TAKEOVER_NOTIFICATION_ID = 7302
+        const val EXTRA_RESTORE = "com.safenest.app.RESTORE_PROTECTION"
         private const val NOTIFICATION_ID = 2401
         private const val DNS_IP = "10.91.0.53"
         private val DNS_ADDRESS = byteArrayOf(10, 91, 0, 53)
@@ -110,6 +113,7 @@ class SafeNestVpnService : VpnService() {
             // Do not report protection if Android no longer grants this app VPN ownership.
             if (session != null && VpnService.prepare(this@SafeNestVpnService) != null) {
                 stopProtection("Another VPN replaced SafeNest or its VPN permission was revoked. Websites are not filtered; reopen SafeNest and restore protection.")
+                notifyTakeover()
                 return
             }
             samplePlatformStatus()
@@ -154,6 +158,7 @@ class SafeNestVpnService : VpnService() {
         lastBlockedAt.set(0L)
         try {
             startForeground(NOTIFICATION_ID, notification())
+            try { getSystemService(NotificationManager::class.java)?.cancel(TAKEOVER_NOTIFICATION_ID) } catch (_: Exception) {}
             val initialNetwork = physicalNetwork()
             val initialProperties = linkProperties(initialNetwork)
             updatePrivateDnsState(initialProperties)
@@ -514,7 +519,29 @@ class SafeNestVpnService : VpnService() {
         getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("protection_on", false).apply()
     }
 
-    override fun onRevoke() { stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it."); super.onRevoke() }
+    override fun onRevoke() {
+        stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it.")
+        notifyTakeover()
+        super.onRevoke()
+    }
+
+    /** Protection was committed and another VPN took the connection: ask the user back in to restore it. */
+    private fun notifyTakeover() {
+        if (!ProtectionCommitment.isActive(this)) return
+        try {
+            val manager = getSystemService(NotificationManager::class.java) ?: return
+            manager.createNotificationChannel(NotificationChannel(ALERT_CHANNEL, "SafeNest protection alerts", NotificationManager.IMPORTANCE_HIGH))
+            val open = PendingIntent.getActivity(this, 1,
+                Intent().setClassName(this, "com.safenest.app.MainActivity").putExtra(EXTRA_RESTORE, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            manager.notify(TAKEOVER_NOTIFICATION_ID, Notification.Builder(this, ALERT_CHANNEL)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle("SafeNest protection interrupted")
+                .setContentText("Another VPN replaced SafeNest. Tap to restore protection.")
+                .setCategory(Notification.CATEGORY_ALARM).setAutoCancel(true).setContentIntent(open).build())
+        } catch (_: Exception) {}
+    }
     override fun onDestroy() {
         val wasRunning = session != null
         disposeSession()

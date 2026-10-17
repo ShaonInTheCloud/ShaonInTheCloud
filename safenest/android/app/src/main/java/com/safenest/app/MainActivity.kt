@@ -166,23 +166,6 @@ private fun SafeNestApp() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Service state is authoritative; a permission dialog or start request is not success.
-    LaunchedEffect(lifecycleOwner) {
-        while (true) {
-            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                protectionOn = SafeNestVpnService.isRunning.get() && VpnService.prepare(context) == null
-                testActive = LocalTestSession.isActive(context)
-                paidAccess = ProtectionCommitment.hasVerifiedAccess(context)
-                ProtectionCommitment.checkpoint(context)
-                dnsState = SafeNestVpnService.dnsHealth.get()
-                lockdown = SafeNestVpnService.lockdownEnabled.get()
-                isOwner = ManagedProtection.isDeviceOwner(context)
-                managedActive = ManagedProtection.isConfigured(context)
-            }
-            delay(750)
-        }
-    }
-
     val vpnPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             if (!ProtectionCommitment.begin(context)) {
@@ -201,6 +184,31 @@ private fun SafeNestApp() {
             }
         } else toast = s(language, "VPN permission was not granted.", "VPN অনুমতি দেওয়া হয়নি।")
     }
+
+    // Service state is authoritative; a permission dialog or start request is not success.
+    var restorePrompted by remember { mutableStateOf(false) }
+    LaunchedEffect(lifecycleOwner) {
+        while (true) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                protectionOn = SafeNestVpnService.isRunning.get() && VpnService.prepare(context) == null
+                // Committed protection lost its VPN slot to another app: re-request it as soon as
+                // SafeNest is in front, once per visit, so a takeover is undone in one tap.
+                if (!protectionOn && ProtectionCommitment.isActive(context) && !restorePrompted) {
+                    val prepare = VpnService.prepare(context)
+                    if (prepare != null) { restorePrompted = true; try { vpnPermission.launch(prepare) } catch (_: Exception) {} }
+                } else if (protectionOn) restorePrompted = false
+                testActive = LocalTestSession.isActive(context)
+                paidAccess = ProtectionCommitment.hasVerifiedAccess(context)
+                ProtectionCommitment.checkpoint(context)
+                dnsState = SafeNestVpnService.dnsHealth.get()
+                lockdown = SafeNestVpnService.lockdownEnabled.get()
+                isOwner = ManagedProtection.isDeviceOwner(context)
+                managedActive = ManagedProtection.isConfigured(context)
+            }
+            delay(750)
+        }
+    }
+
 
     val importRules = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null && !importing) {

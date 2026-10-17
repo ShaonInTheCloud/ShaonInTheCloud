@@ -42,8 +42,40 @@ public final class SystemScreenGuard {
         "thunder\\s?vpn|supervpn|windscribe|tunnelbear|hotspot\\s?shield|private internet access|" +
         "cyberghost|1\\.1\\.1\\.1)(?![a-z0-9])");
 
+    /** Android's own VPN permission prompt. Every third-party VPN must pass it once. */
+    public static final String VPN_DIALOGS = "com.android.vpndialogs";
     public static boolean isSystemSurface(String pkg) {
-        return SETTINGS.contains(pkg) || INSTALLERS.contains(pkg) || "com.android.vending".equals(pkg);
+        return SETTINGS.contains(pkg) || INSTALLERS.contains(pkg) || "com.android.vending".equals(pkg) || VPN_DIALOGS.equals(pkg);
+    }
+    /** The VPN "Connection request" prompt for any app other than SafeNest. SafeNest's own prompt stays usable. */
+    public static boolean blocksForeignVpnConsent(String pkg, Collection<String> labels) {
+        if (!VPN_DIALOGS.equals(pkg)) return false;
+        boolean own = false, vpnPrompt = false;
+        for (String raw : labels) {
+            String s = normalize(raw);
+            if (isSafeNestIdentity(s) || s.contains("safenest")) own = true;
+            if (s.contains("vpn") || s.contains("connection request")) vpnPrompt = true;
+        }
+        return vpnPrompt && !own;
+    }
+    /** SafeNest's own VPN detail page in Settings (Always-on VPN lives here). Entering it is allowed. */
+    public static boolean isOwnVpnDetail(String pkg, Collection<String> labels) {
+        if (!SETTINGS.contains(pkg)) return false;
+        boolean own = false, alwaysOn = false;
+        for (String raw : labels) {
+            String s = normalize(raw);
+            if (isSafeNestIdentity(s)) own = true;
+            if (s.equals("always-on vpn") || s.equals("সবসময় চালু vpn") || s.equals("aina päällä oleva vpn")) alwaysOn = true;
+        }
+        return own && alwaysOn;
+    }
+    /** The confirmation that actually removes the profile: a dialog whose confirm button is Forget. */
+    public static boolean isForgetConfirmation(Collection<String> labels, Collection<String> actions) {
+        boolean confirm = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.equals("forget") || s.equals("ভুলে যান") || s.equals("unohda"));
+        boolean question = labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
+            s.startsWith("forget this vpn") || s.startsWith("forget vpn?") || s.contains("vpn will be removed"));
+        return confirm || question;
     }
     public static boolean blocksSafeNestControl(String pkg, Collection<String> labels,
                                                 Collection<String> actions, boolean checkedToggle) {
@@ -54,6 +86,9 @@ public final class SystemScreenGuard {
         if (!target) return false;
         boolean ownToggle = checkedToggle && labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("use safenest") || s.equals("use safenest app guard"));
+        // The VPN detail page must stay reachable so Always-on can be switched on; its
+        // Forget VPN button only matters once the Forget confirmation appears.
+        if (isOwnVpnDetail(pkg, labels)) return isForgetConfirmation(labels, actions);
         return ownToggle || actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             PROTECTED_ACTIONS.contains(s) || s.startsWith("deactivate and uninstall"));
     }
@@ -73,7 +108,8 @@ public final class SystemScreenGuard {
         if (!SETTINGS.contains(pkg) || title == null || title.length() > 240) return "";
         String text = normalize(title);
         if (text.equals("safenest test app guard") || text.equals("safenest owner test app guard")) return "test_accessibility";
-        if (text.equals("safenest") || text.equals("safenest test") || text.equals("safenest owner test")) return "test_settings_detail";
+        // A window titled with the app name is either App info or the VPN detail page; only
+        // content tells them apart, so the content scan decides.
         return "";
     }
     public static String testControlReason(String pkg, Collection<String> labels,
@@ -100,9 +136,15 @@ public final class SystemScreenGuard {
             (text.contains("block connections without vpn") && text.contains("forget vpn"));
         boolean connectionDialog = actions.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("connect") || s.equals("disconnect") || s.equals("katkaise yhteys") || s.equals("সংযোগ বিচ্ছিন্ন"));
+        // Removing SafeNest's VPN profile ends protection: the Forget confirmation always bounces.
+        if (settings && own && isForgetConfirmation(labels, actions)) return "test_vpn_forget";
         // A name in the VPN list is insufficient. Require actual detail/connection controls.
         if (settings && (vpnDetail || connectionDialog)) {
-            if (own && (ownTitle || pageTitles.isEmpty())) return "test_vpn_detail";
+            if (own && (ownTitle || pageTitles.isEmpty())) {
+                if (isForgetConfirmation(labels, actions)) return "test_vpn_forget";
+                if (connectionDialog && !vpnDetail) return "test_vpn_detail";
+                return ""; // own detail page stays open so Always-on VPN can be enabled
+            }
             if (knownVpnTitle || (pageTitles.isEmpty() && knownVpnLabel && vpnDetail)) return "test_other_vpn_detail";
         }
         if (!own || (!pageTitles.isEmpty() && !ownTitle)) return "";
