@@ -482,8 +482,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
         handler.postDelayed({
             if (!isConnected || !GuardPreferences.isEnabled(this)) return@postDelayed
             if (performGlobalAction(GLOBAL_ACTION_HOME)) recordHome(reason, message)
-            // Belt and braces: a second Home after the first settles catches a late dialog.
-            handler.postDelayed({ if (isConnected && GuardPreferences.isEnabled(this)) performGlobalAction(GLOBAL_ACTION_HOME) }, 400)
+            // No second Home: it would also eject whatever the user opens next. A dialog that
+            // appears late is caught by the confirmation scan and gets its own exit.
         }, 250)
     }
 
