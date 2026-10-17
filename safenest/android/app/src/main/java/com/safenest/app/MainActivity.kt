@@ -194,8 +194,13 @@ private fun SafeNestApp() {
                 // Committed protection lost its VPN slot to another app: re-request it as soon as
                 // SafeNest is in front, once per visit, so a takeover is undone in one tap.
                 if (!protectionOn && ProtectionCommitment.isActive(context) && !restorePrompted) {
+                    restorePrompted = true
                     val prepare = VpnService.prepare(context)
-                    if (prepare != null) { restorePrompted = true; try { vpnPermission.launch(prepare) } catch (_: Exception) {} }
+                    if (prepare != null) try { vpnPermission.launch(prepare) } catch (_: Exception) {}
+                    else try {
+                        // Still authorised (Always-on was switched off, or the filter was stopped): restart directly.
+                        ContextCompat.startForegroundService(context, Intent(context, SafeNestVpnService::class.java).setAction(SafeNestVpnService.ACTION_START))
+                    } catch (_: Exception) {}
                 } else if (protectionOn) restorePrompted = false
                 testActive = LocalTestSession.isActive(context)
                 paidAccess = ProtectionCommitment.hasVerifiedAccess(context)
