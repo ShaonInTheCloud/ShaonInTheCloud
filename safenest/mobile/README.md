@@ -1,7 +1,7 @@
 # SafeNest mobile (Expo — Android + iOS)
 
 The cross-platform SafeNest app: one codebase for Android and iOS, talking to the same Supabase
-project as the website and the Kotlin Android app. Expo SDK 58, Expo Router, TypeScript.
+project as the website and the Kotlin Android app. Expo SDK 57 (matches the App Store Expo Go), Expo Router, TypeScript.
 
 What is in it today
 
