@@ -1,0 +1,9 @@
+{
+  "removed_host": "gamblersanonymous.org",
+  "affected_asset": "gambling_hosts_blocklistproject.txt",
+  "reason": "Gambling recovery support, not a casino; removed from the old attributed snapshot",
+  "original_asset_count": 342623,
+  "corrected_asset_count": 342622,
+  "corrected_asset_sha256": "73af5a17c9caeff38a287da96a0af91c10e5351ed1dde07c4a23f6aa0fda5275",
+  "source_notice": "Upstream attribution and old raw snapshot metadata retained; this exclusion modifies the normalized bundled asset."
+}

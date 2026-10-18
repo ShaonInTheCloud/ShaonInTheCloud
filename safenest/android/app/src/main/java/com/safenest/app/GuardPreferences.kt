@@ -36,7 +36,8 @@ object GuardPreferences {
         prefs(context).edit().putBoolean("enabled", value).apply()
     }
     fun disable(context: Context) = setEnabled(context, false)
-    fun blocksVpnApps(context: Context): Boolean = prefs(context).getBoolean("block_vpn_apps", false)
+    /** On by default: another VPN replacing SafeNest's is the simplest bypass. */
+    fun blocksVpnApps(context: Context): Boolean = prefs(context).getBoolean("block_vpn_apps", true)
     fun setBlockVpnApps(context: Context, value: Boolean) {
         if (value && !ProtectionCommitment.hasVerifiedAccess(context)) return
         if (!value && (ProtectionCommitment.isActive(context) || ManagedProtection.isConfigured(context))) return
@@ -55,7 +56,7 @@ object GuardPreferences {
         prefs(context).edit().putBoolean("enabled", true).putBoolean("block_vpn_apps", true).apply()
     }
     internal fun clearForExpiry(context: Context) {
-        prefs(context).edit().putBoolean("enabled", false).putBoolean("block_vpn_apps", false)
+        prefs(context).edit().putBoolean("enabled", false).remove("block_vpn_apps")
             .putBoolean("block_encrypted_dns_bypass", false)
             .putBoolean("test_control_consent", false).putBoolean("test_control_consent_v2", false)
             .putBoolean("test_control_consent_v3", false).commit()
@@ -63,11 +64,13 @@ object GuardPreferences {
 
     /** Foreground event path: no installed-app inventory scan per event. */
     fun isBlockedPackage(context: Context, name: String): Boolean =
-        (KnownGamblingPackages.contains(name) || name in prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty()) &&
+        (KnownGamblingPackages.contains(name) || name in prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() ||
+            BlockedAppCatalog.isGamblingApp(context, name)) &&
             GuardRules.isPackageName(name) && !GuardRules.isBrowserExempt(name) && !isEssentialPackage(context, name)
 
     fun getBlockedPackages(context: Context): Set<String> =
-        (prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() + KnownGamblingPackages.installed(context))
+        (prefs(context).getStringSet("blocked_packages", emptySet()).orEmpty() + KnownGamblingPackages.installed(context) +
+            BlockedAppCatalog.installedMatches(context).filter { BlockedAppCatalog.isGamblingApp(context, it) })
             .filter { GuardRules.isPackageName(it) && !GuardRules.isBrowserExempt(it) && !isEssentialPackage(context, it) }.toSet()
 
     /** Only installed apps can be chosen. System/recovery apps cannot be added. */

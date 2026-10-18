@@ -1,0 +1,19 @@
+[Unit]
+Description=SafeNest blocklist health check (daily)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=safenest
+EnvironmentFile=/etc/safenest-health.env
+WorkingDirectory=/opt/safenest/safenest/intelligence
+ExecStartPre=-/usr/bin/git -C /opt/safenest pull --ff-only
+ExecStart=/usr/bin/node src/health-runner.mjs run
+ExecStartPost=/usr/bin/node src/health-runner.mjs export /var/lib/safenest/health-export
+TimeoutStartSec=22h
+Nice=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/safenest /var/lib/safenest
+PrivateTmp=true

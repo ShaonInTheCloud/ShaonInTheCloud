@@ -1,0 +1,14 @@
+[Unit]
+Description=SafeNest blocklist health — one-time import of the bundled list
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=safenest
+EnvironmentFile=/etc/safenest-health.env
+WorkingDirectory=/opt/safenest/safenest/intelligence
+ExecStart=/usr/bin/node src/health-runner.mjs seed
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/safenest /var/lib/safenest

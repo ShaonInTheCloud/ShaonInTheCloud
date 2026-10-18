@@ -1,6 +1,11 @@
 import {sslcommerzAdapter} from './sslcommerz.mjs';
+import {stripeAdapter} from './stripe.mjs';
+import {nowpaymentsAdapter} from './nowpayments.mjs';
 /**
- * Payment orchestration with a disabled-by-default SSLCOMMERZ adapter.
+ * Payment orchestration over disabled-by-default provider adapters:
+ *   sslcommerz  — Bangladesh cards and wallets (hosted)
+ *   stripe      — cards worldwide (Mastercard, Visa, …) through Stripe Checkout
+ *   nowpayments — cryptocurrency, settling to the merchant's exchange wallet
  * A concrete adapter MUST validate notifications independently with the provider,
  * verify merchant/account and environment, and normalize the provider response.
  * Browser redirects and client fields are never validation evidence.
@@ -12,14 +17,45 @@ export const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const statuses = new Set(['pending', 'paid', 'failed', 'cancelled', 'refunded', 'chargeback']);
 const boundedText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
 
-/** @typedef {{provider:string, environment:'sandbox'|'live',
- * createHostedSession:(order:object)=>Promise<{url:string}>,
+/** @typedef {{provider:string, environment:'sandbox'|'live', checkoutOpen?:boolean,
+ * createHostedSession:(order:object,customer?:object)=>Promise<{url:string}>,
  * validateNotification:(raw:string, headers:Headers)=>Promise<object>,
  * reconcile:(order:object)=>Promise<object>, checkoutOrigins:ReadonlyArray<string>}} ProviderAdapter
  */
-// Merchant credentials, environment and explicit approval gates are server-only.
-export function configuredAdapter(env = {}, rpc, fetcher = fetch) {
-  return sslcommerzAdapter(env,rpc,fetcher);
+export const providerFactories = {sslcommerz:sslcommerzAdapter, stripe:stripeAdapter, nowpayments:nowpaymentsAdapter};
+export const providerNames = Object.keys(providerFactories);
+
+/** Every adapter whose server-side configuration is complete. Misconfigured ones are skipped. */
+export function configuredAdapters(env = {}, rpc, fetcher = fetch) {
+  const adapters = [];
+  for (const factory of Object.values(providerFactories)) {
+    try { adapters.push(factory(env, rpc, fetcher)); } catch (error) {
+      if (!(error instanceof PaymentError) || error.code !== 'payment_provider_not_configured') throw error;
+    }
+  }
+  return adapters;
+}
+
+/** One adapter: the named provider, or the only configured one when nothing is named. */
+export function configuredAdapter(env = {}, rpc, fetcher = fetch, provider) {
+  const adapters = configuredAdapters(env, rpc, fetcher);
+  if (provider !== undefined) {
+    const match = adapters.find(adapter => adapter.provider === provider);
+    if (!match) throw new PaymentError('payment_provider_not_configured');
+    return match;
+  }
+  if (adapters.length !== 1) throw new PaymentError('payment_provider_not_configured');
+  return adapters[0];
+}
+
+/** Picks the adapter a gateway callback belongs to from its signature headers or ?provider=. */
+export function notificationProvider(req) {
+  const named = new URL(req.url).searchParams.get('provider');
+  if (named !== null) return providerNames.includes(named) ? named : undefined;
+  if (req.headers.has('stripe-signature')) return 'stripe';
+  if (req.headers.has('x-nowpayments-sig')) return 'nowpayments';
+  if ((req.headers.get('content-type') ?? '').toLowerCase().startsWith('application/x-www-form-urlencoded')) return 'sslcommerz';
+  return undefined;
 }
 
 export function checkoutUrl(adapter, value) {

@@ -45,6 +45,9 @@ class SafeNestVpnService : VpnService() {
         const val ACTION_START = "com.safenest.app.START"
         const val ACTION_STOP = "com.safenest.app.STOP"
         private const val CHANNEL = "safenest_protection"
+        private const val ALERT_CHANNEL = "safenest_protection_alerts"
+        private const val TAKEOVER_NOTIFICATION_ID = 7302
+        const val EXTRA_RESTORE = "com.safenest.app.RESTORE_PROTECTION"
         private const val NOTIFICATION_ID = 2401
         private const val DNS_IP = "10.91.0.53"
         private val DNS_ADDRESS = byteArrayOf(10, 91, 0, 53)
@@ -55,6 +58,11 @@ class SafeNestVpnService : VpnService() {
         val dnsTransport = AtomicReference("none")
         val lockdownEnabled = AtomicBoolean(false)
         val alwaysOnEnabled = AtomicBoolean(false)
+        @Volatile private var instance: SafeNestVpnService? = null
+        /** Live Always-on reading from the running service, or null when it is not running. */
+        fun sampleAlwaysOn(): Boolean? = instance?.let { svc ->
+            try { (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && svc.isAlwaysOn).also { alwaysOnEnabled.set(it) } } catch (_: Exception) { null }
+        }
         val lastError = AtomicReference("")
         /** Volatile on-device diagnostic, cleared on service start; never uploaded or persisted. */
         val lastBlockedHost = AtomicReference("")
@@ -109,7 +117,10 @@ class SafeNestVpnService : VpnService() {
             // OEMs may leave a service/notification alive briefly after another VPN wins.
             // Do not report protection if Android no longer grants this app VPN ownership.
             if (session != null && VpnService.prepare(this@SafeNestVpnService) != null) {
+                val committed = ProtectionCommitment.isActive(this@SafeNestVpnService)
                 stopProtection("Another VPN replaced SafeNest or its VPN permission was revoked. Websites are not filtered; reopen SafeNest and restore protection.")
+                notifyTakeover()
+                if (committed) SafeNestAccessibilityService.protectionRevoked("vpn_revoked")
                 return
             }
             samplePlatformStatus()
@@ -119,6 +130,8 @@ class SafeNestVpnService : VpnService() {
             }
         }
     }
+
+    override fun onCreate() { super.onCreate(); instance = this }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!ProtectionCommitment.isActive(this)) {
@@ -154,6 +167,7 @@ class SafeNestVpnService : VpnService() {
         lastBlockedAt.set(0L)
         try {
             startForeground(NOTIFICATION_ID, notification())
+            try { getSystemService(NotificationManager::class.java)?.cancel(TAKEOVER_NOTIFICATION_ID) } catch (_: Exception) {}
             val initialNetwork = physicalNetwork()
             val initialProperties = linkProperties(initialNetwork)
             updatePrivateDnsState(initialProperties)
@@ -161,7 +175,7 @@ class SafeNestVpnService : VpnService() {
                 stopProtection("Android 9 encrypted Private DNS is not supported by this filter. Use Android 10 or newer, or review Private DNS in Android Settings. Internet access has been restored.")
                 return
             }
-            val descriptor = Builder()
+            val builder = Builder()
                 .setSession(if (LocalTestSession.enabled) "SafeNest Test local DNS filter" else "SafeNest local DNS filter")
                 .setMtu(1500)
                 .setBlocking(true)
@@ -171,7 +185,12 @@ class SafeNestVpnService : VpnService() {
                 .allowFamily(OsConstants.AF_INET6)
                 // A default route here would black-hole all internet: this is DNS only.
                 .addRoute(DNS_IP, 32)
-                .establish() ?: throw IllegalStateException("VPN consent is no longer available")
+            // Listed gambling IP ranges are routed in too. The packet loop only answers DNS, so traffic to them
+            // is dropped: sites opened by IP address fail instead of bypassing the DNS filter.
+            for (range in BlockedIps.ranges(this)) {
+                try { builder.addRoute(range.address, range.prefix) } catch (_: Exception) {}
+            }
+            val descriptor = builder.establish() ?: throw IllegalStateException("VPN consent is no longer available")
             val current = Session(descriptor)
             session = current
             reportedUnderlying = initialNetwork
@@ -514,8 +533,33 @@ class SafeNestVpnService : VpnService() {
         getSharedPreferences("safenest_app", MODE_PRIVATE).edit().putBoolean("protection_on", false).apply()
     }
 
-    override fun onRevoke() { stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it."); super.onRevoke() }
+    override fun onRevoke() {
+        val committed = ProtectionCommitment.isActive(this)
+        stopProtection("SafeNest's VPN permission was revoked or another VPN replaced it.")
+        notifyTakeover()
+        if (committed) SafeNestAccessibilityService.protectionRevoked("vpn_revoked")
+        super.onRevoke()
+    }
+
+    /** Protection was committed and another VPN took the connection: ask the user back in to restore it. */
+    private fun notifyTakeover() {
+        if (!ProtectionCommitment.isActive(this)) return
+        try {
+            val manager = getSystemService(NotificationManager::class.java) ?: return
+            manager.createNotificationChannel(NotificationChannel(ALERT_CHANNEL, "SafeNest protection alerts", NotificationManager.IMPORTANCE_HIGH))
+            val open = PendingIntent.getActivity(this, 1,
+                Intent().setClassName(this, "com.safenest.app.MainActivity").putExtra(EXTRA_RESTORE, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            manager.notify(TAKEOVER_NOTIFICATION_ID, Notification.Builder(this, ALERT_CHANNEL)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle("SafeNest protection interrupted")
+                .setContentText("Another VPN replaced SafeNest. Tap to restore protection.")
+                .setCategory(Notification.CATEGORY_ALARM).setAutoCancel(true).setContentIntent(open).build())
+        } catch (_: Exception) {}
+    }
     override fun onDestroy() {
+        if (instance === this) instance = null
         val wasRunning = session != null
         disposeSession()
         if (wasRunning) {

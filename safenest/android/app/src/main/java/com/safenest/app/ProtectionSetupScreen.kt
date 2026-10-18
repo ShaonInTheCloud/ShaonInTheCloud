@@ -27,9 +27,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private val SetupInk = Color(0xFF28111F)
-private val SetupPurple = Color(0xFF982957)
-private val SetupMuted = Color(0xFF2D081C)
+private val SetupInk = Neon.Text
+private val SetupPurple = Neon.PinkSoft
+private val SetupMuted = Neon.Muted
 
 @Composable
 fun ProtectionSetupScreen(
@@ -136,7 +136,7 @@ fun ProtectionSetupScreen(
                 "strict-private-dns" -> t("Your strict Private DNS", "আপনার নির্দিষ্ট Private DNS")
                 else -> t("Not connected", "সংযুক্ত নয়")
             })
-            if (vpnTakenOver) Text(t("Another VPN has taken over. SafeNest cannot filter its traffic on this personal phone. Restore SafeNest VPN permission and test again.", "অন্য VPN চালু হয়েছে। ব্যক্তিগত ফোনে SafeNest তার ট্রাফিক ফিল্টার করতে পারে না। SafeNest VPN অনুমতি ফিরিয়ে আবার পরীক্ষা করুন।"), fontSize = 12.sp, color = Color(0xFFB53A3A))
+            if (vpnTakenOver) Text(t("Another VPN has taken over. SafeNest cannot filter its traffic on this personal phone. Restore SafeNest VPN permission and test again.", "অন্য VPN চালু হয়েছে। ব্যক্তিগত ফোনে SafeNest তার ট্রাফিক ফিল্টার করতে পারে না। SafeNest VPN অনুমতি ফিরিয়ে আবার পরীক্ষা করুন।"), fontSize = 12.sp, color = Color(0xFFFF5C7A))
             StatusLine(t("Allowed-site DNS", "স্বাভাবিক সাইটের DNS"), when {
                 lockdown -> t("Lockdown conflicts with this build", "Lockdown এই সংস্করণের সাথে সামঞ্জস্যপূর্ণ নয়")
                 !running -> t("Not running", "চালু নেই")
@@ -158,9 +158,9 @@ fun ProtectionSetupScreen(
                 !guardEnabled || !accessEnabled || !guardConnected -> t("Selected; app guard is not connected", "নির্বাচিত; অ্যাপ গার্ড সংযুক্ত নয়")
                 else -> t("Active for visible detected apps", "দৃশ্যমান শনাক্ত অ্যাপে সক্রিয়")
             })
-            if (guardEnabled && !running) Text(t("The DNS filter is off. The UI guard can recognize some blocked addresses, but network filtering is not running.", "DNS ফিল্টার বন্ধ। UI গার্ড কিছু ব্লক ঠিকানা চিনতে পারে, কিন্তু নেটওয়ার্ক ফিল্টার চলছে না।"), fontSize = 11.sp, color = Color(0xFF9A5500))
-            if (lockdown) Text(t("Turn OFF “Block connections without VPN” in Android VPN settings. This version filters DNS and does not relay all internet traffic.", "Android VPN সেটিংসে “Block connections without VPN” বন্ধ করুন। এই সংস্করণ DNS ফিল্টার করে, সব ইন্টারনেট ট্রাফিক বহন করে না।"), fontSize = 12.sp, color = Color(0xFFB53A3A))
-            if (error.isNotBlank()) Text(t("Diagnostic: ", "ত্রুটির তথ্য: ") + error, fontSize = 11.sp, color = Color(0xFFB53A3A))
+            if (guardEnabled && !running) Text(t("The DNS filter is off. The UI guard can recognize some blocked addresses, but network filtering is not running.", "DNS ফিল্টার বন্ধ। UI গার্ড কিছু ব্লক ঠিকানা চিনতে পারে, কিন্তু নেটওয়ার্ক ফিল্টার চলছে না।"), fontSize = 11.sp, color = Neon.Orange)
+            if (lockdown) Text(t("Turn OFF “Block connections without VPN” in Android VPN settings. This version filters DNS and does not relay all internet traffic.", "Android VPN সেটিংসে “Block connections without VPN” বন্ধ করুন। এই সংস্করণ DNS ফিল্টার করে, সব ইন্টারনেট ট্রাফিক বহন করে না।"), fontSize = 12.sp, color = Color(0xFFFF5C7A))
+            if (error.isNotBlank()) Text(t("Diagnostic: ", "ত্রুটির তথ্য: ") + error, fontSize = 11.sp, color = Color(0xFFFF5C7A))
         }
 
         SetupCard(t("1. App guard and Accessibility", "১. অ্যাপ গার্ড ও Accessibility")) {
@@ -266,7 +266,7 @@ fun ProtectionSetupScreen(
                 }
             }) { Text(t("Refresh managed browser rules", "পরিচালিত ব্রাউজারের তালিকা হালনাগাদ")) }
         }
-        if (message.isNotBlank()) Text(message, color = Color(0xFFB53A3A), fontSize = 12.sp)
+        if (message.isNotBlank()) Text(message, color = Color(0xFFFF5C7A), fontSize = 12.sp)
         TextButton(onClick = onBack) { Text(t("Back to protection", "সুরক্ষায় ফিরুন")) }
     }
 
@@ -302,7 +302,7 @@ fun ProtectionSetupScreen(
 }
 
 @Composable private fun SetupCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface.copy(alpha = .85f)) {
+    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title, color = SetupInk, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             content()

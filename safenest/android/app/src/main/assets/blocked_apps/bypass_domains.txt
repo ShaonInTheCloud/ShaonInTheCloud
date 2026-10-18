@@ -1,0 +1,35 @@
+# SafeNest — web proxies, "unblocker" sites and Tor web gateways. They open blocked sites inside another
+# site, so the gambling domain never reaches the filter. Each entry blocks the name and its subdomains.
+# One per line; '#' starts a comment. Add new ones here (same daily process as the gambling lists).
+croxyproxy.com
+croxyproxy.net
+croxyproxy.rocks
+proxysite.com
+kproxy.com
+hidester.com
+4everproxy.com
+proxyium.com
+blockaway.net
+hide.me
+vpnbook.com
+whoer.net
+filterbypass.me
+proxfree.com
+zalmos.com
+hidemyass.com
+megaproxy.com
+proxyfree.com
+unblock-websites.com
+plainproxies.com
+proxyorca.com
+genmirror.com
+sitenable.com
+siteget.net
+proxy-youtube.com
+# Tor web gateways (open .onion sites in a normal browser)
+tor2web.org
+onion.ws
+onion.ly
+onion.pet
+onion.city
+onion.to

@@ -6,12 +6,9 @@ import java.util.Locale
 
 /** Pure parsing rules. A URL is never matched using page text or gambling keywords. */
 object GuardRules {
-    // Browsers are exempt from whole-app selection; supported address bars are checked separately.
-    private val browserExemptions = setOf(
-        "com.android.chrome", "com.chrome.beta", "com.chrome.dev", "com.chrome.canary",
-        "org.mozilla.firefox", "org.mozilla.firefox_beta", "org.mozilla.fenix"
-    )
-    fun isBrowserExempt(packageName: String): Boolean = packageName in browserExemptions
+    // Browsers with a known address bar stay usable; their address bar is checked against the blocklist
+    // instead (AppBlockRules.ADDRESS_BARS). Browsers with a built-in VPN are not exempt: they are blocked whole.
+    fun isBrowserExempt(packageName: String): Boolean = AppBlockRules.addressBarIds(packageName) != null
 
     fun shouldReturnHome(packageName: String, selectedOrVpn: Boolean, essential: Boolean): Boolean =
         isPackageName(packageName) && selectedOrVpn && !essential && !isBrowserExempt(packageName)
