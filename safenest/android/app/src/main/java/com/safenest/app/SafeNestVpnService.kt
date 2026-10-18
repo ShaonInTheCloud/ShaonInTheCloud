@@ -58,6 +58,11 @@ class SafeNestVpnService : VpnService() {
         val dnsTransport = AtomicReference("none")
         val lockdownEnabled = AtomicBoolean(false)
         val alwaysOnEnabled = AtomicBoolean(false)
+        @Volatile private var instance: SafeNestVpnService? = null
+        /** Live Always-on reading from the running service, or null when it is not running. */
+        fun sampleAlwaysOn(): Boolean? = instance?.let { svc ->
+            try { (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && svc.isAlwaysOn).also { alwaysOnEnabled.set(it) } } catch (_: Exception) { null }
+        }
         val lastError = AtomicReference("")
         /** Volatile on-device diagnostic, cleared on service start; never uploaded or persisted. */
         val lastBlockedHost = AtomicReference("")
@@ -125,6 +130,8 @@ class SafeNestVpnService : VpnService() {
             }
         }
     }
+
+    override fun onCreate() { super.onCreate(); instance = this }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!ProtectionCommitment.isActive(this)) {
@@ -552,6 +559,7 @@ class SafeNestVpnService : VpnService() {
         } catch (_: Exception) {}
     }
     override fun onDestroy() {
+        if (instance === this) instance = null
         val wasRunning = session != null
         disposeSession()
         if (wasRunning) {

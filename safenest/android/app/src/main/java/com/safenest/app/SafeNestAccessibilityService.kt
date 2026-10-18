@@ -409,10 +409,12 @@ class SafeNestAccessibilityService : AccessibilityService() {
         }
         return false
     }
-    /** Reading Secure settings needs no permission; Android records the Always-on app here. */
-    private fun alwaysOnIsSafeNest(): Boolean = try {
-        android.provider.Settings.Secure.getString(contentResolver, "always_on_vpn_app") == packageName
-    } catch (_: Exception) { false }
+    /**
+     * Always-on is SafeNest: the running VPN service reports VpnService.isAlwaysOn (the Secure
+     * setting is not readable by apps since Android 12). A fresh sample is taken on each visit.
+     */
+    private fun alwaysOnIsSafeNest(): Boolean = SafeNestVpnService.isRunning.get() &&
+        (SafeNestVpnService.sampleAlwaysOn() ?: SafeNestVpnService.alwaysOnEnabled.get())
     private fun qa(message: String) { if (BuildConfig.DEBUG) android.util.Log.i("SafeNestGuard", message) }
     /**
      * On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Android
