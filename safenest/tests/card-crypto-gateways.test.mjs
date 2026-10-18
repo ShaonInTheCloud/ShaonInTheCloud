@@ -196,8 +196,9 @@ test('catalogue exposes only providers with open checkout and prices they can se
   assert.deepEqual(body.products.map(p=>[p.code,p.providers]),[['monthly_v2',['stripe']],['global_monthly_v1',['stripe']]]);
   const closed=await (await handleCatalogue(new Request('https://fixture'),{},{rpc:async()=>products,adapters:adapters.map(a=>({...a,checkoutOpen:false}))})).json();
   assert.deepEqual(closed,{available:false,products:[],providers:[]});
-  const mixed=await (await handleCatalogue(new Request('https://fixture'),{},{rpc:async()=>products,adapters:[adapters[0],{...adapters[1],checkoutOpen:true,environment:'live'}]})).json();
-  assert.equal(mixed.available,false);
+  const mixed=await handleCatalogue(new Request('https://fixture'),{},{rpc:async()=>products,adapters:[adapters[0],{...adapters[1],checkoutOpen:true,environment:'live'}]});
+  assert.equal(mixed.status,503);
+  assert.deepEqual(await mixed.json(),{error:'payment_catalogue_unavailable'});
   const batches=[];const key='k'.repeat(40);
   const reconcile=await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key}}),{PAYMENT_RECONCILE_KEY:key},
     {rpc:async(name,args)=>{batches.push(args.p_provider);return [];},adapters});
