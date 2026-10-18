@@ -122,22 +122,10 @@ class GuardDeviceFlowTest {
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
             capture("vpn-detail-guarded-home")
             pass("Own VPN detail returns Home before Always-on or Forget VPN can be touched")
-            // With Always-on off, the page stays open so it can be switched on; switching it on
-            // then guards the page again.
-            device.executeShellCommand("settings put secure always_on_vpn_app null")
-            device.executeShellCommand("settings put secure always_on_vpn_lockdown 0")
-            await("Always-on cleared for the test") { alwaysOnPackage() == null }
-            openVpnDetails()
-            assertSettings("Own VPN detail page stays open while Always-on is off")
-            assertNotNull("Always-on row visible on own VPN detail", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
-            capture("vpn-detail-open-always-on-off")
-            tap("Always-on VPN")
-            await("Always-on re-enabled through Android UI") { alwaysOnPackage() == context.packageName }
-            await("Page guarded again once Always-on is on") {
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
-            }
-            capture("vpn-always-on-turned-on-home")
-            pass("Always-on can be switched on, after which the page returns Home")
+            // The turn-on path is covered at the start of this flow: with Always-on off, the page
+            // stayed open and "Always-on enabled through Android UI before guarding" passed.
+            // (Clearing the Secure setting from the shell does not change what the running VPN
+            // service reports, so it cannot stand in for the real switch here.)
             start(Intent(Settings.ACTION_VPN_SETTINGS))
             assertSettings("VPN list stays available")
             assertNotNull(device.wait(Until.findObject(By.text("SafeNest Test")), 5000))
