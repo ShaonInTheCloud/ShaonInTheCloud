@@ -20,7 +20,7 @@ export async function handleCatalogue(req,env,{fetcher=fetch,rpc=serviceRpc(env,
     // Only providers whose checkout the operator opened are offered; the product list is
     // filtered to those providers so the browser never sees an unpayable price.
     const open=(adapters??configuredAdapters(env,rpc,fetcher)).filter(a=>a.checkoutOpen===true);
-    if(open.length===0) throw new PaymentError('checkout_not_open');
+    if(open.length===0) return response(req,{available:false,products:[],providers:[]});
     const environments=new Set(open.map(a=>a.environment));
     if(environments.size!==1) throw new PaymentError('payment_provider_not_configured');
     const [environment]=environments;
@@ -29,7 +29,7 @@ export async function handleCatalogue(req,env,{fetcher=fetch,rpc=serviceRpc(env,
       .map(p=>({...p,providers:(p.providers??[]).filter(name=>names.has(name))})).filter(p=>p.providers.length>0);
     const providers=open.map(a=>({provider:a.provider,checkout_origins:a.checkoutOrigins}));
     return response(req,{available:products.length>0,environment,products,providers});
-  } catch {return response(req,{available:false,products:[],providers:[]});}
+  } catch {return response(req,{error:'payment_catalogue_unavailable'},503);}
 }
 export async function handleStatus(req,env,{fetcher=fetch,rpc=serviceRpc(env,fetcher)}={}) {
   const early=preflight(req,'POST');if(early)return early;
