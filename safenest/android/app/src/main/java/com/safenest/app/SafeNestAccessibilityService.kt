@@ -171,10 +171,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
                             !node.isPassword && GuardRules.hostFromAddressBar(node.text?.toString().orEmpty())
                                 ?.let { RulesStore.isBlocked(this, it) } == true
                         }
-                        if (blocked) { returnHome(now, "website", "SafeNest blocked this website."); return }
+                        if (blocked) { leaveSite(now, "website", "SafeNest blocked this website."); return }
                         // A site opened by public IP address never asks DNS; the router's 192.168.x.x page stays usable.
                         if (nodes.any { !it.isPassword && IpRules.isPublicIpAddressBar(it.text?.toString()) }) {
-                            returnHome(now, "ip_address", "SafeNest blocks websites opened by IP address."); return
+                            leaveSite(now, "ip_address", "SafeNest blocks websites opened by IP address."); return
                         }
                     } finally { nodes.forEach { @Suppress("DEPRECATION") it.recycle() } }
                 }
@@ -520,6 +520,22 @@ class SafeNestAccessibilityService : AccessibilityService() {
             }
         } finally { queue.forEach { @Suppress("DEPRECATION") it.node.recycle() } }
         return ControlLabels(labels, actions, titles, detailTitles, checkedToggle)
+    }
+
+    private var lastSiteExit = 0L
+    /**
+     * A blocked website in an ordinary browser: the browser stays open and steps back to the
+     * previous page (the DNS filter already keeps the site from loading). Only destructive
+     * actions, gambling apps and VPN apps/browsers are sent Home.
+     */
+    private fun leaveSite(now: Long, reason: String, message: String) {
+        if (!GuardPreferences.isEnabled(this)) return
+        if (now - lastSiteExit < 1000L) return
+        lastSiteExit = now
+        if (performGlobalAction(GLOBAL_ACTION_BACK)) {
+            lastBlockReason = reason
+            if (now - lastToast > 3000L) { Toast.makeText(this, message, Toast.LENGTH_SHORT).show(); lastToast = now }
+        }
     }
 
     private fun returnHome(now: Long, reason: String, message: String, controlPackage: String? = null) {
