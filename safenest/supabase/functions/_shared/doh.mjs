@@ -71,6 +71,46 @@ export function matchBlocked(name, sets) {
   return null;
 }
 
+// ---- Brand mirrors (same rule as the Android app's MirrorRules.java) ----------------------------
+const TWO_PART_SUFFIXES = new Set(['com.bd', 'net.bd', 'org.bd', 'co.uk', 'org.uk', 'co.in', 'com.au', 'co.nz', 'com.sg', 'com.my', 'com.ph',
+  'co.za', 'com.br', 'com.tr', 'com.pk', 'com.np', 'co.ke', 'com.ng', 'com.bn', 'co.jp', 'com.cn']);
+const MIRROR_TAIL = /^-?(?:[0-9]{1,4}|[a-z]|app|apk|bd|bdt|bet|bets|bangla|bangladesh|live|login|link|links|mirror|new|now|official|online|vip|win|wins|casino|game|games|play|pro|site|web|club|zone|go|ok|fun|cash|india|in|bn|desh)?[0-9]{0,4}$/;
+const LOOSE_TAIL = /^-?[a-z0-9]{0,8}(?:-[a-z0-9]{1,8})?$/;
+const LEAD = /^(?:www|m|the|my|go|get|new|bd|app|m-|bd-|my-|go-)?$/;
+const NOT_MIRROR = new Set(['bajirao', 'bajigur', 'betwayne', 'betanova', 'melbetter', 'unibetter', 'bovadaho', 'velkia', 'velkis', 'bet365sports']);
+
+/** The label before the public suffix: "babu88a" for www.babu88a.com or babu88a.com.bd. */
+export function registrableLabel(hostname) {
+  const parts = String(hostname || '').toLowerCase().replace(/\.+$/, '').split('.');
+  if (parts.length < 2) return '';
+  const suffixParts = parts.length >= 3 && TWO_PART_SUFFIXES.has(parts.slice(-2).join('.')) ? 2 : 1;
+  return parts.length <= suffixParts ? '' : parts[parts.length - 1 - suffixParts];
+}
+
+/** Returns the gambling brand this hostname mirrors (babu88a.com → babu88), or null. */
+export function mirrorOf(hostname, brands) {
+  const label = registrableLabel(hostname);
+  if (label.length < 4 || NOT_MIRROR.has(label)) return null;
+  for (const brand of brands) {
+    if (!brand || brand.length < 4 || brand.length > label.length) continue;
+    for (let at = label.indexOf(brand); at >= 0; at = label.indexOf(brand, at + 1)) {
+      const lead = label.slice(0, at), tail = label.slice(at + brand.length);
+      if (LEAD.test(lead) && (brand.length >= 6 ? LOOSE_TAIL : MIRROR_TAIL).test(tail)) return brand;
+    }
+  }
+  return null;
+}
+
+/** Brand names as the app ships them: one per line, comments allowed, compacted to [a-z0-9]. */
+export function parseBrands(text) {
+  const out = new Set();
+  for (const raw of String(text).split(/\r?\n/)) {
+    const value = raw.split('#')[0].trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (value.length >= 4) out.add(value);
+  }
+  return [...out];
+}
+
 /** Parses the header and first question of a DNS wire-format query. Throws on malformed input. */
 export function parseQuery(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length < 17 || bytes.length > MAX_QUERY) throw new Error('bad_length');
@@ -131,6 +171,7 @@ const dnsReply = bytes => reply(bytes, 200, {'Content-Type': DNS_MESSAGE});
 /**
  * Handles one DoH request.
  * deps.blocklists(): Promise<Set<string>[]> — sets of blocked registrable names
+ * deps.brands?: string[] — gambling brand names; a brand plus a short tail is blocked as a mirror
  * deps.fetch: fetch implementation for the upstream resolvers
  */
 export async function handleDoh(req, deps) {
@@ -151,7 +192,7 @@ export async function handleDoh(req, deps) {
   } catch { return reply('Malformed DNS query', 400); }
 
   const sets = await deps.blocklists();
-  if (matchBlocked(q.name, sets)) return dnsReply(blockedResponse(bytes, q));
+  if (matchBlocked(q.name, sets) || (deps.brands && mirrorOf(q.name, deps.brands))) return dnsReply(blockedResponse(bytes, q));
 
   for (const upstream of deps.upstreams ?? UPSTREAMS) {
     try {

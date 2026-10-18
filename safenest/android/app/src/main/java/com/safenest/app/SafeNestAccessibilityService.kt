@@ -355,10 +355,16 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 hardExit(now, "vpn_consent", "SafeNest blocked another VPN from taking over the connection.")
                 return true
             }
-            // SafeNest's own VPN page stays open so Always-on can be switched on; if the switch
-            // is off while protection is committed, switch it back on instead of leaving.
+            // SafeNest's own VPN page: open while Always-on is still off, so it can be switched
+            // on. Once Always-on is SafeNest, the page itself goes Home before the switch (or
+            // Forget VPN) can be touched, so it can be turned on but never off.
             if (guardActive && SystemScreenGuard.isOwnVpnDetail(name, screen.labels) &&
                 !SystemScreenGuard.isForgetConfirmation(screen.labels, screen.actions)) {
+                if (alwaysOnIsSafeNest()) {
+                    cancelControlScan()
+                    returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
+                    return true
+                }
                 ensureAlwaysOn(root, now)
             }
             val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions, recentlyOnOwnPage(now)) else ""
@@ -389,6 +395,10 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private var lastAlwaysOnClick = 0L
     private var alwaysOnAttempt = 0
+    /** Reading Secure settings needs no permission; Android records the Always-on app here. */
+    private fun alwaysOnIsSafeNest(): Boolean = try {
+        android.provider.Settings.Secure.getString(contentResolver, "always_on_vpn_app") == packageName
+    } catch (_: Exception) { false }
     private fun qa(message: String) { if (BuildConfig.DEBUG) android.util.Log.i("SafeNestGuard", message) }
     /**
      * On SafeNest's own VPN page: turn Always-on VPN back on when it is found off. Android

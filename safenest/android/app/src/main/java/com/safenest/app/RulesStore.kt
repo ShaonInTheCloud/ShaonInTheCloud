@@ -110,7 +110,8 @@ object RulesStore {
             preferences(context)
             blockedCache ?: RuleCategory.entries.flatMap { get(context, it) }.toSet().also { blockedCache = it }
         }
-        return DomainRules.isBlocked(host, rules) || BundledGamblingRules.isBlocked(context, host) || BypassDomains.isBlocked(context, host)
+        return DomainRules.isBlocked(host, rules) || BundledGamblingRules.isBlocked(context, host) || BypassDomains.isBlocked(context, host) ||
+            BlockedAppCatalog.isMirrorSite(context, host)
     }
 
     fun matches(host: String, rule: String): Boolean = DomainRules.matches(host, rule)

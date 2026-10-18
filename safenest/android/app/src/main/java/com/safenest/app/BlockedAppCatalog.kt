@@ -37,6 +37,9 @@ object BlockedAppCatalog {
         }
     }
 
+    /** A website whose name is a known gambling brand plus a short tail (babu88a.com, jeetbuzz-bd.live). */
+    fun isMirrorSite(context: Context, host: String): Boolean = MirrorRules.isMirror(host, lists(context).brands)
+
     private fun label(context: Context, pkg: String): String? = try {
         val pm = context.packageManager
         pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString().takeIf { it.length <= 80 }

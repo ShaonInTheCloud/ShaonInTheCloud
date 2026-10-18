@@ -4,7 +4,7 @@
 // and common encrypted-DNS bypass endpoints. verify_jwt = false (config.toml): DNS clients send no JWT.
 import {createClient} from 'npm:@supabase/supabase-js@2.117.1';
 import {BYPASS_DOMAINS, handleDoh, loadCompressedList} from '../_shared/doh.mjs';
-import {BUNDLED_GZIP_BASE64} from './domains.generated.mjs';
+import {BUNDLED_BRANDS, BUNDLED_GZIP_BASE64} from './domains.generated.mjs';
 import {IOS_PROFILE} from './profile.generated.mjs';
 
 // Decoded once per instance (~0.2 s, ~25 MB); every request awaits the same promise.
@@ -32,5 +32,6 @@ Deno.serve(req => new URL(req.url).searchParams.get('profile') === 'ios' && req.
       'Content-Disposition': 'attachment; filename="safenest-dns.mobileconfig"', 'Cache-Control': 'no-cache'}})
   : handleDoh(req, {
   fetch,
+  brands: BUNDLED_BRANDS, // babu88a.com, jeetbuzz-bd.live: brand + short tail is blocked as a mirror
   blocklists: async () => { refreshPublished(); return [await bundled, published, bypass]; }, // refresh runs in the background
 }));

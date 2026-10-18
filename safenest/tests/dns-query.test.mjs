@@ -128,3 +128,13 @@ test('dns-query skips JWT verification (DNS clients send none)', () => {
   const config = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
   assert.match(config, /\[functions\.dns-query\]\s*\nverify_jwt\s*=\s*false/);
 });
+
+import {mirrorOf, parseBrands, registrableLabel} from '../supabase/functions/_shared/doh.mjs';
+test('brand mirrors: babu88a.com and friends are blocked, ordinary names are not', () => {
+  const brands = parseBrands('# comment\nBabu 88\njeetbuzz\nbaji\n1win\nbet365\nvelki\n');
+  assert.equal(registrableLabel('www.babu88a.com.bd'), 'babu88a');
+  for (const h of ['babu88a.com', 'www.babu88b.net', 'babu88-bd.live', 'mbabu88.com', 'jeetbuzz123.live', 'baji999.live', '1win-bd.com', 'bet365bangla.com'])
+    assert.equal(mirrorOf(h, brands) != null, true, h);
+  for (const h of ['bajirao.com', 'alibaba.com', 'google.com', 'bet365sports.com', 'velkia.fi', '1winner.com', 'wikipedia.org', 'prothomalo.com'])
+    assert.equal(mirrorOf(h, brands), null, h);
+});

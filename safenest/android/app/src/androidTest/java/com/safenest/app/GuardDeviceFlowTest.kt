@@ -112,38 +112,32 @@ class GuardDeviceFlowTest {
                 device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
             }
             pass("Own Accessibility detail returns Home")
+            // Always-on is SafeNest: the own VPN detail page (Always-on switch, Forget VPN) goes
+            // Home before anything on it can be touched. It can be turned on but never off.
+            assertEquals("Always-on is SafeNest before the guarded visit", context.packageName, alwaysOnPackage())
             openVpnDetails()
-            assertSettings("Own VPN detail page stays open while guarded")
-            assertNotNull("Always-on row visible on own VPN detail", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
-            capture("vpn-detail-open-while-guarded")
-            // Android hides the Always-on switch from non-accessibility-tool services, so the
-            // guard reacts to the consequence instead: Android drops the VPN the moment the switch
-            // goes off, and that revoke sends the screen Home and raises the restore flow.
-            tap("Always-on VPN")
-            await("Switching Always-on off sends the screen Home") {
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("vpn_revoked", "always_on_restored")
-            }
-            capture("vpn-always-on-off-home")
-            pass("Always-on switched off: screen sent Home, protection marked interrupted")
-            // Restore: SafeNest re-requests its VPN slot as soon as it is in front.
-            openApp()
-            if (android.net.VpnService.prepare(context) != null) tap("OK")
-            await("Protection restored after the Always-on interruption") { SafeNestVpnService.isRunning.get() }
-            pass("Protection restored through SafeNest's own prompt")
-            openVpnDetails()
-            assertSettings("Own VPN detail open again")
-            if (alwaysOnPackage() != context.packageName) {
-                tap("Always-on VPN")
-                await("Always-on re-enabled through Android UI") { alwaysOnPackage() == context.packageName }
-            }
-            assertSettings("Still on own VPN detail after re-enabling Always-on")
-            tap("Forget VPN")
-            await("Forget VPN tap returns Home") {
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("destructive_tap", "test_forget_vpn_confirm")
+            await("Own VPN detail returns Home while Always-on is on") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
             }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
-            capture("vpn-forget-tap-home")
-            pass("Forget VPN tap returns Home and Always-on stays enabled")
+            capture("vpn-detail-guarded-home")
+            pass("Own VPN detail returns Home before Always-on or Forget VPN can be touched")
+            // With Always-on off, the page stays open so it can be switched on; switching it on
+            // then guards the page again.
+            device.executeShellCommand("settings put secure always_on_vpn_app null")
+            device.executeShellCommand("settings put secure always_on_vpn_lockdown 0")
+            await("Always-on cleared for the test") { alwaysOnPackage() == null }
+            openVpnDetails()
+            assertSettings("Own VPN detail page stays open while Always-on is off")
+            assertNotNull("Always-on row visible on own VPN detail", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
+            capture("vpn-detail-open-always-on-off")
+            tap("Always-on VPN")
+            await("Always-on re-enabled through Android UI") { alwaysOnPackage() == context.packageName }
+            await("Page guarded again once Always-on is on") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
+            }
+            capture("vpn-always-on-turned-on-home")
+            pass("Always-on can be switched on, after which the page returns Home")
             start(Intent(Settings.ACTION_VPN_SETTINGS))
             assertSettings("VPN list stays available")
             assertNotNull(device.wait(Until.findObject(By.text("SafeNest Test")), 5000))
