@@ -358,8 +358,9 @@ class SafeNestAccessibilityService : AccessibilityService() {
             // SafeNest's own VPN page: open while Always-on is still off, so it can be switched
             // on. Once Always-on is SafeNest, the page itself goes Home before the switch (or
             // Forget VPN) can be touched, so it can be turned on but never off.
-            if (guardActive && SystemScreenGuard.isOwnVpnDetail(name, screen.labels) &&
+            if (guardActive && ownVpnDetailOnScreen(name, root, screen) &&
                 !SystemScreenGuard.isForgetConfirmation(screen.labels, screen.actions)) {
+                qa("ownVpnDetail alwaysOnIsSafeNest=${alwaysOnIsSafeNest()} labels=${screen.labels}")
                 if (alwaysOnIsSafeNest()) {
                     cancelControlScan()
                     returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
@@ -395,6 +396,19 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private var lastAlwaysOnClick = 0L
     private var alwaysOnAttempt = 0
+    /**
+     * SafeNest's own VPN detail page. Settings hides the Always-on row's text from the label
+     * walk on some builds, so fall back to the page heading plus a text search for the row.
+     */
+    private fun ownVpnDetailOnScreen(name: String, root: AccessibilityNodeInfo, screen: ControlLabels): Boolean {
+        if (SystemScreenGuard.isOwnVpnDetail(name, screen.labels)) return true
+        if (!SystemScreenGuard.isSettingsPackage(name) || !SystemScreenGuard.hasOwnIdentity(screen.detailTitles)) return false
+        for (text in listOf("Always-on VPN", "সবসময় চালু VPN", "Forget VPN", "Block connections without VPN")) {
+            val found = root.findAccessibilityNodeInfosByText(text) ?: continue
+            try { if (found.isNotEmpty()) return true } finally { found.forEach { @Suppress("DEPRECATION") it.recycle() } }
+        }
+        return false
+    }
     /** Reading Secure settings needs no permission; Android records the Always-on app here. */
     private fun alwaysOnIsSafeNest(): Boolean = try {
         android.provider.Settings.Secure.getString(contentResolver, "always_on_vpn_app") == packageName
