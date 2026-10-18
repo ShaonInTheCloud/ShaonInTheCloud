@@ -67,7 +67,7 @@ export default function Home() {
   const trial = ent?.plan_code === 'trial';
   const status = state === 'checking' ? t.statusChecking : state === 'offline' ? t.statusOffline
     : active ? (trial ? t.statusTrial : t.statusActive) : t.statusNone;
-  const go = (href: Href) => () => router.push(href);
+  const go = (href: Href) => () => router.navigate(href);
 
   return (
     <Screen>
@@ -84,7 +84,7 @@ export default function Home() {
         <View style={{marginTop: -6}}><Pill text={status} tone={active ? 'good' : state === 'offline' ? 'bad' : 'neutral'} /></View>
         {active && ent ? (
           <>
-            <CountUp value={Math.max(0, (new Date(ent.ends_at).getTime() - Date.now()) / 86400000)}
+            <CountUp value={Math.floor(Math.max(0, (new Date(ent.ends_at).getTime() - Date.now()) / 86400000))}
               format={n => lang === 'bn' ? `${Math.floor(n)} দিন` : `${Math.floor(n)} days`}
               style={{marginTop: 14, textAlign: 'center', fontFamily: lang === 'bn' ? fonts.banglaDisplay : fonts.display, fontSize: 60, lineHeight: 64, letterSpacing: -2, color: theme.ink}} />
             <Body muted size={14} style={{textAlign: 'center'}}>{remaining(ent.ends_at, lang)} {lang === 'bn' ? 'বাকি' : 'left'}</Body>

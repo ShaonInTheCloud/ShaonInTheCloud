@@ -13,7 +13,12 @@ export function useReducedMotion() {
   return reduced;
 }
 
-function useLoop(duration: number, run: boolean, easing = Easing.linear) {
+// Stable easing functions: creating them during render would restart every loop on every render.
+const LINEAR = Easing.linear;
+const PULSE = Easing.inOut(Easing.quad);
+const SETTLE = Easing.out(Easing.cubic);
+
+function useLoop(duration: number, run: boolean, easing: (t: number) => number = LINEAR) {
   const value = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!run) { value.stopAnimation(); value.setValue(0); return; }
@@ -31,10 +36,10 @@ export function Aurora() { return null; }
  * The Nest Orb, flat: a solid hot-pink core with one gloss highlight, a solid orange segmented ring and a neon
  * ring, turning in opposite directions. The core pulses while protection is on; everything turns plum when off.
  */
-export function NestOrb({size = 220, active}: {size?: number; active: boolean}) {
+export const NestOrb = React.memo(function NestOrb({size = 220, active}: {size?: number; active: boolean}) {
   const reduced = useReducedMotion();
   const spin = useLoop(12000, !reduced);
-  const pulse = useLoop(2400, !reduced && active, Easing.inOut(Easing.quad));
+  const pulse = useLoop(2400, !reduced && active, PULSE);
   const rotate = spin.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']});
   const counter = spin.interpolate({inputRange: [0, 1], outputRange: ['360deg', '0deg']});
   const scale = pulse.interpolate({inputRange: [0, 0.5, 1], outputRange: [1, 1.06, 1]});
@@ -62,7 +67,7 @@ export function NestOrb({size = 220, active}: {size?: number; active: boolean}) 
       </Animated.View>
     </View>
   );
-}
+});
 
 /** Revolut-style rolling number: counts up to `value` when it first appears or changes. */
 export function CountUp({value, format, style}: {value: number; format: (n: number) => string; style?: StyleProp<TextStyle>}) {
@@ -71,8 +76,8 @@ export function CountUp({value, format, style}: {value: number; format: (n: numb
   const [shown, setShown] = useState(reduced ? value : 0);
   useEffect(() => {
     if (reduced) { setShown(value); return; }
-    const id = anim.addListener(({value: v}) => setShown(v));
-    Animated.timing(anim, {toValue: value, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: false}).start();
+    const id = anim.addListener(({value: v}) => setShown(prev => (Math.floor(v) === Math.floor(prev) ? prev : v)));
+    Animated.timing(anim, {toValue: value, duration: 900, easing: SETTLE, useNativeDriver: false}).start();
     return () => anim.removeListener(id);
   }, [value, reduced, anim]);
   return <Text style={style}>{format(shown)}</Text>;
