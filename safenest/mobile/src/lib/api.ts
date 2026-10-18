@@ -67,6 +67,9 @@ export const api = {
   },
 };
 
+/** Safari opens this and offers to install the SafeNest DNS profile (blocks the same 541k gambling sites). */
+export const IOS_PROFILE_URL = `${SUPABASE_URL}/functions/v1/dns-query?profile=ios`;
+
 /** One A-record lookup through the SafeNest DNS-over-HTTPS filter; blocked names answer 0.0.0.0. */
 export async function dnsFilterBlocks(host: string): Promise<boolean> {
   const labels = host.toLowerCase().split('.').filter(Boolean);

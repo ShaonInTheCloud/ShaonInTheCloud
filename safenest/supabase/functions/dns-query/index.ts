@@ -5,6 +5,7 @@
 import {createClient} from 'npm:@supabase/supabase-js@2.117.1';
 import {BYPASS_DOMAINS, handleDoh, loadCompressedList} from '../_shared/doh.mjs';
 import {BUNDLED_GZIP_BASE64} from './domains.generated.mjs';
+import {IOS_PROFILE} from './profile.generated.mjs';
 
 // Decoded once per instance (~0.2 s, ~25 MB); every request awaits the same promise.
 const bundled = loadCompressedList(BUNDLED_GZIP_BASE64);
@@ -25,7 +26,11 @@ async function refreshPublished() {
   } catch { /* keep the previous list; the bundled list always applies */ }
 }
 
-Deno.serve(req => handleDoh(req, {
+// GET ?profile=ios serves the SafeNest DNS profile with Apple's profile type, so Safari offers to install it.
+Deno.serve(req => new URL(req.url).searchParams.get('profile') === 'ios' && req.method === 'GET'
+  ? new Response(IOS_PROFILE, {headers: {'Content-Type': 'application/x-apple-aspen-config',
+      'Content-Disposition': 'attachment; filename="safenest-dns.mobileconfig"', 'Cache-Control': 'no-cache'}})
+  : handleDoh(req, {
   fetch,
   blocklists: async () => { refreshPublished(); return [await bundled, published, bypass]; }, // refresh runs in the background
 }));

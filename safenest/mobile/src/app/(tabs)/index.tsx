@@ -1,10 +1,10 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Image, Linking, Pressable, ScrollView, Text, View} from 'react-native';
+import {Image, Linking, Platform, Pressable, ScrollView, Text, View} from 'react-native';
 import {router, useFocusEffect, type Href} from 'expo-router';
 import {Body, Button, Card, Display, Label, Notice, Pill, Screen, Title} from '@/components/ui';
 import {CountUp, NestOrb} from '@/components/motion';
 import {useStore} from '@/lib/store';
-import {api, ApiError, type AccessResult} from '@/lib/api';
+import {api, ApiError, IOS_PROFILE_URL, type AccessResult} from '@/lib/api';
 import {fill} from '@/lib/i18n';
 import {fonts} from '@/lib/theme';
 
@@ -101,6 +101,19 @@ export default function Home() {
       </View>
 
       {!active && state === 'ok' ? <Button label={t.startTrial} onPress={startTrial} busy={busy} /> : null}
+      {Platform.OS === 'ios' ? (
+        <Card tone="orange">
+          <Title style={{color: '#FFFFFF'}}>{lang === 'bn' ? 'এই iPhone-এ সুরক্ষা চালু করুন' : 'Turn on protection on this iPhone'}</Title>
+          <Body size={15} style={{color: '#FFFFFF'}}>{lang === 'bn'
+            ? '১. নিচের বোতাম চাপুন, Safari-তে "Allow" দিন।\n২. Settings খুলে "Profile Downloaded" → Install।\n৩. Settings → General → VPN & Device Management → DNS → SafeNest।'
+            : '1. Tap the button, then Allow in Safari.\n2. Open Settings → Profile Downloaded → Install.\n3. Settings → General → VPN & Device Management → DNS → SafeNest.'}</Body>
+          <Button kind="primary" label={lang === 'bn' ? 'সুরক্ষা চালু করুন' : 'Turn on protection'} style={{backgroundColor: '#0E0110'}}
+            onPress={() => Linking.openURL(IOS_PROFILE_URL)} />
+          <Body size={13} style={{color: '#FFFFFF', opacity: 0.9}}>{lang === 'bn'
+            ? 'এটি ৫ লাখ ৪১ হাজার জুয়ার সাইট ব্লক করে। Settings থেকে সরানো যায়।'
+            : 'Blocks 541,000 gambling sites. It can be removed in Settings.'}</Body>
+        </Card>
+      ) : null}
       <Notice text={note} tone={noteTone} />
 
       <Title style={{marginTop: 6}}>{lang === 'bn' ? 'আপনার টুল' : 'Your tools'}</Title>
