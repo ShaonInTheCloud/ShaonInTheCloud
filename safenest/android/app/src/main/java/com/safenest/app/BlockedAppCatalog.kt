@@ -52,7 +52,11 @@ object BlockedAppCatalog {
         val l = lists(context)
         val decided = AppBlockRules.reason(pkg, label(context, pkg), l.packages, l.brands, l.vpnBrowsers) { domain ->
             BundledGamblingRules.contains(context, domain) || RulesStore.isCatalogRule(context, RuleCategory.GAMBLING, domain)
-        }.let { if (it.isNotEmpty() && GuardPreferences.isEssentialPackage(context, pkg)) "" else it }
+        }.let {
+            // A listed VPN browser is blocked even when the phone maker pre-installed it as a system app;
+            // the essential exemption protects Settings, the launcher and the dialer, never a browser.
+            if (it.isNotEmpty() && it != AppBlockRules.VPN_BROWSER && GuardPreferences.isEssentialPackage(context, pkg)) "" else it
+        }
         synchronized(decisions) { decisions[pkg] = decided }
         return decided
     }

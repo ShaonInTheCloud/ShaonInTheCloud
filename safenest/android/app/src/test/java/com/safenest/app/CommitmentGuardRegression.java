@@ -19,6 +19,10 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("SafeNest", "Disconnect this VPN?"), List.of("Cancel", "Disconnect"), false), "SafeNest disconnect dialog");
         check(SystemScreenGuard.blocksSafeNestControl("com.google.android.packageinstaller", List.of("SafeNest"), List.of("Uninstall"), false), "SafeNest uninstall");
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("SafeNest", "Use SafeNest"), List.of(), true), "own accessibility toggle");
+        // Android's confirmation after the Accessibility switch is flipped off; the switch page itself is unreadable on 14+.
+        check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop SafeNest app guard?", "Stopping SafeNest app guard will turn off its features."), List.of("Cancel", "Stop"), false), "Stop service? dialog bounces without the app name as a label");
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Stop SafeNest Test app guard?"), List.of(), List.of("Cancel", "Stop")).equals("test_accessibility_confirm"), "lab Stop service? dialog");
+        check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop TalkBack?"), List.of("Cancel", "Stop"), false), "another service's Stop dialog stays usable");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Accessibility", "SafeNest app guard"), List.of(), true), "unrelated toggle in accessibility list");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Another VPN"), List.of("Disconnect"), false), "other VPN settings unaffected");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.chrome", List.of("SafeNest"), List.of("Uninstall"), false), "webpage is not Settings");
