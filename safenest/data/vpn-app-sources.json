@@ -94,5 +94,11 @@
       "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
     }
   ],
-  "known_packages_file": "data/known-vpn-packages.json"
+  "known_packages_file": "data/known-vpn-packages.json",
+  "playstore_csv": {
+    "file": "data/vpn-apps-playstore-2021.csv",
+    "min_installs": 10000,
+    "source": "https://github.com/gauthamp10/google-playstore-dataset (MIT), 2.3M Google Play apps scraped June 2021; rows whose store name contains the whole word VPN or proxy",
+    "fetched": "2026-10-20"
+  }
 }
