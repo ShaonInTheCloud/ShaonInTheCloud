@@ -1,0 +1,263 @@
+/* SafeNest hot-pink brand layer (Oct 2026): hot pink ground, white cards, neon S grid, rabbit guide. Replaces raspberry-theme.css. */
+@import url('https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700;800&display=swap');
+/* The artwork fills the page. Only individual features and controls use glass. */
+:root {
+  color-scheme: light;
+  --bg: #d80f7f;
+  --ink: #ffffff;
+  --text: #ffffff;
+  --muted: #ffe8f5;
+  --mint: #ffd2ea;
+  --rose: #ffd2ea;
+  --pink: #ff74c4;
+  --line: #ffffff66;
+  --glass: #ffffff;
+  --glass-text: #2b0a1d;
+  --glass-muted: #4b2a3c;
+  --bar-ink: #ffffff;
+}
+body {
+  background: #d80f7f;
+  color: var(--ink);
+  isolation: isolate;
+}
+::selection { background: #ffffff; color: #b80a6a; }
+/* No page-wide frames, color bands, or covering panels. */
+.nav, body > header, body > header:not(.nav), .announcement, .product-intro, .hero, .page-intro,
+.content-section, .content-section:nth-of-type(2n+1), .page-body,
+.product-overview, .card, .portal-open .card, main > .intro,
+.statement, .statement-band, .human-story, .section, .family, .panel,
+.steps, .pricing, .payment-section, .campaign-teaser, .character-story,
+.page-character, body > footer, body > footer:has(.payment-catalog),
+body > footer:has(.payment-catalog):not(:has(.footer-main)),
+.portal-heading, .portal-nav {
+  background: transparent; border: 0; box-shadow: none; backdrop-filter: none;
+}
+h1, h2, h3, p, .note, .email, .app-meta { color: var(--ink); }
+.card p, .card .note { color: var(--ink); }
+a { color: inherit; }
+h1, .product-intro > div > h1, .page-intro h1,
+.hero h1 .translation-en, .hero h1 .translation-bn {
+  color: var(--ink); background: none;
+  text-shadow: 0 2px 14px #7a044540;
+}
+h2, .eyebrow, .product-intro .lead, .page-intro p,
+.content-section > p, .product-overview .note, .product-overview > h2,
+.product-overview > .eyebrow, .intro > p, .card > p {
+  color: var(--ink); background: transparent; border: 0;
+  text-shadow: none;
+}
+.eyebrow { padding: 0; border-radius: 0; }
+.translation-bn { opacity: 1; }
+.product-hero { display: block; min-height: 0; }
+.product-intro { padding: 60px 36px 48px; }
+.product-intro > div { max-width: 900px; }
+.product-intro h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.14; }
+.product-intro .lead { font-size: 18px; line-height: 1.8; max-width: 74ch; }
+.product-overview { padding: 32px 0 0; margin-top: 28px; border-radius: 0; }
+.product-overview h2 { font-size: 26px; margin-bottom: 22px; }
+.product-overview dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.product-overview dl > div { display: block; padding: 20px; }
+.product-overview dt { margin-bottom: 10px; }
+.product-overview .note { padding-top: 22px; }
+/* Small frosted wraps around feature copy, not around slogans or sections. */
+.product-card, .plans .price-card, .price-card, .challenge, .info-card,
+.cards article, .tile, .question, .product-overview dl > div,
+.portal-panel, .app-panel, .activation-note, .support-message,
+.intro .bubble, #status, .verification-placeholder,
+.card form:not(.site-search) {
+  background: var(--glass); border: 1px solid var(--line); border-radius: 24px;
+  box-shadow: 0 10px 0 #00000024;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  color: var(--glass-text); text-shadow: none;
+}
+.product-card h3, .plans .price-card h2, .price-card h2, .challenge h3,
+.info-card h2, .cards article h3, .tile h3, .question summary,
+.portal-panel h2, .portal-panel h3, .activation-note h3, .support-message h3 {
+  color: var(--glass-text); text-shadow: none;
+}
+.product-card p, .plans .price-card p, .price-card p, .challenge p,
+.info-card p, .cards article p, .tile p, .question > p,
+.portal-panel p, .activation-note p, .support-message p,
+.card form:not(.site-search) p, .card form:not(.site-search) label,
+.product-overview dt, .product-overview dd, .intro .bubble,
+.verification-placeholder p, .installation-steps p, .download-details p {
+  color: var(--glass-text); text-shadow: none;
+}
+.product-overview dt, .price-card .price-note, .app-meta { color: var(--glass-muted); }
+.portal-panel .note, .portal-panel .email, .portal-panel .app-meta,
+.card form .note, #delete-account .note { color: var(--glass-text); }
+#delete-account { background: var(--glass); border: 1px solid #f3c6de; border-radius: 24px; padding: 20px; color: var(--glass-text); }
+.product-card p, .content-section > p, .info-card p, .question > p { line-height: 1.85; }
+/* Headings, status text and secondary controls must remain readable on white cards. */
+:is(.product-card, .price-card, .challenge, .info-card, .cards article, .tile,
+    .question, .product-overview dl > div, .portal-panel, .app-panel,
+    .activation-note, .support-message, .intro .bubble, #status,
+    .verification-placeholder, .card form:not(.site-search), #delete-account) {
+  --ink: var(--glass-text);
+  --muted: var(--glass-muted);
+}
+#status { color: var(--glass-text); }
+.card form:not(.site-search) .text-button,
+.product-card .textBtn, .price-card .textBtn, .info-card .textBtn,
+.cards article .textBtn, .tile .textBtn,
+.portal-panel button:not(.primary),
+.portal-panel .text-button,
+#delete-account summary {
+  color: var(--glass-text); background: #ffe8f5; border-color: #f3c6de;
+}
+.tabs button[aria-pressed=true] { color: #b80a6a; background: #ffffff; border-color: #ffffff; }
+:is(.portal-panel, .card form:not(.site-search), #delete-account)
+  :is(a, button, input, select, textarea, summary):focus-visible { outline-color: #b80a6a; }
+.plans .price-amount, .plans .price-card .price-amount, .price-card .price-amount { color: #b80a6a; }
+.question { padding: 22px; margin: 14px 0; }
+.question > p { padding-left: 0; }
+.price-card.featured, .challenge[aria-pressed=true] { background: #ffe8f5; border-color: #d80f7f; }
+.challenge[aria-pressed=true] { box-shadow: inset 0 0 0 2px #d80f7f; }
+.price-badge, .badge { background: #d80f7f; color: #fff; border: 1px solid #d80f7f; }
+.progress-track { background: #ffe8f5; border: 0; }
+.progress-track > div { background: linear-gradient(90deg, #d80f7f, #ff74c4); }
+.card form:not(.site-search) { padding: 24px; }
+/* Navigation remains floating: rounded links, with no solid header strip. */
+.nav { box-shadow: none; }
+.nav nav a, .nav .lang, body > header button, .tabs button,
+.textBtn, button, .portal-nav a, .support-ticket {
+  background: #ffffff2e; color: #ffffff; border: 1px solid #ffffff80;
+  border-radius: 999px; box-shadow: none;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.nav nav a:hover, .nav nav a:focus-visible, .textBtn:hover,
+.portal-nav a:hover, .support-ticket:hover { background: #ffffff4a; border-color: #fff; }
+.nav nav a[aria-current=page] { background: #ffffff; color: #b80a6a; border-color: #fff; }
+.nav .translation-bn, .nav nav a[aria-current=page] .translation-bn { color: inherit; }
+.nav .lang.active, .lang[aria-pressed=true], .tabs button[aria-selected=true] {
+  color: #b80a6a; background: #ffffff; border-color: #ffffff;
+}
+.announcement, .announcement a, .announcement .translation-en, .announcement .translation-bn {
+  color: var(--ink); background: transparent; border: 0; text-shadow: none;
+}
+.announcement > a { border-radius: 999px; padding: 4px 12px; background: #ffffff2e; text-shadow: none; }
+.btn, .btn.dark, .primary, .nav .account-login {
+  background: #ffffff;
+  color: #b80a6a; border: 1px solid #ffffff; border-radius: 999px;
+  box-shadow: 0 7px 0 #00000026; text-shadow: none; transition: transform .2s, box-shadow .2s;
+}
+.btn .translation-bn, .nav .account-login .translation-bn { color: #b80a6a; }
+.btn:hover, .nav .account-login:hover { transform: translateY(-2px); box-shadow: 0 9px 0 #00000026; }
+.btn:hover, .btn.dark:hover, .primary:hover:not(:disabled), .nav .account-login:hover {
+  background: #ffe8f5; color: #b80a6a; border-color: #ffffff;
+}
+.text-button, .portal-link, .download-details summary {
+  color: #ffffff; background: #ffffff2e; padding: 8px 14px;
+  border: 1px solid var(--line); border-radius: 999px;
+}
+.download-details summary { width: fit-content; }
+.page-body > p a { padding: 8px 14px; border-radius: 999px; background: #ffffff2e; color: #ffffff; }
+.info-card a, .question a { color: #b80a6a; text-decoration: underline; text-underline-offset: 4px; }
+.site-search input, input, select, textarea {
+  background: #ffffff; color: #2b0a1d; border: 1px solid #f3c6de; border-radius: 18px;
+}
+input::placeholder, textarea::placeholder, .site-search input::placeholder { color: #8a5a73; opacity: 1; }
+input[type=checkbox], input[type=radio] { accent-color: #d80f7f; }
+.site-search-submit, .nav .site-search-submit { background: #ffffff; color: #b80a6a; border: 0; }
+.site-search-submit svg { stroke: #b80a6a; }
+.site-search-results { background: #ffffff; border-color: #f3c6de; }
+.site-search-results a, .site-search-empty { color: #2b0a1d; }
+.site-search-results small { color: #4b2a3c; }
+.site-search-results a:hover { background: #ffe8f5; }
+.site-search input:focus { box-shadow: 0 0 0 3px #ffffff80; }
+#status.error { background: #ffe8f5; color: #8f0752; border-color: #d80f7f; }
+.brand { background: transparent; border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+footer p, footer a, footer .footer-links a, .payment-catalog, .payment-catalog h2,
+.footer-trust-strip h2, .payment-catalog h2 .translation-bn,
+.payment-catalog .payment-catalog-note, .footer-payment-block > p,
+.footer-chip-label, .footer-verified > p { color: var(--bar-ink); text-shadow: none; }
+footer .footer-links a { padding: 6px 12px; border-radius: 999px; background: #ffffff26; }
+footer .footer-links a:hover { color: #b80a6a; background: #ffffff; }
+.footer-trust-strip, .footer-navigation, footer nav[aria-label="Service information"] { border: 0; }
+footer nav[aria-label="Service information"] a { padding: 7px 12px; border-radius: 999px; background: #ffffff26; }
+.payment-brand, .payment-logo-card { background: #ffffff; border-color: #ffffff; border-radius: 12px; box-shadow: none; }
+.verification-mark { color: #ffffff; border-color: #ffffff80; }
+.footer-chip { background: #ffffff26; color: #ffffff; border-color: #ffffff66; }
+.skip { background: #ffffff; color: #b80a6a; }
+/* Compact header chrome and a separate, deeper rose footer frame the live artwork. */
+.nav, body > header:not(.nav) {
+  background: #d80f7fe6; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  color: var(--bar-ink); border-bottom: 1px solid #ffffff3a;
+  padding-top: 8px; padding-bottom: 8px;
+  box-shadow: none;
+}
+body > header:not(.nav) { padding-inline: max(20px, calc((100vw - 1136px) / 2)); }
+body > footer, body > footer:has(.payment-catalog),
+body > footer:has(.payment-catalog):not(:has(.footer-main)) {
+  max-width: none; margin: 32px 0 0;
+  padding: 28px max(20px, calc((100vw - 1136px) / 2)) 36px;
+  background: #8f0752;
+  color: var(--bar-ink); border-top: 1px solid #ffffff3a;
+  box-shadow: none;
+}
+footer h2, footer summary, footer .translation-bn,
+footer .footer-help, footer .footer-navigation { color: var(--bar-ink); text-shadow: none; }
+footer > p { max-width: 90ch; margin-inline: auto; }
+footer .footer-links a, footer nav[aria-label="Service information"] a {
+  background: #ffffff26; color: var(--bar-ink);
+}
+footer .footer-links a:hover { background: #ffffff; color: #b80a6a; }
+footer .payment-catalog { max-width: 1136px; margin-inline: auto; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible { outline: 3px solid #ffffff; outline-offset: 4px; }
+@media (max-width: 760px) {
+  .product-intro { padding: 40px 22px 36px; }
+  .product-intro h1 { font-size: clamp(36px, 9vw, 46px); }
+  .product-overview dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .product-overview dl > div { padding: 18px; }
+  .card form:not(.site-search) { padding: 20px; }
+}
+@media (max-width: 380px) { .product-overview dl { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+    }
+
+/* ---- SafeNest animated S background ---- */
+
+.sbg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+.sbg use{animation:sn-breathe 6s ease-in-out infinite;animation-delay:var(--d,0s);transform-box:fill-box;transform-origin:center}
+.sbg path{fill:none;stroke-linecap:butt;stroke-linejoin:round}
+.s-glow{stroke:#ffb0dd;stroke-width:60;opacity:.45;filter:url(#sn-blur);animation:sn-pulse 6s ease-in-out infinite;animation-delay:var(--d,0s)}
+.s-a{stroke:#ff86cb;stroke-width:54}
+.s-gap{stroke:#b00a66;stroke-width:26}
+.s-b{stroke:#ff86cb;stroke-width:14}
+.s-gap2{stroke:#c60d74;stroke-width:0}
+.s-c{stroke:#ff6db6;stroke-width:0}
+.s-flow{stroke:#ffd2ea;stroke-width:54;opacity:.35;stroke-dasharray:40 420;stroke-dashoffset:0;animation:sn-flow 7s linear infinite;animation-delay:var(--d,0s)}
+@keyframes sn-flow{to{stroke-dashoffset:-460}}
+@keyframes sn-pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+@keyframes sn-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.sbg use,.s-glow,.s-flow{animation:none}.s-flow{opacity:0}}
+
+/* ---- Rabbit guide ---- */
+#sn-bun{position:fixed;left:0;top:0;width:380px;height:595px;z-index:60;pointer-events:none;transform-origin:50% 100%;will-change:transform;visibility:hidden}
+#sn-bun.on{visibility:visible}
+#sn-bun .b-shadow{position:absolute;left:14%;width:72%;bottom:-1.2%;height:4.6%;border-radius:50%;background:radial-gradient(closest-side,#28001680,#28001600)}
+#sn-bun .b-tilt{position:absolute;inset:0;transform-origin:50% 100%}
+#sn-bun .p{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
+#sn-bun .p.base{background-image:url('assets/rabbit/base.webp')}
+#sn-bun .p.earL{background-image:url('assets/rabbit/earL.webp');transform-origin:36.8% 23.5%}
+#sn-bun .p.earR{background-image:url('assets/rabbit/earR.webp');transform-origin:61.3% 19.6%}
+#sn-bun .p.armL{background-image:url('assets/rabbit/armL.webp');transform-origin:41.2% 61%}
+#sn-bun .p.armR{background-image:url('assets/rabbit/armR.webp');transform-origin:80.6% 56%}
+#sn-say{position:fixed;left:0;top:0;z-index:61;max-width:240px;background:#fff;color:#2b0a1d;font-weight:700;font-size:16px;line-height:1.35;padding:10px 16px;border-radius:20px;box-shadow:0 6px 0 #0000002e;pointer-events:none;opacity:0;transform:translate(-50%,-100%) scale(.85);transition:opacity .25s,transform .25s;visibility:hidden}
+#sn-say.show{opacity:1;visibility:visible;transform:translate(-50%,-100%) scale(1)}
+#sn-say::after{content:"";position:absolute;bottom:-9px;left:calc(50% + var(--tx,0px));width:18px;height:18px;background:#fff;transform:translateX(-50%) rotate(45deg);border-radius:3px}
+.nav nav a.sn-bump,.sn-bump{animation:sn-bump .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes sn-bump{0%{transform:none}25%{transform:translateY(-9px) rotate(-7deg)}55%{transform:translateY(2px) rotate(4deg)}100%{transform:none}}
+@media (max-width:760px){#sn-say{font-size:14px;max-width:190px;padding:8px 13px}}
+/* Leave narrow phone screens clear for copy and form controls. */
+@media (max-width:479px){#sn-bun,#sn-say{display:none}}
+/* ---- Type: Anek Bangla for both scripts ---- */
+body,.translation-bn,h1,h2,h3,button,input,select,textarea{font-family:'Anek Bangla','Hind Siliguri','Noto Sans Bengali',system-ui,sans-serif}
+.translation-bn{font-size:.9em}
+h1 .translation-bn,h2 .translation-bn{font-size:.5em}
+/* Content sits above the S grid. */
+main,body>header,body>footer,.announcement,.page-body,.card{position:relative;z-index:1}
+html,body{overflow-x:clip}
+.nav{z-index:20}
