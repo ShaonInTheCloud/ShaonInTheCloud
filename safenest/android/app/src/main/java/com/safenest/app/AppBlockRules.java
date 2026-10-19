@@ -20,8 +20,10 @@ import java.util.regex.Pattern;
  *   5. "-bet" / "bet-" brand shapes in the package ID (melbet, linebet, 22bet, betway, betwinner),
  *      with a list of ordinary words that look alike (alphabet, better, between, beta...).
  * Browsers with a built-in VPN or proxy move traffic out of the on-device DNS filter, so like Gamban they are
- * blocked as a whole (assets/blocked_apps/vpn_browsers.txt). Other browsers stay usable and their address bar
- * is checked against the blocklist instead, which works even when that browser's own VPN is on.
+ * blocked as a whole (assets/blocked_apps/vpn_browsers.txt), as are VPN apps (assets/blocked_apps/vpn_apps.txt).
+ * Other browsers stay usable and their address bar is checked against the blocklist instead, which works even
+ * when that browser's own VPN is on. On store install pages, a title with the whole word "vpn" or "proxy" is
+ * blocked too, so an unlisted VPN cannot be installed during protection.
  */
 public final class AppBlockRules {
     private AppBlockRules() {}
@@ -32,6 +34,8 @@ public final class AppBlockRules {
     public static final String GAMBLING_BRAND = "gambling_brand";
     public static final String GAMBLING_WORD = "gambling_word";
 
+    /** Store titles with these whole words are VPN/proxy apps; the install page bounces even for an unlisted brand. */
+    private static final Set<String> VPN_WORDS = Set.of("vpn", "proxy", "ভিপিএন", "প্রক্সি");
     private static final Set<String> WORDS = Set.of(
         "bet", "bets", "betting", "bettings", "casino", "casinos", "poker", "slots", "jackpot", "jackpots",
         "sportsbook", "baccarat", "roulette", "blackjack", "teenpatti", "rummy", "satta", "matka", "lottery", "lotto",
@@ -130,7 +134,7 @@ public final class AppBlockRules {
             for (String name : vpnBrowserNames) if (!name.isEmpty() && (lower.equals(name) || lower.startsWith(name + " ") || lower.startsWith(name + ":"))) return true;
             Set<String> w = words(title);
             if (brands.contains(compact(title))) return true;
-            for (String word : w) if (brands.contains(word) || WORDS.contains(word)) return true;
+            for (String word : w) if (brands.contains(word) || WORDS.contains(word) || VPN_WORDS.contains(word)) return true;
         }
         return false;
     }

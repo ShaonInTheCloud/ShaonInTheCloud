@@ -56,6 +56,14 @@ public final class AppBlockRulesRegression {
         check(!AppBlockRules.blocksInstall(List.of("Baji Live"), List.of("Uninstall"), brands, names), "uninstalling stays allowed");
         check(!AppBlockRules.blocksInstall(List.of("WhatsApp Messenger"), List.of("Install"), brands, names), "normal install");
         check(!AppBlockRules.blocksInstall(List.of("Operator Tools"), List.of("Install"), brands, names), "'Opera' prefix only as a word");
+        // VPN apps: catalogue names (vpn_apps.txt shares the vpn_browsers format) and the generic words
+        Set<String> vpnNames = new java.util.HashSet<>(names); vpnNames.add("psiphon"); vpnNames.add("proton vpn");
+        check(AppBlockRules.blocksInstall(List.of("Psiphon"), List.of("Install"), brands, vpnNames), "VPN app by catalogue name");
+        check(AppBlockRules.blocksInstall(List.of("Proton VPN: Fast & Secure VPN"), List.of("Install"), brands, vpnNames), "catalogue name with tagline");
+        check(AppBlockRules.blocksInstall(List.of("Some New Free VPN - Unlimited"), List.of("Install"), brands, names), "unlisted VPN by the word");
+        check(AppBlockRules.blocksInstall(List.of("Socks5 Proxy Client"), List.of("Update"), brands, names), "proxy app by the word, update too");
+        check(!AppBlockRules.blocksInstall(List.of("Proxyfire Launcher"), List.of("Install"), brands, names), "'proxy' only as a whole word");
+        check(!AppBlockRules.blocksInstall(List.of("Psiphon"), List.of("Uninstall"), brands, vpnNames), "removing a VPN stays allowed");
         // IP blocklist and raw-IP address bars
         check(IpRules.parseBlockEntry("203.0.113.7") != null, "single public IPv4");
         check(IpRules.parseBlockEntry("198.51.100.0/24 # comment") != null, "public /24");
