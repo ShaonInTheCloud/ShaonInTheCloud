@@ -50,7 +50,12 @@ for (const file of await readdir('dist')) {
   html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
   html = html.replace('</head>', '<meta name="theme-color" content="#d80f7f"></head>');
   const policy = contentSecurityPolicy(url.origin, { meta: true });
-  if (!html.includes('http-equiv="Content-Security-Policy"')) {
+  if (html.includes('http-equiv="Content-Security-Policy"')) {
+    // Auth's older inline policy must use the same resource permissions as
+    // the host policy, including the shared theme's Google Fonts.
+    html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g,
+      `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  } else {
     html = html.replace(/<head>/, `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`);
   }
   await writeFile(path, html);

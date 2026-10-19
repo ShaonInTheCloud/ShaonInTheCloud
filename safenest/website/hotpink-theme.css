@@ -99,6 +99,8 @@ h2, .eyebrow, .product-intro .lead, .page-intro p,
 }
 #status { color: var(--glass-text); }
 .card form:not(.site-search) .text-button,
+.product-card .textBtn, .price-card .textBtn, .info-card .textBtn,
+.cards article .textBtn, .tile .textBtn,
 .portal-panel button:not(.primary),
 .portal-panel .text-button,
 #delete-account summary {
@@ -135,14 +137,14 @@ h2, .eyebrow, .product-intro .lead, .page-intro p,
   color: var(--ink); background: transparent; border: 0; text-shadow: none;
 }
 .announcement > a { border-radius: 999px; padding: 4px 12px; background: #ffffff2e; text-shadow: none; }
-.btn, .primary, .nav .account-login {
+.btn, .btn.dark, .primary, .nav .account-login {
   background: #ffffff;
   color: #b80a6a; border: 1px solid #ffffff; border-radius: 999px;
   box-shadow: 0 7px 0 #00000026; text-shadow: none; transition: transform .2s, box-shadow .2s;
 }
 .btn .translation-bn, .nav .account-login .translation-bn { color: #b80a6a; }
 .btn:hover, .nav .account-login:hover { transform: translateY(-2px); box-shadow: 0 9px 0 #00000026; }
-.btn:hover, .primary:hover:not(:disabled), .nav .account-login:hover {
+.btn:hover, .btn.dark:hover, .primary:hover:not(:disabled), .nav .account-login:hover {
   background: #ffe8f5; color: #b80a6a; border-color: #ffffff;
 }
 .text-button, .portal-link, .download-details summary {
@@ -249,6 +251,8 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid #ffffff; outl
 .nav nav a.sn-bump,.sn-bump{animation:sn-bump .7s cubic-bezier(.3,1.6,.5,1)}
 @keyframes sn-bump{0%{transform:none}25%{transform:translateY(-9px) rotate(-7deg)}55%{transform:translateY(2px) rotate(4deg)}100%{transform:none}}
 @media (max-width:760px){#sn-say{font-size:14px;max-width:190px;padding:8px 13px}}
+/* Leave narrow phone screens clear for copy and form controls. */
+@media (max-width:479px){#sn-bun,#sn-say{display:none}}
 /* ---- Type: Anek Bangla for both scripts ---- */
 body,.translation-bn,h1,h2,h3,button,input,select,textarea{font-family:'Anek Bangla','Hind Siliguri','Noto Sans Bengali',system-ui,sans-serif}
 .translation-bn{font-size:.9em}

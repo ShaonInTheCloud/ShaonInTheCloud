@@ -53,6 +53,12 @@
 
   // Which heading is in view decides what the rabbit says and when it hops.
   let pendingSay = '';
+  new MutationObserver(() => {
+    if (!curHead) return;
+    pendingSay = headingText(curHead);
+    lastSay = '';
+    say.classList.remove('show');
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   function watchHeadings() {
     const hs = headings(); if (!hs.length) return;
     const mid = innerHeight * .45; let best = null, bd = 1e9;
