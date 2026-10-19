@@ -299,9 +299,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
         }
         if (!own) return
         if (alwaysOnRow && !destructive) {
-            // The switch has just flipped; re-read the page shortly and put it back on if it is off.
-            handler.postDelayed({ val root = controlForegroundRoot() ?: return@postDelayed
-                try { if (root.packageName?.toString() == name) ensureAlwaysOn(root, SystemClock.elapsedRealtime(), force = true) }
+            // The switch has just flipped. If Always-on is now SafeNest, leave the page at once so the same
+            // visit cannot flip it back; the page bounces on every later visit. Otherwise try to put it back on.
+            handler.postDelayed({
+                val later = SystemClock.elapsedRealtime()
+                if (alwaysOnIsSafeNest()) {
+                    cancelControlScan()
+                    returnHome(later, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
+                    return@postDelayed
+                }
+                val root = controlForegroundRoot() ?: return@postDelayed
+                try { if (root.packageName?.toString() == name) ensureAlwaysOn(root, later, force = true) }
                 finally { @Suppress("DEPRECATION") root.recycle() } }, 350)
             return
         }

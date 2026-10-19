@@ -245,7 +245,7 @@ class SafeNestVpnService : VpnService() {
                     writeReply(current, request, DnsPacketCodec.error(request.query, 3))
                     continue
                 }
-                // Opt-in: names that would let a browser or app move DNS out of this filter.
+                // On by default: names that would let a browser or app move DNS out of this filter.
                 if (EncryptedDnsBypass.isBypassName(request.query.hostname) &&
                     GuardPreferences.blocksEncryptedDnsBypass(this)) {
                     noteBlocked(request.query.hostname)

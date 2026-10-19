@@ -44,8 +44,9 @@ object GuardPreferences {
         prefs(context).edit().putBoolean("block_vpn_apps", value).apply()
     }
 
-    /** Opt-in: refuse lookups of public encrypted-DNS resolver names and DoH canary names. Off by default. */
-    fun blocksEncryptedDnsBypass(context: Context): Boolean = prefs(context).getBoolean("block_encrypted_dns_bypass", false)
+    /** Refuse lookups of public encrypted-DNS resolver names and DoH canary names. On by default: a browser's own
+     *  Secure DNS (Firefox, Chrome) would otherwise carry gambling lookups past the filter. Can be switched off before activation. */
+    fun blocksEncryptedDnsBypass(context: Context): Boolean = prefs(context).getBoolean("block_encrypted_dns_bypass", true)
     fun setBlockEncryptedDnsBypass(context: Context, value: Boolean) {
         if (value && !ProtectionCommitment.hasVerifiedAccess(context)) return
         if (!value && (ProtectionCommitment.isActive(context) || ManagedProtection.isConfigured(context))) return
@@ -57,7 +58,7 @@ object GuardPreferences {
     }
     internal fun clearForExpiry(context: Context) {
         prefs(context).edit().putBoolean("enabled", false).remove("block_vpn_apps")
-            .putBoolean("block_encrypted_dns_bypass", false)
+            .remove("block_encrypted_dns_bypass")
             .putBoolean("test_control_consent", false).putBoolean("test_control_consent_v2", false)
             .putBoolean("test_control_consent_v3", false).commit()
     }
