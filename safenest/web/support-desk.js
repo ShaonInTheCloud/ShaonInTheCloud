@@ -1,8 +1,11 @@
 // The database enforces confirmed identity, ownership, staff access and limits.
 export function installSupportDesk(client,{identity}) {
   const $=id=>document.getElementById(id), form=$('support-form'), reply=$('support-reply-form');
-  const requestedTopic=new URLSearchParams(location.search).get('topic');
-  if(['app','account','billing','privacy','business'].includes(requestedTopic))form.elements.category.value=requestedTopic;
+  const requested=new URLSearchParams(location.search),requestedTopic=requested.get('topic');
+  // Prefill only; the customer still reviews and sends. maxlength mirrors the form fields.
+  const prefill=()=>{if(['app','account','billing','privacy','business'].includes(requestedTopic))form.elements.category.value=requestedTopic;
+    for(const [name,max] of [['subject',120],['message',4000]]){const v=requested.get(name);if(v)form.elements[name].value=v.slice(0,max);}};
+  prefill();
   let generation=0,currentUser=null,staff=false,selected=null,offset=0,threadLimit=100;
   let draft=null,replyDraft=null,sending=false,replying=false;
   const say=text=>{$('support-status').textContent=text;};
@@ -40,7 +43,7 @@ export function installSupportDesk(client,{identity}) {
   }
   async function refresh(){
     const user=identity();
-    if(user!==currentUser){generation++;currentUser=user;staff=false;selected=null;draft=null;replyDraft=null;form.reset();if(['app','account','billing','privacy','business'].includes(requestedTopic))form.elements.category.value=requestedTopic;reply.reset();$('support-list').replaceChildren();$('support-messages').replaceChildren();$('support-thread').hidden=true;$('support-more').hidden=true;$('support-operator-note').hidden=true;say('');}
+    if(user!==currentUser){generation++;currentUser=user;staff=false;selected=null;draft=null;replyDraft=null;form.reset();prefill();reply.reset();$('support-list').replaceChildren();$('support-messages').replaceChildren();$('support-thread').hidden=true;$('support-more').hidden=true;$('support-operator-note').hidden=true;say('');}
     if(!user)return;
     const g=++generation;
     try{const {data,error}=await client.rpc('support_is_operator').abortSignal(AbortSignal.timeout(12000));if(!valid(user,g))return;if(error)throw error;staff=data===true;$('support-operator-note').hidden=!staff;
