@@ -21,11 +21,6 @@ body {
   color: var(--ink);
   isolation: isolate;
 }
-.liquid-background.ready { opacity: 1; }
-  0% { transform: translate(-3%, 2%) scale(1.02) rotate(-1deg); }
-  50% { transform: translate(2%, -2%) scale(1.06) rotate(.7deg); }
-  100% { transform: translate(3%, 3%) scale(1.02) rotate(1deg); }
-}
 ::selection { background: #ffffff; color: #b80a6a; }
 /* No page-wide frames, color bands, or covering panels. */
 .nav, body > header, body > header:not(.nav), .announcement, .product-intro, .hero, .page-intro,
@@ -94,6 +89,24 @@ h2, .eyebrow, .product-intro .lead, .page-intro p,
 .card form .note, #delete-account .note { color: var(--glass-text); }
 #delete-account { background: var(--glass); border: 1px solid #f3c6de; border-radius: 24px; padding: 20px; color: var(--glass-text); }
 .product-card p, .content-section > p, .info-card p, .question > p { line-height: 1.85; }
+/* Headings, status text and secondary controls must remain readable on white cards. */
+:is(.product-card, .price-card, .challenge, .info-card, .cards article, .tile,
+    .question, .product-overview dl > div, .portal-panel, .app-panel,
+    .activation-note, .support-message, .intro .bubble, #status,
+    .verification-placeholder, .card form:not(.site-search), #delete-account) {
+  --ink: var(--glass-text);
+  --muted: var(--glass-muted);
+}
+#status { color: var(--glass-text); }
+.card form:not(.site-search) .text-button,
+.portal-panel button:not(.primary),
+.portal-panel .text-button,
+#delete-account summary {
+  color: var(--glass-text); background: #ffe8f5; border-color: #f3c6de;
+}
+.tabs button[aria-pressed=true] { color: #b80a6a; background: #ffffff; border-color: #ffffff; }
+:is(.portal-panel, .card form:not(.site-search), #delete-account)
+  :is(a, button, input, select, textarea, summary):focus-visible { outline-color: #b80a6a; }
 .plans .price-amount, .plans .price-card .price-amount, .price-card .price-amount { color: #b80a6a; }
 .question { padding: 22px; margin: 14px 0; }
 .question > p { padding-left: 0; }
