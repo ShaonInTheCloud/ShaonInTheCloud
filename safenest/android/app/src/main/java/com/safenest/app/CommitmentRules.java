@@ -7,13 +7,14 @@ public final class CommitmentRules {
         return starts > 0 && starts <= serverNow && ends > serverNow &&
             ends - starts <= 370L * 24 * 60 * 60 * 1000;
     }
-    public static long effectiveNow(long wall, long elapsed, long serverAnchor,
-                                    long elapsedAnchor, long highWater, boolean sameBoot) {
-        if (sameBoot && elapsed >= elapsedAnchor) {
-            // A manual wall-clock jump must neither shorten nor extend a consented period.
-            return Math.max(highWater, serverAnchor + elapsed - elapsedAnchor);
-        }
-        return Math.max(Math.max(wall, highWater), serverAnchor);
+    /**
+     * Trusted time: the last server time plus uptime since. The wall clock is never read, so moving it can neither
+     * shorten nor extend a consented period, before or after a reboot. A reading below the anchor means a reboot:
+     * only uptime since boot is added. Powered-off time is not counted until the next server recheck re-anchors.
+     */
+    public static long effectiveNow(long elapsed, long serverAnchor, long elapsedAnchor, long highWater) {
+        if (elapsed >= elapsedAnchor) return Math.max(highWater, serverAnchor + elapsed - elapsedAnchor);
+        return Math.max(highWater, serverAnchor) + elapsed;
     }
     public static boolean active(boolean committed, long ends, long now) {
         return committed && ends > now && ends > 0;
