@@ -41,6 +41,16 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 if (!BuildConfig.ALLOW_SYSTEM_GUARD && !testControls) return@post
                 service.hardExit(SystemClock.elapsedRealtime(), reason,
                     "SafeNest protection was switched off. Open SafeNest to restore it.")
+                // VPN permission usually survives (Always-on switched off, service stopped): bring the filter
+                // straight back rather than waiting for the user to open SafeNest. Two tries clear the teardown.
+                for (delay in longArrayOf(1500L, 4000L)) service.handler.postDelayed({
+                    if (!ProtectionCommitment.isActive(service) || SafeNestVpnService.isRunning.get() ||
+                        android.net.VpnService.prepare(service) != null) return@postDelayed
+                    try {
+                        androidx.core.content.ContextCompat.startForegroundService(service,
+                            Intent(service, SafeNestVpnService::class.java).setAction(SafeNestVpnService.ACTION_START))
+                    } catch (_: Exception) {}
+                }, delay)
             }
         }
         internal fun windowStatusForQa(): String = if (BuildConfig.DEBUG && LocalTestSession.enabled)
@@ -299,10 +309,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
         }
         if (!own) return
         if (alwaysOnRow && !destructive) {
-            // The switch has just flipped; re-read the page shortly and put it back on if it is off.
-            handler.postDelayed({ val root = controlForegroundRoot() ?: return@postDelayed
-                try { if (root.packageName?.toString() == name) ensureAlwaysOn(root, SystemClock.elapsedRealtime(), force = true) }
-                finally { @Suppress("DEPRECATION") root.recycle() } }, 350)
+            // The switch has just flipped; Android 14+ hides its state from this service, so do not wait to
+            // read it. Leave the page now: the only legitimate tap here turns Always-on on, and leaving at
+            // once removes the chance to tap it off in the same visit. Later visits bounce on entry.
+            cancelControlScan()
+            hardExit(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.")
             return
         }
         cancelControlScan()
