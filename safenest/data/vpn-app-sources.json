@@ -1,0 +1,104 @@
+{
+  "about": "Inputs for tools/build_vpn_catalogue.py, which writes android/app/src/main/assets/blocked_apps/vpn_apps.txt. Every entry traces to a public source; nothing is guessed. Package IDs and app names are facts, not licensed text.",
+  "fdroid": {
+    "index_url": "https://f-droid.org/repo/index-v2.json",
+    "fetched": "2026-10-19",
+    "category": "VPN & Proxy",
+    "exclude": {
+      "net.yukh.xui": "panel manager, not a VPN client",
+      "org.sirekanyan.outline": "server manager, not a VPN client",
+      "com.github.vgaj.proxy": "serves a proxy, does not route this phone",
+      "com.tokyoxpa3.androidproxy": "serves a proxy, does not route this phone",
+      "org.vi_server.androidudpbus": "UDP tool, not a VPN",
+      "io.github.valnesfjord.tgwsproxyrs": "Telegram bridge, not a VPN"
+    },
+    "include_outside_category": {
+      "dnsfilter.android": "local-VPN DNS filter: takes the VPN slot",
+      "com.github.xfalcon.vhosts": "hosts override in VPN mode: takes the VPN slot",
+      "com.kin.athena": "firewall using the VPN slot"
+    },
+    "package_only_names": {
+      "MESH": "ordinary word; a store title starting with Mesh is not necessarily this app",
+      "Outline": "also a notes app name; Outline VPN's title carries the word VPN",
+      "I2P": "too short to be a safe title prefix",
+      "Xray": "too short and generic"
+    }
+  },
+  "names": [
+    {
+      "name": "Amnezia VPN",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "Atlas VPN",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "Avast SecureLine",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "BlackVPN",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "HMA",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "HMA VPN",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "Hola",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "Hola VPN",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "IPVanish",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "IVPN",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "Mullvad",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "NordLayer",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "NymVPN",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "PrivadoVPN",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "PureVPN",
+      "source": "https://en.wikipedia.org/wiki/Comparison_of_virtual_private_network_services"
+    },
+    {
+      "name": "VPN Unlimited",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    },
+    {
+      "name": "VPNBook",
+      "source": "https://en.wikipedia.org/wiki/Category:Virtual_private_network_services"
+    }
+  ],
+  "known_packages_file": "data/known-vpn-packages.json",
+  "playstore_csv": {
+    "file": "data/vpn-apps-playstore-2021.csv",
+    "min_installs": 10000,
+    "source": "https://github.com/gauthamp10/google-playstore-dataset (MIT), 2.3M Google Play apps scraped June 2021; rows whose store name contains the whole word VPN or proxy",
+    "fetched": "2026-10-20"
+  }
+}

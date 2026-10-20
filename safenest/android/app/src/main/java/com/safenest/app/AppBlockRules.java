@@ -1,5 +1,6 @@
 package com.safenest.app;
 
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,8 +21,10 @@ import java.util.regex.Pattern;
  *   5. "-bet" / "bet-" brand shapes in the package ID (melbet, linebet, 22bet, betway, betwinner),
  *      with a list of ordinary words that look alike (alphabet, better, between, beta...).
  * Browsers with a built-in VPN or proxy move traffic out of the on-device DNS filter, so like Gamban they are
- * blocked as a whole (assets/blocked_apps/vpn_browsers.txt). Other browsers stay usable and their address bar
- * is checked against the blocklist instead, which works even when that browser's own VPN is on.
+ * blocked as a whole (assets/blocked_apps/vpn_browsers.txt), as are VPN apps (assets/blocked_apps/vpn_apps.txt).
+ * Other browsers stay usable and their address bar is checked against the blocklist instead, which works even
+ * when that browser's own VPN is on. On store install pages, a title with the whole word "vpn" or "proxy" is
+ * blocked too, so an unlisted VPN cannot be installed during protection.
  */
 public final class AppBlockRules {
     private AppBlockRules() {}
@@ -32,6 +35,8 @@ public final class AppBlockRules {
     public static final String GAMBLING_BRAND = "gambling_brand";
     public static final String GAMBLING_WORD = "gambling_word";
 
+    /** Store titles with these whole words are VPN/proxy apps; the install page bounces even for an unlisted brand. */
+    private static final Set<String> VPN_WORDS = Set.of("vpn", "proxy", "ভিপিএন", "প্রক্সি");
     private static final Set<String> WORDS = Set.of(
         "bet", "bets", "betting", "bettings", "casino", "casinos", "poker", "slots", "jackpot", "jackpots",
         "sportsbook", "baccarat", "roulette", "blackjack", "teenpatti", "rummy", "satta", "matka", "lottery", "lotto",
@@ -44,6 +49,21 @@ public final class AppBlockRules {
     private static final Pattern SUFFIX_BET = Pattern.compile("^[a-z0-9]{1,8}bet$");
     private static final Pattern PREFIX_BET = Pattern.compile("^bet[a-z0-9]{2,12}$");
     private static final Pattern SPLIT = Pattern.compile("[^a-z0-9]+");
+    // Keep combining marks inside words: Bangla vowel signs and virama are marks, not letters.
+    // Separate from SPLIT so existing gambling/package recognition retains its behavior.
+    private static final Pattern VPN_TITLE_SPLIT = Pattern.compile("[^\\p{L}\\p{M}\\p{N}]+");
+
+    private static boolean hasVpnTitleWord(String title) {
+        String normalized = Normalizer.normalize(title, Normalizer.Form.NFKC)
+            .toLowerCase(Locale.ROOT)
+            // Joiners can change Bangla conjunct rendering without changing the word.
+            .replace("\u200c", "").replace("\u200d", "");
+        for (String word : VPN_TITLE_SPLIT.split(normalized)) {
+            if (VPN_WORDS.contains(word)) return true;
+        }
+        return false;
+    }
+
     /** Second-level labels too generic to treat a reversed package domain as a gambling site. */
     private static final Set<String> GENERIC_LABELS = Set.of(
         "app", "apps", "android", "mobile", "google", "example", "my", "the", "client", "game", "games", "play", "free", "pro");
@@ -128,6 +148,7 @@ public final class AppBlockRules {
             if (title == null || title.length() > 140) continue;
             String lower = title.toLowerCase(Locale.ROOT);
             for (String name : vpnBrowserNames) if (!name.isEmpty() && (lower.equals(name) || lower.startsWith(name + " ") || lower.startsWith(name + ":"))) return true;
+            if (hasVpnTitleWord(title)) return true;
             Set<String> w = words(title);
             if (brands.contains(compact(title))) return true;
             for (String word : w) if (brands.contains(word) || WORDS.contains(word)) return true;

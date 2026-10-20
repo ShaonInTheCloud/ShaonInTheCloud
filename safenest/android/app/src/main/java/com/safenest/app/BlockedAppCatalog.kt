@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 /**
- * Gambling apps and VPN browsers SafeNest blocks during protection. The lists are plain text assets in
+ * Gambling apps, VPN browsers and VPN apps SafeNest blocks during protection. The lists are plain text assets in
  * assets/blocked_apps so the team can update them like the domain list; matching rules live in AppBlockRules.
  * Decisions are cached per package ID (an app's ID and name do not change while it is installed).
  */
@@ -26,7 +26,9 @@ object BlockedAppCatalog {
         lists?.let { return it }
         return synchronized(this) {
             lists ?: run {
-                val browserRows = lines(context, "vpn_browsers.txt").map { it.substringBefore('#').trim() }.filter { it.isNotEmpty() }
+                // VPN apps are treated exactly like VPN browsers: blocked whole, and their store page bounces.
+                val browserRows = (lines(context, "vpn_browsers.txt") + lines(context, "vpn_apps.txt"))
+                    .map { it.substringBefore('#').trim() }.filter { it.isNotEmpty() }
                 Lists(
                     packages = AppBlockRules.parseList(lines(context, "gambling_packages.txt"), false),
                     brands = AppBlockRules.parseList(lines(context, "gambling_app_brands.txt"), true),
