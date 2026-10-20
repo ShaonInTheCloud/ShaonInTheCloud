@@ -64,6 +64,37 @@ public final class AppBlockRulesRegression {
         check(AppBlockRules.blocksInstall(List.of("Socks5 Proxy Client"), List.of("Update"), brands, names), "proxy app by the word, update too");
         check(!AppBlockRules.blocksInstall(List.of("Proxyfire Launcher"), List.of("Install"), brands, names), "'proxy' only as a whole word");
         check(!AppBlockRules.blocksInstall(List.of("Psiphon"), List.of("Uninstall"), brands, vpnNames), "removing a VPN stays allowed");
+        // Generic Unicode title matching must work without a package or catalogue-name match.
+        for (String title : List.of(
+            "ফ্রি ভিপিএন", "নিরাপদ প্রক্সি", "Fast ভিপিএন - Secure", "বাংলা Proxy Client",
+            "ভিপিএন—দ্রুত", "প্রক্সি।নিরাপদ", "Fast\u00a0VPN", "Ｆｒｅｅ ＶＰＮ",
+            "Ｐｒｏｘｙ Client", "প্\u200dরক্সি", "প্\u200cরক্সি",
+            java.text.Normalizer.normalize("দ্রুত ভিপিএন", java.text.Normalizer.Form.NFD))) {
+            for (String action : List.of("Install", "Update", "ইনস্টল", "asenna")) {
+                check(AppBlockRules.blocksInstall(List.of(title), List.of(action), Set.of(), Set.of()),
+                    "Unicode VPN/proxy install: " + title + " / " + action);
+            }
+            for (String action : List.of("Uninstall", "আনইনস্টল", "Poista", "Open")) {
+                check(!AppBlockRules.blocksInstall(List.of(title), List.of(action), brands, vpnNames),
+                    "non-install operation stays allowed: " + title + " / " + action);
+            }
+        }
+        for (String title : List.of("বাংলা অভিধান", "বিকাশ", "নগদ", "WhatsApp Messenger",
+            "Google Maps", "Proxyfire Launcher", "MyVPNTools", "ভিপিএনসেবা", "প্রক্সিসেবা",
+            "অপ্রক্সি", "éproxy", "proxyé", "proxy\u0301", "vpn২")) {
+            check(!AppBlockRules.blocksInstall(List.of(title), List.of("Install"), brands, names),
+                "ordinary or non-whole-word title stays installable: " + title);
+        }
+        check(!AppBlockRules.blocksInstall(List.of("ভিপিএন"), List.of(), brands, names),
+            "no install action stays allowed");
+        check(!AppBlockRules.blocksInstall(List.of("ভিপিএন"), List.of("Uninstall", "Open"), brands, names),
+            "uninstall and open together stay allowed");
+        // Preserve the existing ASCII gambling tokenization, including mixed-script boundaries.
+        check(AppBlockRules.blocksInstall(List.of("বাংলাCasino"), List.of("Install"), brands, names),
+            "existing gambling word matching is unchanged");
+        check(r.apply("com.android.settings", "Settings").isEmpty(), "Settings stays usable");
+        check(r.apply("com.android.dialer", "Phone").isEmpty(), "dialer stays usable");
+        check(r.apply("com.android.launcher", "Home").isEmpty(), "launcher stays usable");
         // IP blocklist and raw-IP address bars
         check(IpRules.parseBlockEntry("203.0.113.7") != null, "single public IPv4");
         check(IpRules.parseBlockEntry("198.51.100.0/24 # comment") != null, "public /24");
