@@ -42,6 +42,6 @@ const metadata = {
   brands: brands.map(b => ({name:b.name,slug:b.slug,matching_hostnames:domains.filter(d => selected.get(d).includes(b.slug)).length})),
   domains: domains.map(domain => ({domain, category:'gambling', source:'blocklistproject', brand_text_matches:selected.get(domain), confidence:'THIRD_PARTY_FEED'}))
 };
-writeFileSync(new URL('android/app/src/main/assets/gambling_brand_families.txt', root), domains.join('\n')+'\n');
+writeFileSync(new URL('data/blocklists/sources/gambling_brand_families.txt', root), domains.join('\n')+'\n');
 writeFileSync(new URL('data/gambling-brand-families.json', root), JSON.stringify(metadata,null,2)+'\n');
 console.log(JSON.stringify({domains:domains.length,brands:metadata.brands.filter(b=>b.matching_hostnames),rejected:rejected.length}));

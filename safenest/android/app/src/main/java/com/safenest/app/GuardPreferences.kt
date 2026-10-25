@@ -53,7 +53,10 @@ object GuardPreferences {
     }
 
     internal fun commitVpnBlocking(context: Context) {
-        prefs(context).edit().putBoolean("enabled", true).putBoolean("block_vpn_apps", true).apply()
+        // A commitment always blocks VPN apps and encrypted-DNS bypass names: both are the
+        // two cheapest ways around a DNS filter, and the disclosure says so.
+        prefs(context).edit().putBoolean("enabled", true).putBoolean("block_vpn_apps", true)
+            .putBoolean("block_encrypted_dns_bypass", true).apply()
     }
     internal fun clearForExpiry(context: Context) {
         prefs(context).edit().putBoolean("enabled", false).remove("block_vpn_apps")

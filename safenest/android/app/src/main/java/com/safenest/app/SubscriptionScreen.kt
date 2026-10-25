@@ -110,10 +110,16 @@ fun SubscriptionScreen(language: String, onVerified: () -> Unit) {
         }) { Text(if (running == "trial") t("Starting trial…", "ট্রায়াল শুরু হচ্ছে…") else t("Start three-day trial", "তিন দিনের ট্রায়াল শুরু করুন")) }
         MessageHere("trial")
     }
-    if (!committed) Text(t(if (BuildConfig.ALLOW_SYSTEM_GUARD) "Purchasing and payment confirmation still require the website's billing integration. This app cannot create a paid entitlement." else "This Play build is for existing SafeNest accounts. In-app purchases are not available. A server-verified active entitlement is required.",
-        if (BuildConfig.ALLOW_SYSTEM_GUARD) "কেনা ও পেমেন্ট নিশ্চিত করার জন্য ওয়েবসাইটের বিলিং সংযোগ প্রয়োজন। অ্যাপ নিজে পেইড অনুমতি তৈরি করতে পারে না।" else "এই Play সংস্করণ বিদ্যমান SafeNest অ্যাকাউন্টের জন্য। অ্যাপে কেনা যায় না। সার্ভারে যাচাইকৃত সক্রিয় অনুমতি দরকার।"))
-    if (BuildConfig.ALLOW_SYSTEM_GUARD) TextButton(onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://mysafenestbd.com"))) } }) {
-        Text(t("Open SafeNest website", "SafeNest ওয়েবসাইট খুলুন"))
+    val store = InAppPurchases.provider
+    if (!committed && store.available && !BuildConfig.LOCAL_TEST_BUILD) {
+        StorePurchaseSection(language, email, password, busy, onBusy = { busy = it },
+            onMessage = { message = it; messageAt = "store" }, onVerified = { password = ""; onVerified() })
+        MessageHere("store")
+    }
+    if (!committed && !store.available) Text(t("Purchasing and payment confirmation use the SafeNest website. This app cannot create a paid entitlement by itself.",
+        "কেনা ও পেমেন্ট নিশ্চিত করা SafeNest ওয়েবসাইটে হয়। অ্যাপ নিজে পেইড অনুমতি তৈরি করতে পারে না।"))
+    if (!store.available) TextButton(onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://mysafenestbd.com"))) } }) {
+        Text(t("Open SafeNest website", "SafeNest ওয়েবসাইট খুলুন"))
     }
     TextButton(onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://mysafenestbd.com/privacy.html"))) } }) {
         Text(t("Privacy information", "গোপনীয়তার তথ্য"))

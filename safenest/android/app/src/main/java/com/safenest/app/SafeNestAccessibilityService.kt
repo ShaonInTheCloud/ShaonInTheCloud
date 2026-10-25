@@ -381,8 +381,18 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 return true
             }
             if (guardActive && GuardPreferences.blocksVpnApps(this) &&
-                SystemScreenGuard.blocksVpnInstall(name, screen.titles, screen.actions)) {
-                returnHome(now, "vpn_install", "SafeNest blocked this detected VPN installation screen.")
+                SystemScreenGuard.blocksVpnInstall(name, screen.titles.ifEmpty { screen.labels }, screen.actions)) {
+                returnHome(now, "vpn_install", "SafeNest blocked this VPN installation screen.")
+                return true
+            }
+            if (guardActive && GuardPreferences.blocksVpnApps(this) &&
+                SystemScreenGuard.blocksOtherVpnControl(name, screen.labels, screen.actions)) {
+                returnHome(now, "other_vpn", "SafeNest blocked another VPN while your protection period is active.")
+                return true
+            }
+            if (guardActive && GuardPreferences.blocksEncryptedDnsBypass(this) &&
+                SystemScreenGuard.blocksPrivateDns(name, screen.labels, screen.actions)) {
+                returnHome(now, "private_dns", "Private DNS stays as it is during your protection period.")
                 return true
             }
             if (guardActive && (name == "com.android.vending" || SystemScreenGuard.isSystemSurface(name)) &&
