@@ -17,7 +17,7 @@ function setLang(lang) {
     el.setAttribute('aria-pressed', String(el.dataset.lang === lang));
   });
   if (location.pathname.endsWith('/') || location.pathname.endsWith('/index.html')) {
-    document.title = lang === 'bn' ? 'SafeNest — Android-এ জুয়া ও প্রাপ্তবয়স্ক সাইট ব্লকিং' : 'SafeNest — Gambling and adult-site blocking for Android';
+    document.title = lang === 'bn' ? 'SafeNest — Android-এ বেটিং ও প্রাপ্তবয়স্ক সাইট ব্লকিং' : 'SafeNest — Gambling and adult-site blocking for Android';
   }
   try { localStorage.setItem('safenest-language-v2', lang); } catch {}
 }
@@ -83,7 +83,7 @@ if (searchForm) {
   const searchInput = searchForm.querySelector('input[type="search"]');
   const searchResults = searchForm.querySelector('.site-search-results');
   const pages = [
-    { href: './', en: 'Home', bn: 'হোম', summaryEn: 'SafeNest and the SafeNest practical steps', summaryBn: 'Android-এ জুয়া ও প্রাপ্তবয়স্ক সাইট ব্লকিং', terms: 'home safenest protect safer digital space gambling porn adult family support campaign' },
+    { href: './', en: 'Home', bn: 'হোম', summaryEn: 'SafeNest and the SafeNest practical steps', summaryBn: 'Android-এ বেটিং ও প্রাপ্তবয়স্ক সাইট ব্লকিং', terms: 'home safenest protect safer digital space gambling porn adult family support campaign' },
     { href: 'campaign.html', en: 'Practical steps', bn: 'করণীয়', summaryEn: 'Private checkmarks and practical steps', summaryBn: 'ব্যক্তিগত চিহ্ন ও করণীয়', terms: 'campaign challenge mindful online habits screen time recovery' },
     { href: 'how-it-works.html', en: 'Features & setup', bn: 'ফিচার ও সেটআপ', summaryEn: 'Android filtering, app guard and current limits', summaryBn: 'অ্যান্ড্রয়েড ফিল্টার, অ্যাপ গার্ড ও সীমাবদ্ধতা', terms: 'how works android dns filter website app guard vpn limits private dns encrypted security' },
     { href: 'pricing.html', en: 'Pricing', bn: 'মূল্য', summaryEn: 'Proposed prices and payment status', summaryBn: 'প্রস্তাবিত মূল্য ও পেমেন্টের অবস্থা', terms: 'pricing plans price cost subscription payment visa mastercard bkash rocket upay dbbl wallet dutch bangla bank support progress' },

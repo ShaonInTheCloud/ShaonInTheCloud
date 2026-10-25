@@ -54,22 +54,25 @@ for (const file of pages) {
   const base = file.includes('/') ? '../' : '';
   let html = await readFile(path, 'utf8');
   // One final brand layer covers marketing, generated service pages and Auth.
-  // Keep the original page layouts and load the shared motion on every route.
-  if (!html.includes('liquid-pink.css"')) {
-    html = html.replace('</head>', `<link rel="stylesheet" href="${base}liquid-pink.css"></head>`);
-  }
-  html = html.replace(/<link[^>]*href="(?:\.\.\/)?raspberry-theme\.css"[^>]*>/g, '');
-  html = html.replace('</head>', `<link rel="stylesheet" href="${base}raspberry-theme.css"></head>`);
-  if (!html.includes('liquid-pink.js"')) {
-    html = html.replace('</body>', `<script src="${base}liquid-pink.js" defer></script></body>`);
-  }
+  // Keep the original page layouts; the hot-pink layer (Oct 2026) replaces the
+  // liquid-pink artwork and raspberry theme with the neon S grid and rabbit guide.
+  // Global pages live one folder down, so every path is written relative to `base`.
+  html = html.replace(/<link[^>]*href="(?:\.\.\/)?(?:liquid-pink|raspberry-theme|hotpink-theme)\.css"[^>]*>/g, '');
+  html = html.replace('</head>', `<link rel="stylesheet" href="${base}hotpink-theme.css"></head>`);
+  html = html.replace(/<script[^>]*src="(?:\.\.\/)?(?:liquid-pink|s-background|rabbit-guide)\.js"[^>]*><\/script>/g, '');
+  html = html.replace('</body>', `<script src="${base}s-background.js" defer></script><script src="${base}rabbit-guide.js" defer></script></body>`);
   // Launch switch: once the Play listing is live, set SAFENEST_PLAY_STORE_URL and every
   // page's announcement bar becomes the store link. Nothing is shown before that.
   if (playStoreUrl) html = html.replace(/<aside class="announcement">[\s\S]*?<\/aside>/, playAnnouncement(html.includes('lang="bn"')));
   html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
-  html = html.replace('</head>', '<meta name="theme-color" content="#631332"></head>');
+  html = html.replace('</head>', '<meta name="theme-color" content="#d80f7f"></head>');
   const policy = contentSecurityPolicy(url.origin, { meta: true });
-  if (!html.includes('http-equiv="Content-Security-Policy"')) {
+  if (html.includes('http-equiv="Content-Security-Policy"')) {
+    // Auth's older inline policy must use the same resource permissions as
+    // the host policy, including the shared theme's Google Fonts.
+    html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g,
+      `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  } else {
     html = html.replace(/<head>/, `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`);
   }
   await writeFile(path, html);
