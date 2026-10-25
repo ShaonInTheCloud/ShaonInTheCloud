@@ -41,19 +41,21 @@ for (const file of await readdir('dist')) {
   const path = `dist/${file}`;
   let html = await readFile(path, 'utf8');
   // One final brand layer covers marketing, generated service pages and Auth.
-  // Keep the original page layouts and load the shared motion on every route.
-  if (!html.includes('href="liquid-pink.css"')) {
-    html = html.replace('</head>', '<link rel="stylesheet" href="liquid-pink.css"></head>');
-  }
-  html = html.replace(/<link[^>]*href="raspberry-theme\.css"[^>]*>/g, '');
-  html = html.replace('</head>', '<link rel="stylesheet" href="raspberry-theme.css"></head>');
-  if (!html.includes('src="liquid-pink.js"')) {
-    html = html.replace('</body>', '<script src="liquid-pink.js" defer></script></body>');
-  }
+  // Keep the original page layouts; the hot-pink layer (Oct 2026) replaces the
+  // liquid-pink artwork and raspberry theme with the neon S grid and rabbit guide.
+  html = html.replace(/<link[^>]*href="(?:liquid-pink|raspberry-theme|hotpink-theme)\.css"[^>]*>/g, '');
+  html = html.replace('</head>', '<link rel="stylesheet" href="hotpink-theme.css"></head>');
+  html = html.replace(/<script[^>]*src="(?:liquid-pink|s-background|rabbit-guide)\.js"[^>]*><\/script>/g, '');
+  html = html.replace('</body>', '<script src="s-background.js" defer></script><script src="rabbit-guide.js" defer></script></body>');
   html = html.replace(/<meta name="theme-color"[^>]*>/g, '');
-  html = html.replace('</head>', '<meta name="theme-color" content="#631332"></head>');
+  html = html.replace('</head>', '<meta name="theme-color" content="#d80f7f"></head>');
   const policy = contentSecurityPolicy(url.origin, { meta: true });
-  if (!html.includes('http-equiv="Content-Security-Policy"')) {
+  if (html.includes('http-equiv="Content-Security-Policy"')) {
+    // Auth's older inline policy must use the same resource permissions as
+    // the host policy, including the shared theme's Google Fonts.
+    html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/g,
+      `<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+  } else {
     html = html.replace(/<head>/, `<head><meta http-equiv="Content-Security-Policy" content="${policy}">`);
   }
   await writeFile(path, html);
