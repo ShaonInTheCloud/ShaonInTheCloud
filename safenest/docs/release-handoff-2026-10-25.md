@@ -6,10 +6,10 @@
 
 | Track | What it is | Exact reference | Live? |
 |---|---|---|---|
-| **A. Sites (website)** | Source for the live mysafenestbd.com, published through Sites hosting | Sites source `b9d5b4cd00ea52145bd166cf63f8b1e458104f0b`, published as **v45**. It contains the PR #21 design plus newer auth, CAPTCHA and download changes. **This commit is not on GitHub.** | Yes, v45 is live |
+| **A. Sites (website)** | Source for the live mysafenestbd.com, published through Sites hosting | Sites source `4081fe8ac308609a7cf8b4aa5ac79f2080f3847c`, published as **v45**: deployment `appgdep_6add6ae0c6608191b4e030cf8a4cca62`, saved version `appgprj_6ab4d7e9b7f881919fce6caac5d93115~appgver_1d5f78a5a23c8191b0f84d8ad650196b`. (`b9d5b4cd…` is an older Sites source.) It contains the PR #21 design plus newer auth, CAPTCHA and download changes. **This commit is not on GitHub.** | Yes, v45 is live |
 | **B. GitHub PR #17** | Global edition, card/crypto payment code (disabled), Play Billing, Android guard, iPhone DNS filter, Expo app, and the website as merged from `main` | Branch `safenest-global-card-crypto`, head `b540d97f3396581a7e575221daa8ec2b0df158e0`. `main` is at `972eb3ff6b6b371d4844d3a22cb2a8c25d70bec1`, which includes PR #21. | No, not merged to `main` |
 
-The two tracks are separate. Merging or deploying PR #17 must not overwrite the Sites source or the published v45 without someone first reconciling it against Sites `b9d5b4cd`. That source contains auth, CAPTCHA and download work that GitHub does not have.
+The two tracks are separate. Merging or deploying PR #17 must not overwrite the Sites source or the published v45 without someone first reconciling it against Sites `4081fe8a`. That source contains auth, CAPTCHA and download work that GitHub does not have.
 
 ### What is on PR #17 now
 - `ea9f0a7`: `launch/play-billing-and-full-guard` (PR #18) merged into the Global branch, version **0.5.16 / versionCode 45**.
@@ -67,7 +67,7 @@ The two tracks are separate. Merging or deploying PR #17 must not overwrite the 
    - Then confirm `node scripts/check-live-security.mjs` passes on all paths.
    - Owner action; not done.
 2. **Re-test browser auth after headers go live.** Run recovery, signup confirmation and support once more, because the enforced CSP and `frame-ancestors` affect Supabase `connect-src` and the Turnstile frame.
-3. **Reconcile the website tracks.** Bring Sites `b9d5b4cd` (auth, CAPTCHA, downloads) and PR #17's website (Global edition pages, Nest Run, iOS profile page) into one source before either is deployed over the other.
+3. **Reconcile the website tracks.** Bring Sites `4081fe8a` (auth, CAPTCHA, downloads) and PR #17's website (Global edition pages, Nest Run, iOS profile page) into one source before either is deployed over the other.
 4. **Android CI green at the PR #17 head.** Includes the emulator guard flow.
 5. **Real-phone acceptance of a signed 0.5.16 build.** Check that:
    - blocked sites in Chrome step back, and mirror domains are blocked
