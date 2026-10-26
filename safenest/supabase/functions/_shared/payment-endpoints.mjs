@@ -59,8 +59,17 @@ export async function handleReconcile(req,env,{fetcher=fetch,rpc=serviceRpc(env,
     if((await readLimitedBody(req))!=='')throw new PaymentError('invalid_request',400);
     const adapter=configuredAdapter(env,rpc,fetcher);
     const orders=await rpc('payment_reconciliation_batch',{p_environment:adapter.environment});
-    let processed=0,review=0;
-    await Promise.all(orders.map(async order=>{try{await reconcileOrder(adapter,order,rpc);processed++;}catch{review++;}}));
-    return response(req,{processed,review});
+    let processed=0,review=0,failed=0;
+    await Promise.all(orders.map(async order=>{
+      try {await reconcileOrder(adapter,order,rpc);processed++;}
+      catch(e) {
+        // Invalid/ambiguous evidence needs review; provider/network/ledger outages
+        // must make the scheduler fail visibly. The SQL batch lease expires so
+        // either outcome can be retried without trusting a callback or re-granting.
+        if(e instanceof PaymentError && e.status<500) review++;
+        else failed++;
+      }
+    }));
+    return response(req,{processed,review,failed},failed?503:200);
   } catch(e){return response(req,{error:e instanceof PaymentError?e.code:'payment_backend_unavailable'},e instanceof PaymentError?e.status:503);}
 }
