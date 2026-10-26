@@ -1,25 +1,29 @@
-name: SafeNest deploy security headers (manual)
-# Puts the security-headers Worker in front of mysafenestbd.com, then runs the live header check.
-# Needs repository secrets CLOUDFLARE_API_TOKEN (Workers Scripts:Edit, Workers Routes:Edit, Zone:Read) and CLOUDFLARE_ACCOUNT_ID.
+name: SafeNest hosting validation and approved deployment (manual)
 on:
   workflow_dispatch:
     inputs:
-      deploy:
-        description: 'Type "deploy" to publish the Worker; anything else only checks the live site'
-        required: false
-        default: 'check'
+      action:
+        description: 'validate is local only; preflight reads Cloudflare; deploy requires reconciled source and exact-SHA approval'
+        type: choice
+        options: [validate, preflight, deploy]
+        default: validate
+      target:
+        description: 'production attaches the custom domain and is an owner-approved cutover'
+        type: choice
+        options: [preview, production]
+        default: preview
 permissions:
   contents: read
+concurrency:
+  group: safenest-hosting-${{ inputs.target }}
+  cancel-in-progress: false
 jobs:
-  headers:
+  validate:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
         working-directory: safenest
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -28,15 +32,52 @@ jobs:
           cache: npm
           cache-dependency-path: safenest/package-lock.json
       - run: npm ci
-      - name: Build Worker
-        if: ${{ inputs.deploy == 'deploy' }}
+      - run: npm test
+      - run: npm run build
+      - name: Validate both configs without uploading
+        run: |
+          npx --no-install wrangler deploy --dry-run --config cloudflare/wrangler.toml --env preview
+          npx --no-install wrangler deploy --dry-run --config cloudflare/wrangler.toml --env production
+      - run: node scripts/check-local-hosting.mjs
+  hosting:
+    if: ${{ inputs.action != 'validate' }}
+    needs: validate
+    environment: safenest-hosting-${{ inputs.target }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: safenest
+    env:
+      HOSTING_TARGET: ${{ inputs.target }}
+      HOSTING_APPROVED_SHA: ${{ vars.HOSTING_APPROVED_SHA }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+      # Reconciliation must review these build settings against Sites v45.
+      SAFENEST_AUTH_CAPTCHA_ENABLED: ${{ vars.SAFENEST_AUTH_CAPTCHA_ENABLED }}
+      TURNSTILE_SITEKEY: ${{ vars.TURNSTILE_SITEKEY }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - run: npm ci
+      - name: Read-only account and zone ownership preflight
+        run: node scripts/hosting-preflight.mjs "$HOSTING_TARGET"
+      - if: ${{ inputs.action == 'deploy' }}
         run: npm run build
-      - name: Deploy Worker
-        if: ${{ inputs.deploy == 'deploy' }}
-        run: |
-          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets."; exit 1; }
-          npx --yes wrangler@4.149.0 deploy --config cloudflare/wrangler.toml
-      - name: Live header check
-        run: |
-          sleep 15
-          node scripts/check-live-security.mjs
+      - name: Verify reconciliation and exact commit approval before any upload
+        if: ${{ inputs.action == 'deploy' }}
+        run: node scripts/hosting-preflight.mjs "$HOSTING_TARGET" --deployment
+      - name: Validate the actual deployment artifact
+        if: ${{ inputs.action == 'deploy' }}
+        run: node scripts/check-local-hosting.mjs
+      - name: Deploy approved assets
+        if: ${{ inputs.action == 'deploy' }}
+        run: npx --no-install wrangler deploy --config cloudflare/wrangler.toml --env "$HOSTING_TARGET"
+      - name: Production response check
+        if: ${{ inputs.action == 'deploy' && inputs.target == 'production' }}
+        run: node scripts/check-live-security.mjs

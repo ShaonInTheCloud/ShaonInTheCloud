@@ -42,3 +42,21 @@ test('body and status pass through and malformed policy is rejected', async () =
   assert.equal(await (await run(worker, '/')).text(), '<html></html>');
   assert.throws(() => parseHeaders('  Orphan: header'));
 });
+
+test('static Worker uses ASSETS, preserving redirects and errors with policy headers', async () => {
+  const source = workerSource(securityHeaders('https://example.supabase.co'), { assets: true });
+  const worker = (await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'))).default;
+  for (const status of [200, 302, 404, 500]) {
+    const r = await worker.fetch(new Request('https://example.com/account'), { ASSETS: { fetch: async () => new Response('body', { status, headers: { location: '/account', 'set-cookie': 'example=value', 'referrer-policy': 'wrong, duplicate' } }) } });
+    assert.equal(r.status, status);
+    assert.equal(r.headers.get('location'), '/account');
+    assert.equal(r.headers.get('set-cookie'), 'example=value');
+    assert.equal(r.headers.get('referrer-policy'), 'no-referrer');
+    assert.equal(r.headers.get('cache-control'), 'no-store');
+    assert.equal(await r.text(), 'body');
+  }
+  const r = await worker.fetch(new Request('https://example.com/'), { ASSETS: { fetch: async () => { throw new Error('private detail'); } } });
+  assert.equal(r.status, 503);
+  assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(await r.text(), 'Service unavailable');
+});

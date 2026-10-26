@@ -1,9 +1,29 @@
-# Deploys the generated security-headers Worker in front of mysafenestbd.com.
-# Build first: `npm run build` writes dist/cloudflare-security-headers-worker.js.
-name = "safenest-security-headers"
-main = "../dist/cloudflare-security-headers-worker.js"
+# Local validation only by default. No origin-proxy route and no public endpoint.
+# Build with npm run build. Deployment requires the reconciliation and approval gates.
+name = "safenest-static-assets"
+main = "../dist/cloudflare-static-assets-worker.js"
 compatibility_date = "2026-10-01"
 workers_dev = false
-routes = [
-  { pattern = "mysafenestbd.com/*", zone_name = "mysafenestbd.com" }
-]
+preview_urls = false
+routes = []
+
+[assets]
+directory = "../dist"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "auto-trailing-slash"
+not_found_handling = "none"
+
+[env.preview]
+name = "safenest-static-assets-preview"
+workers_dev = true
+preview_urls = false
+routes = []
+
+[env.production]
+name = "safenest-static-assets"
+workers_dev = false
+preview_urls = false
+# A custom domain makes this Worker the origin; a /* route would still need an origin.
+# Attaching this domain is a cutover and must only occur after owner approval.
+routes = [{ pattern = "mysafenestbd.com", custom_domain = true }]
