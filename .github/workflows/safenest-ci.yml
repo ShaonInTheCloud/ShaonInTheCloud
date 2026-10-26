@@ -2,9 +2,9 @@ name: SafeNest release checks
 on:
   push:
     branches: [main]
-    paths: ['safenest/**', '.github/workflows/safenest-ci.yml', '.github/workflows/safenest-signed-release.yml']
+    paths: ['safenest/**', '.github/workflows/safenest-ci.yml', '.github/workflows/safenest-signed-release.yml', '.github/workflows/safenest-deploy-backend.yml', '.github/workflows/safenest-migrate-backend.yml']
   pull_request:
-    paths: ['safenest/**', '.github/workflows/safenest-ci.yml', '.github/workflows/safenest-signed-release.yml']
+    paths: ['safenest/**', '.github/workflows/safenest-ci.yml', '.github/workflows/safenest-signed-release.yml', '.github/workflows/safenest-deploy-backend.yml', '.github/workflows/safenest-migrate-backend.yml']
   workflow_dispatch:
 permissions:
   contents: read

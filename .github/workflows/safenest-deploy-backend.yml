@@ -1,21 +1,42 @@
-name: SafeNest deploy backend (manual)
-# Applies pending Supabase migrations and redeploys the payment functions. Manual only.
-# Default run is a dry run that lists what would change. Needs repository secrets:
-#   SUPABASE_ACCESS_TOKEN (personal access token) and SUPABASE_DB_PASSWORD.
+name: SafeNest deploy payment functions (manual)
+# Functions only. SQL preview/application lives in safenest-migrate-backend.yml.
 on:
   workflow_dispatch:
     inputs:
-      apply:
-        description: 'Type "apply" to change the live project; anything else is a dry run'
+      deploy:
+        description: 'Type "deploy-payment-functions" to authorize production function deployment; otherwise preview only'
         required: false
-        default: 'dry-run'
+        default: 'preview'
 permissions:
   contents: read
 concurrency:
   group: safenest-deploy-backend
   cancel-in-progress: false
 jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: safenest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Check payment configuration and authentication locally (no hosted calls)
+        run: node --test tests/function-config.test.mjs tests/payment-handlers.test.mjs tests/payment-auth.test.mjs
+      - name: Preview function scope
+        run: |
+          printf 'Commit: %s\n' "$GITHUB_SHA"
+          cat supabase/config.toml
+          echo 'Only payment-notification, payment-return, payment-reconcile, payment-catalogue, payment-order and payment-status will be deployed after explicit authorization.'
+          echo 'This workflow never links the database or applies SQL migrations.'
   deploy:
+    needs: preview
+    if: ${{ github.ref == 'refs/heads/main' && inputs.deploy == 'deploy-payment-functions' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
@@ -24,27 +45,20 @@ jobs:
         working-directory: safenest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       PROJECT_REF: kflenmeizngmafwnwhgv
       SUPABASE_CLI: supabase@2.120.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
-      - name: Check secrets
+      - name: Check deployment token
         run: |
-          [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_DB_PASSWORD" ] || { echo "Add SUPABASE_ACCESS_TOKEN and SUPABASE_DB_PASSWORD as repository secrets."; exit 1; }
-      - name: Link project
-        run: npx --yes "$SUPABASE_CLI" link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
-      - name: Pending migrations (dry run)
-        run: npx --yes "$SUPABASE_CLI" db push --dry-run
-      - name: Apply migrations
-        if: ${{ inputs.apply == 'apply' }}
-        run: npx --yes "$SUPABASE_CLI" db push --yes
-      - name: Deploy payment functions (verify_jwt comes from config.toml)
-        if: ${{ inputs.apply == 'apply' }}
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || { echo 'Configure SUPABASE_ACCESS_TOKEN for the production environment.'; exit 1; }
+      - name: Deploy payment functions (per-function verify_jwt comes from config.toml)
         run: |
           for fn in payment-notification payment-return payment-reconcile payment-catalogue payment-order payment-status; do
-            npx --yes "$SUPABASE_CLI" functions deploy "$fn" --project-ref "$PROJECT_REF"
+            npx --yes "$SUPABASE_CLI" functions deploy "$fn" --project-ref "$PROJECT_REF" --use-api
           done
