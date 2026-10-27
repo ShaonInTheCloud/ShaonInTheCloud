@@ -450,6 +450,7 @@ private fun SafeNestApp() {
     OutlinedButton(onClick=onCatalog,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp)){Text(t("Verified catalog and updates","যাচাইকৃত ক্যাটালগ ও আপডেট"),fontSize=10.sp)}
     OutlinedButton(onClick=onImport,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp)){Text(t("Import a website list JSON","ওয়েবসাইট তালিকা JSON আমদানি করুন"),fontSize=10.sp)}
     OutlinedButton(onClick=onSetup,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp)){Text(t("Permissions and app guard setup","VPN সুরক্ষা সেটআপ নির্দেশিকা"),fontSize=10.sp)}
+    ReportSiteButton(lang)
     Text(t("Starter domain examples are limited and not an up-to-date universal list. Custom DNS, encrypted DNS, direct IPs, in-app content and mirrors can reduce coverage. No browsing history is uploaded by this prototype.","প্রাথমিক ডোমেইনের তালিকা সীমিত এবং হালনাগাদ সর্বজনীন তালিকা নয়। Custom DNS, encrypted DNS, সরাসরি IP, অ্যাপের ভেতরের কনটেন্ট ও mirror সাইট সুরক্ষার বাইরে থাকতে পারে। এই প্রোটোটাইপ ব্রাউজিং ইতিহাস আপলোড করে না।"),fontSize=9.sp,color=SoftText,lineHeight=14.sp)
 }
 
@@ -474,7 +475,8 @@ private fun SafeNestApp() {
     Text(t("PROGRESS WITHOUT PRESSURE","চাপ ছাড়া অগ্রগতি"),fontSize=10.sp,color=SoftText)
     Text(t("Your own steps forward.","আপনার এগিয়ে চলা।"),fontSize=24.sp,fontWeight=FontWeight.Bold,color=Ink)
     StatCard(t("CHECK-INS","চেক-ইন"),"$checkins",t("Saved on this device","এই ডিভাইসে সংরক্ষিত"),Lilac,Modifier.fillMaxWidth())
-    Text(t("Your check-ins stay on this device. SafeNest does not estimate money saved or uninterrupted protection days.","চেক-ইন এই ডিভাইসেই থাকে। SafeNest সাশ্রয় বা অবিচ্ছিন্ন সুরক্ষার সময় অনুমান করে না।"),fontSize=12.sp,color=SoftText)
+    DaysFreeCard(lang)
+    Text(t("Your check-ins and days-free count stay on this device. Days free is your own count; SafeNest does not estimate money saved.","আপনার চেক-ইন ও জুয়ামুক্ত দিনের হিসাব এই ডিভাইসেই থাকে। জুয়ামুক্ত দিন আপনার নিজের হিসাব; SafeNest সাশ্রয় অনুমান করে না।"),fontSize=12.sp,color=SoftText)
 }
 
 @Composable private fun SettingsScreen(lang:String,active:Boolean,isOwner:Boolean,managedActive:Boolean,onLanguage:()->Unit,onVpnSettings:()->Unit,onSetup:()->Unit,onManaged:()->Unit){val t={en:String,bn:String->s(lang,en,bn)}
