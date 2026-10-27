@@ -39,8 +39,9 @@ verify_jwt = true
 verify_jwt = false
 
 # Payment callbacks come from the payment gateway or a scheduler and carry no Supabase user JWT.
-# Each handler authenticates itself: the gateway validation API, a constant-time reconcile key,
-# or (catalogue) no authentication at all because it returns only public prices.
+# Notifications and POST returns use independent gateway validation; GET returns only
+# redirect to a fixed account page. Reconciliation requires its own key. The catalogue
+# exposes only public prices. Disabling gateway JWT checks grants no payment authority.
 [functions.payment-notification]
 verify_jwt = false
 

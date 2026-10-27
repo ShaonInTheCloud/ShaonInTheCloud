@@ -75,6 +75,55 @@ test('disabled catalogue, untrusted redirects and unauthorized reconciliation gr
   assert.equal(returned.status,303);assert.equal(returned.headers.get('location'),'https://mysafenestbd.com/account.html?payment=checking');
   assert.equal((await handleReconcile(new Request('https://fixture',{method:'POST'}),env,{rpc})).status,401);assert.equal(calls,0);
 });
+test('reconciliation rejects missing, weak and wrong keys before provider calls or batch claims',async()=>{
+  const key='local-fixture-reconcile-'.padEnd(40,'x');let calls=0;
+  const deps={rpc:async()=>{calls++;},fetcher:async()=>{calls++;}};
+  for(const [expected,actual] of [[undefined,key],['short','short'],[key,''],[key,key.slice(0,-1)],
+    [key,key.slice(0,-1)+'y']]) {
+    const result=await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':actual}}),
+      {...env,SSLCOMMERZ_RECONCILE_KEY:expected},deps);
+    assert.equal(result.status,401);
+  }
+  const validEnv={...env,SSLCOMMERZ_RECONCILE_KEY:key};
+  assert.equal((await handleReconcile(new Request('https://fixture',{headers:{'x-reconcile-key':key}}),validEnv,deps)).status,405);
+  assert.equal((await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key},body:'{}'}),validEnv,deps)).status,400);
+  assert.equal(calls,0);
+});
+test('authorized reconciliation validates each order and isolates provider and ledger failures',async()=>{
+  const key='local-fixture-reconcile-'.padEnd(40,'x');
+  const orders=[order,{...order,id:other,provider_order_id:'SNproviderfailure'},
+    {...order,id:'33333333-3333-4333-8333-333333333333',provider_order_id:'SNledgerfailure'}];
+  const calls=[];let validations=0;
+  const result=await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key}}),
+    {...env,SSLCOMMERZ_RECONCILE_KEY:key},{
+      rpc:async(name,args)=>{
+        calls.push({name,args});
+        if(name==='payment_reconciliation_batch') {assert.equal(args.p_environment,'sandbox');return orders;}
+        assert.equal(name,'process_validated_payment');assert.equal(args.p_status,'paid');
+        if(args.p_order_id!==order.id)throw new Error('ledger unavailable');return {duplicate:false};
+      },
+      fetcher:async(url,options)=>{
+        assert.equal(new URL(url).origin,'https://sandbox.sslcommerz.com');assert.equal(options.redirect,'error');
+        const query=new URL(url).searchParams;
+        if(url.includes('merchantTransID')) {
+          const id=query.get('tran_id');
+          if(id==='SNproviderfailure')throw new Error('provider timeout');
+          return json({APIConnect:'DONE',element:[{...validation,tran_id:id,val_id:id==='SNledgerfailure'?'ledgerVal':validation.val_id}]});
+        }
+        validations++;return json(query.get('val_id')==='ledgerVal'
+          ? {...validation,tran_id:'SNledgerfailure',val_id:'ledgerVal',bank_tran_id:'ledgerBank'}:validation);
+      },
+    });
+  assert.equal(result.status,200);assert.deepEqual(await result.json(),{processed:1,review:2});
+  assert.equal(validations,2);assert.equal(calls.filter(x=>x.name==='process_validated_payment').length,2);
+});
+test('authorized reconciliation remains closed when the provider is disabled',async()=>{
+  const key='local-fixture-reconcile-'.padEnd(40,'x');let calls=0;
+  const result=await handleReconcile(new Request('https://fixture',{method:'POST',headers:{'x-reconcile-key':key}}),
+    {...env,SSLCOMMERZ_ENABLED:'',SSLCOMMERZ_RECONCILE_KEY:key},{rpc:async()=>{calls++;},fetcher:async()=>{calls++;}});
+  assert.equal(result.status,503);assert.deepEqual(await result.json(),{error:'payment_provider_not_configured'});
+  assert.equal(calls,0);
+});
 test('status derives ownership from live authentication, never a body user ID',async()=>{
   const req=body=>new Request('https://fixture',{method:'POST',headers:{Authorization:'Bearer fixture'},body:JSON.stringify(body)});
   const deps={fetcher:async()=>json({id:user,email_confirmed_at:'fixture'}),rpc:async(name,args)=>{assert.equal(args.p_user_id,user);return null;}};
@@ -104,6 +153,19 @@ test('actual gateway SQL keeps sessions private, claims once, scopes status and 
     for(let i=1;i<10;i++)await db.query(`select public.create_payment_order($1,'fixture','sslcommerz','sandbox',$2)`,[user,'fixture-rate-key-'+String(i).padStart(4,'0')]);
     await assert.rejects(db.query(`select public.create_payment_order($1,'fixture','sslcommerz','sandbox','fixture-rate-key-over')`,[user]),/order_rate_limited/);
     assert.equal((await db.query(`select public.create_payment_order($1,'fixture','sslcommerz','sandbox','fixture-key-local-0001') result`,[user])).rows[0].result.id,o.id);
+    // An attempt claims at most three orders and marks them before HTTP delivery.
+    // If delivery fails, the cooldown permits another attempt without a grant.
+    await db.exec("reset role;update payments.orders set created_at=now()-interval '1 hour';set role service_role");
+    const batch=()=>db.query("select public.payment_reconciliation_batch('sandbox') result");
+    const first=(await batch()).rows.map(x=>x.result.id);assert.equal(first.length,3);
+    const second=(await batch()).rows.map(x=>x.result.id);assert.equal(second.length,3);
+    assert.ok(second.every(id=>!first.includes(id)));
+    await batch();assert.equal((await batch()).rows.length,1);assert.equal((await batch()).rows.length,0);
+    assert.equal((await db.query('select count(*)::int n from payments.events')).rows[0].n,0);
+    await db.exec("reset role;update payments.orders set reconciled_at=now()-interval '6 minutes';set role service_role");
+    assert.equal((await batch()).rows.length,3);
+    await db.exec("reset role;update payments.orders set created_at=now()-interval '8 days',reconciled_at=null;set role service_role");
+    assert.equal((await batch()).rows.length,0,'older orders need operator review');
     await db.exec('reset role;set role authenticated');
     await assert.rejects(db.query('select public.payment_order_status($1,$2)',[o.id,user]),/permission denied/);
     await assert.rejects(db.query('select * from payments.sessions'),/permission denied/);
