@@ -265,12 +265,15 @@ public final class SystemScreenGuard {
      * from the service and the flip produces no usable event, so the service watches the running VPN service's own
      * isAlwaysOn while that page stays in front. There is no time limit: a page left open for any length of time
      * must still be left once Always-on turns on. The watch ends only when another page is in front, the guard
-     * ends or the service disconnects. A momentarily unreadable foreground (UNKNOWN) never leaves and never ends it.
+     * ends or the service disconnects. A momentarily unreadable foreground (UNKNOWN) never ends it. Once the watch
+     * is armed on the own page and nothing has shown another page, a positive isAlwaysOn leaves even while the
+     * foreground is UNKNOWN: Android 16 traces show the root unreadable exactly while Always-on turns on, and
+     * waiting for a readable root let a second tap switch it off. UNKNOWN without a positive keeps watching.
      */
     public static OwnVpnWatchStep ownVpnWatchStep(boolean connected, boolean guardActive, OwnVpnPage page,
                                                   boolean alwaysOnIsSafeNest) {
         if (!connected || !guardActive || page == OwnVpnPage.OTHER) return OwnVpnWatchStep.STOP;
-        if (page == OwnVpnPage.SAME && alwaysOnIsSafeNest) return OwnVpnWatchStep.LEAVE;
+        if (alwaysOnIsSafeNest) return OwnVpnWatchStep.LEAVE; // SAME or UNKNOWN: OTHER already stopped above
         return OwnVpnWatchStep.CONTINUE;
     }
 

@@ -572,7 +572,8 @@ class SafeNestAccessibilityService : AccessibilityService() {
                     } finally { @Suppress("DEPRECATION") root.recycle() }
                 }
                 val sampled = SafeNestVpnService.sampleAlwaysOn()
-                val alwaysOn = pageState == SystemScreenGuard.OwnVpnPage.SAME && alwaysOnIsSafeNest()
+                // Not gated on SAME: on Android 16 the root is unreadable exactly while Always-on turns on.
+                val alwaysOn = pageState != SystemScreenGuard.OwnVpnPage.OTHER && alwaysOnIsSafeNest()
                 val now = SystemClock.elapsedRealtime()
                 val step = SystemScreenGuard.ownVpnWatchStep(isConnected, guardActive, pageState, alwaysOn)
                 val state = "connected=$isConnected guard=$guardActive page=$pageState root=$rootPkg#$rootId target=$target " +
