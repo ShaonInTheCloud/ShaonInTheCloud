@@ -212,9 +212,13 @@ class GuardDeviceFlowTest {
         openApp()
         assertTrue("App startup must finish before setup", device.wait(Until.hasObject(By.text("Start test")), 30_000))
         tap("Start test", scroll = true)
-        device.findObject(By.text("OK"))?.let { tapVisibleText("OK") }
+        dismissSetupInstruction()
         tap("Review and enable test guard", scroll = true)
+        assertTrue("Review must open the app guard disclosure", device.wait(
+            Until.hasObject(By.text("Allow SafeNest app guard?")), 15_000))
         tap("I agree — open settings")
+        await("Explicit test guard consent recorded") { GuardPreferences.hasTestControlConsent(context) }
+        assertSettings("Consent opens Android Accessibility settings")
         if (!GuardPreferences.isAccessibilityEnabled(context)) {
             ownAccessibilityDetail()
             tap("Use SafeNest Test app guard")
@@ -233,6 +237,28 @@ class GuardDeviceFlowTest {
             GuardPreferences.testControlGuardReady(context) && SafeNestVpnService.isRunning.get()
         }
         capture("guard-active-${outcomes.size}")
+    }
+
+    private fun dismissSetupInstruction() {
+        // requestActivation changes the page and animates a Snackbar, not a dialog.
+        // A one-shot OK lookup can precede composition; a successful coordinate tap
+        // can also land while the action is moving. Wait for this specific message,
+        // then observe its dismissal before searching/scrolling the setup page.
+        val instruction = By.pkg(context.packageName).text(
+            "Review and enable the test guard first. Grant Accessibility, then return here.")
+        assertTrue("Start test must reach the permission-first setup instruction",
+            device.wait(Until.hasObject(instruction), 15_000))
+        capture("setup-instruction-${outcomes.size}")
+        await("Setup instruction dismissed") {
+            if (!device.hasObject(instruction)) true else {
+                // Scope OK to the app while the known instruction is present. Never
+                // dismiss an Android permission prompt or the disclosure this way.
+                val action = device.findObject(By.pkg(context.packageName).text("OK"))
+                try { action?.click() } catch (_: StaleObjectException) { }
+                false
+            }
+        }
+        capture("setup-instruction-dismissed-${outcomes.size}")
     }
 
     private fun verifyFilteredInternet() {
