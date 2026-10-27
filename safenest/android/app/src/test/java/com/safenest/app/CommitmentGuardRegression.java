@@ -34,17 +34,19 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop SafeNest app guard?", "Stopping SafeNest app guard will turn off its features."), List.of("Cancel", "Stop"), false), "Stop service? dialog bounces without the app name as a label");
         check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Stop SafeNest Test app guard?"), List.of(), List.of("Cancel", "Stop")).equals("test_accessibility_confirm"), "lab Stop service? dialog");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop TalkBack?"), List.of("Cancel", "Stop"), false), "another service's Stop dialog stays usable");
-        // Own VPN page watch (Always-on off, active guard): leave the moment the live isAlwaysOn is SafeNest,
-        // keep watching only while that exact page stays in front, never once the guard or page is gone.
+        // Own VPN page watch (Always-on off, active guard): leave the moment the live isAlwaysOn is SafeNest while the
+        // own page is in front; keep watching with no time limit; stop only for another page, guard end or disconnect.
         SystemScreenGuard.OwnVpnWatchStep W_CONTINUE = SystemScreenGuard.OwnVpnWatchStep.CONTINUE, W_LEAVE = SystemScreenGuard.OwnVpnWatchStep.LEAVE,
             W_STOP = SystemScreenGuard.OwnVpnWatchStep.STOP;
-        check(SystemScreenGuard.ownVpnWatchStep(true, true, true, false, 0) == W_CONTINUE, "watch continues while Always-on is still off");
-        check(SystemScreenGuard.ownVpnWatchStep(true, true, true, true, 150) == W_LEAVE, "Always-on switched on during the visit leaves the page");
-        check(SystemScreenGuard.ownVpnWatchStep(true, true, true, true, SystemScreenGuard.OWN_VPN_WATCH_MS + 1) == W_LEAVE, "leaving wins even at the window limit");
-        check(SystemScreenGuard.ownVpnWatchStep(true, true, false, true, 150) == W_STOP, "another page in front: stop, never leave from it");
-        check(SystemScreenGuard.ownVpnWatchStep(true, false, true, true, 150) == W_STOP, "guard ended (Stop test / expiry): page stays usable");
-        check(SystemScreenGuard.ownVpnWatchStep(false, true, true, true, 150) == W_STOP, "service disconnected: watch ends");
-        check(SystemScreenGuard.ownVpnWatchStep(true, true, true, false, SystemScreenGuard.OWN_VPN_WATCH_MS) == W_STOP, "bounded: one arming ends after the window");
+        SystemScreenGuard.OwnVpnPage P_SAME = SystemScreenGuard.OwnVpnPage.SAME, P_OTHER = SystemScreenGuard.OwnVpnPage.OTHER,
+            P_UNKNOWN = SystemScreenGuard.OwnVpnPage.UNKNOWN;
+        check(SystemScreenGuard.ownVpnWatchStep(true, true, P_SAME, false) == W_CONTINUE, "watch continues while Always-on is still off");
+        check(SystemScreenGuard.ownVpnWatchStep(true, true, P_SAME, true) == W_LEAVE, "Always-on switched on during the visit leaves the page");
+        check(SystemScreenGuard.ownVpnWatchStep(true, true, P_OTHER, true) == W_STOP, "another page in front: stop, never leave from it");
+        check(SystemScreenGuard.ownVpnWatchStep(true, true, P_UNKNOWN, true) == W_CONTINUE, "unreadable foreground: keep watching, never leave blind");
+        check(SystemScreenGuard.ownVpnWatchStep(true, true, P_UNKNOWN, false) == W_CONTINUE, "unreadable foreground does not end the watch");
+        check(SystemScreenGuard.ownVpnWatchStep(true, false, P_SAME, true) == W_STOP, "guard ended (Stop test / expiry): page stays usable");
+        check(SystemScreenGuard.ownVpnWatchStep(false, true, P_SAME, true) == W_STOP, "service disconnected: watch ends");
         // Only SafeNest's own service labels count; another app's service merely named "App Guard" stays usable.
         for (String other : List.of("Stop Norton App Guard?", "Stop Kaspersky app guard?", "Stop App Guard?", "Stop SafeNestPlus app guard?",
                 "Stop MySafeNest app guard?", "Stop SafeNest app guardian?", "Turn off Bank app guard?"))

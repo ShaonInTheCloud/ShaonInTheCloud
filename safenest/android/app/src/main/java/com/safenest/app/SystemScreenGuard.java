@@ -257,20 +257,21 @@ public final class SystemScreenGuard {
     }
     /** Next step for the own-VPN-page watch. */
     public enum OwnVpnWatchStep { CONTINUE, LEAVE, STOP }
-    /** How long one arming of the own-VPN-page watch may run; any later event on the page re-arms it. */
-    public static final long OWN_VPN_WATCH_MS = 5L * 60L * 1000L;
+    /** What is in front, as far as the own-VPN-page watch can tell. */
+    public enum OwnVpnPage { SAME, OTHER, UNKNOWN }
     /**
      * Owner exception (18 Oct 2026): during an active guard SafeNest's own VPN page stays open while Always-on is
      * off, so it can be switched on, and the same visit must end as soon as it is on. Android 14+ hides that switch
      * from the service and the flip produces no usable event, so the service watches the running VPN service's own
-     * isAlwaysOn while that exact page stays in front. Leave the moment it is on; stop watching when the guard
-     * ends, the page is no longer in front, or the bounded window runs out. Never watches any other page.
+     * isAlwaysOn while that page stays in front. There is no time limit: a page left open for any length of time
+     * must still be left once Always-on turns on. The watch ends only when another page is in front, the guard
+     * ends or the service disconnects. A momentarily unreadable foreground (UNKNOWN) never leaves and never ends it.
      */
-    public static OwnVpnWatchStep ownVpnWatchStep(boolean connected, boolean guardActive, boolean samePageInFront,
-                                                  boolean alwaysOnIsSafeNest, long elapsedMs) {
-        if (!connected || !guardActive || !samePageInFront) return OwnVpnWatchStep.STOP;
-        if (alwaysOnIsSafeNest) return OwnVpnWatchStep.LEAVE;
-        return elapsedMs >= OWN_VPN_WATCH_MS ? OwnVpnWatchStep.STOP : OwnVpnWatchStep.CONTINUE;
+    public static OwnVpnWatchStep ownVpnWatchStep(boolean connected, boolean guardActive, OwnVpnPage page,
+                                                  boolean alwaysOnIsSafeNest) {
+        if (!connected || !guardActive || page == OwnVpnPage.OTHER) return OwnVpnWatchStep.STOP;
+        if (page == OwnVpnPage.SAME && alwaysOnIsSafeNest) return OwnVpnWatchStep.LEAVE;
+        return OwnVpnWatchStep.CONTINUE;
     }
 
     /** SafeNest's own Accessibility service labels (not translated), matched as a whole phrase. */

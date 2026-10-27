@@ -376,7 +376,7 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 qa("ownVpnDetail alwaysOnIsSafeNest=${alwaysOnIsSafeNest()} labels=${screen.labels}")
                 if (alwaysOnIsSafeNest()) {
                     cancelControlScan()
-                    cancelOwnVpnWatch()
+                    cancelOwnVpnWatch("entry: Always-on already SafeNest")
                     returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
                     return true
                 }
@@ -531,30 +531,59 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private var ownVpnWatch: Runnable? = null
     private var ownVpnWatchPage: String? = null
-    /** See SystemScreenGuard.ownVpnWatchStep: only this page, only during an active guard, cancelled when it leaves. */
+    /**
+     * See SystemScreenGuard.ownVpnWatchStep. Watches only SafeNest's own VPN page during an active guard; the
+     * target window may be re-created by Settings while the same page stays in front, so a different window
+     * that still shows the own VPN page counts as the same page (and becomes the new target).
+     */
     private fun watchOwnVpnPage(name: String, windowId: Int) {
         val page = "$name#$windowId"
-        if (ownVpnWatch != null && ownVpnWatchPage == page) return
-        cancelOwnVpnWatch()
+        if (ownVpnWatch != null && ownVpnWatchPage?.substringBefore('#') == name) {
+            qa("ownVpnWatch already running target=$ownVpnWatchPage; event window=$windowId")
+            return
+        }
+        cancelOwnVpnWatch("re-arm")
         ownVpnWatchPage = page
         val startedAt = SystemClock.elapsedRealtime()
+        var target = windowId
+        var lastState = ""
+        qa("ownVpnWatch START pkg=$name target=$windowId")
         val watch = object : Runnable {
             override fun run() {
                 if (ownVpnWatch !== this) return
                 val service = this@SafeNestAccessibilityService
                 val guardActive = GuardPreferences.isEnabled(service) &&
                     (BuildConfig.ALLOW_SYSTEM_GUARD || GuardPreferences.testControlsActive(service))
-                val root = if (isConnected && guardActive) controlForegroundRoot() else null
-                val samePage = root != null && try { root.packageName?.toString() == name && root.windowId == windowId }
-                    finally { @Suppress("DEPRECATION") root.recycle() }
+                var rootPkg: String? = null
+                var rootId = -1
+                val pageState = if (!isConnected || !guardActive) SystemScreenGuard.OwnVpnPage.UNKNOWN else {
+                    val root = controlForegroundRoot()
+                    if (root == null) SystemScreenGuard.OwnVpnPage.UNKNOWN else try {
+                        rootPkg = root.packageName?.toString()
+                        rootId = root.windowId
+                        when {
+                            // A status-bar / heads-up overlay (Android reconnecting the VPN) is not leaving the page.
+                            rootPkg == "com.android.systemui" -> SystemScreenGuard.OwnVpnPage.UNKNOWN
+                            rootPkg != name -> SystemScreenGuard.OwnVpnPage.OTHER
+                            rootId == target -> SystemScreenGuard.OwnVpnPage.SAME
+                            ownVpnPageShown(name, root) -> { target = rootId; ownVpnWatchPage = "$name#$rootId"; SystemScreenGuard.OwnVpnPage.SAME }
+                            else -> SystemScreenGuard.OwnVpnPage.OTHER
+                        }
+                    } finally { @Suppress("DEPRECATION") root.recycle() }
+                }
+                val sampled = SafeNestVpnService.sampleAlwaysOn()
+                val alwaysOn = pageState == SystemScreenGuard.OwnVpnPage.SAME && alwaysOnIsSafeNest()
                 val now = SystemClock.elapsedRealtime()
-                val alwaysOn = samePage && alwaysOnIsSafeNest()
-                when (SystemScreenGuard.ownVpnWatchStep(isConnected, guardActive, samePage, alwaysOn, now - startedAt)) {
+                val step = SystemScreenGuard.ownVpnWatchStep(isConnected, guardActive, pageState, alwaysOn)
+                val state = "connected=$isConnected guard=$guardActive page=$pageState root=$rootPkg#$rootId target=$target " +
+                    "vpnRunning=${SafeNestVpnService.isRunning.get()} sampleAlwaysOn=$sampled alwaysOn=$alwaysOn step=$step"
+                if (state != lastState) { qa("ownVpnWatch +${now - startedAt}ms $state"); lastState = state }
+                when (step) {
                     SystemScreenGuard.OwnVpnWatchStep.CONTINUE -> handler.postDelayed(this, OWN_VPN_WATCH_TICK_MS)
-                    SystemScreenGuard.OwnVpnWatchStep.STOP -> cancelOwnVpnWatch()
+                    SystemScreenGuard.OwnVpnWatchStep.STOP -> cancelOwnVpnWatch("step STOP: $state")
                     SystemScreenGuard.OwnVpnWatchStep.LEAVE -> {
-                        qa("ownVpnWatch alwaysOn now SafeNest after ${now - startedAt} ms; leaving page")
-                        cancelOwnVpnWatch()
+                        qa("ownVpnWatch LEAVE after ${now - startedAt} ms")
+                        cancelOwnVpnWatch("leaving")
                         cancelControlScan()
                         returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
                     }
@@ -565,7 +594,17 @@ class SafeNestAccessibilityService : AccessibilityService() {
         handler.postDelayed(watch, OWN_VPN_WATCH_TICK_MS)
     }
 
-    private fun cancelOwnVpnWatch() {
+    /** The own VPN detail page, judged the same way as on entry (labels plus the focused window title). */
+    private fun ownVpnPageShown(name: String, root: AccessibilityNodeInfo): Boolean {
+        val read = readControlLabels(root)
+        val title = focusedControlWindow()?.takeIf { it.pkg == name && it.id == root.windowId }?.title
+            ?: root.window?.title?.toString()?.takeIf { it.length <= 240 }
+        val screen = if (title != null) read.copy(labels = read.labels + title, detailTitles = read.detailTitles + title) else read
+        return ownVpnDetailOnScreen(name, root, screen)
+    }
+
+    private fun cancelOwnVpnWatch(reason: String) {
+        if (ownVpnWatch != null) qa("ownVpnWatch STOP target=$ownVpnWatchPage reason=$reason")
         ownVpnWatch?.let { handler.removeCallbacks(it) }
         ownVpnWatch = null
         ownVpnWatchPage = null
@@ -691,11 +730,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (connectedService === this) connectedService = null
         handler.removeCallbacks(expiryPoll)
         cancelControlScan()
-        cancelOwnVpnWatch()
+        cancelOwnVpnWatch("unbind")
         controlExit?.cancel()
         // Retain the intended guard selection. If Android revokes Accessibility,
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { cancelControlScan(); cancelOwnVpnWatch(); controlExit?.cancel(); windowPackages.clear(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
+    override fun onDestroy() { cancelControlScan(); cancelOwnVpnWatch("destroy"); controlExit?.cancel(); windowPackages.clear(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
 }
