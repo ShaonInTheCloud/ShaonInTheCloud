@@ -40,12 +40,13 @@ class GuardDeviceFlowTest {
             prepareAndStart()
             pass("Permission-first setup and active connected guard")
             verifyFilteredInternet()
+            guardedSameVisitAlwaysOn(launcher)
             stopTest()
             openVpnDetails()
+            assertSettings("Own VPN detail open again once the test is stopped")
             capture("vpn-detail-before-guard")
-            tap("Always-on VPN")
-            await("Always-on persisted") { alwaysOnPackage() == context.packageName }
-            pass("Always-on enabled through Android UI before guarding")
+            assertEquals("Always-on stays SafeNest after Stop test", context.packageName, alwaysOnPackage())
+            pass("Stop test releases the own VPN page; Always-on stays SafeNest")
             appInfo(context.packageName)
             assertSettings("Test App info available before starting")
             assertNotNull("Actual uninstall page before guarding", device.wait(Until.findObject(By.text("Uninstall")), 5000))
@@ -122,8 +123,8 @@ class GuardDeviceFlowTest {
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
             capture("vpn-detail-guarded-home")
             pass("Own VPN detail returns Home before Always-on or Forget VPN can be touched")
-            // The turn-on path is covered at the start of this flow: with Always-on off, the page
-            // stayed open and "Always-on enabled through Android UI before guarding" passed.
+            // The turn-on path is covered by guardedSameVisitAlwaysOn at the start of this flow: with
+            // Always-on off the page opened during an active guard, and the same visit ended once it was on.
             // (Clearing the Secure setting from the shell does not change what the running VPN
             // service reports, so it cannot stand in for the real switch here.)
             start(Intent(Settings.ACTION_VPN_SETTINGS))
@@ -259,6 +260,47 @@ class GuardDeviceFlowTest {
         } finally { connection.disconnect() }
         pass("Ordinary HTTPS browsing stayed available with protection on")
 
+    }
+
+    /**
+     * Owner exception (18 Oct): during an active guard, the own VPN page opens while Always-on is off so
+     * it can be switched on, and once it is on the same visit must end before it can be switched off.
+     * Always-on is switched on through Android's UI (or by the guard's own ensureAlwaysOn, if it gets
+     * there first), then, as a person would, the row is tapped again about a second later if the page
+     * is still there. Before PR #25 the page stayed, so that second tap switched Always-on off.
+     */
+    private fun guardedSameVisitAlwaysOn(launcher: String) {
+        assertTrue("Guard active for the same-visit check", GuardPreferences.testControlGuardReady(context))
+        assertNull("Always-on must be off before the guarded same-visit check (clear it on the device first)", alwaysOnPackage())
+        openVpnDetails()
+        assertSettings("Own VPN page opens during an active guard while Always-on is off")
+        assertNotNull("Always-on row on the own VPN page", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
+        capture("vpn-detail-guarded-always-on-off")
+        pass("Own VPN page opens during an active guard while Always-on is off")
+        // Give the guard's own ensureAlwaysOn a chance first; otherwise switch it on through Android's UI.
+        val autoDeadline = SystemClock.elapsedRealtime() + 3000
+        while (SystemClock.elapsedRealtime() < autoDeadline && alwaysOnPackage() != context.packageName) SystemClock.sleep(150)
+        val path = if (alwaysOnPackage() == context.packageName) "the guard's ensureAlwaysOn" else {
+            tap("Always-on VPN")
+            "Android UI tap"
+        }
+        await("Always-on persisted during the guarded visit") { alwaysOnPackage() == context.packageName }
+        // A person needs about a second to tap again. If the page is still on screen, try to switch it off.
+        SystemClock.sleep(1000)
+        val again = if (device.currentPackageName == "com.android.settings") device.findObject(By.text("Always-on VPN")) else null
+        if (again != null) {
+            try { again.click(); outcomes.add("NOTE same-visit second tap reached the Always-on row") }
+            catch (_: StaleObjectException) { }
+        }
+        await("The same visit leaves the own VPN page") {
+            device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
+        }
+        // Let a switch-off (if one got through) reach Android before reading the setting.
+        SystemClock.sleep(1500)
+        assertEquals("Always-on must still be SafeNest after the same-visit attempt", context.packageName, alwaysOnPackage())
+        await("Filter running after the same-visit attempt") { SafeNestVpnService.isRunning.get() }
+        capture("vpn-detail-guarded-same-visit-home")
+        pass("Always-on switched on via $path; the same visit left the page and Always-on stayed on")
     }
 
     private fun stopTest() {
