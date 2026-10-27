@@ -37,13 +37,30 @@ class DirectSigningTests(unittest.TestCase):
         self.apk.write_bytes(b"not inspected by the stand-in")
 
     def fake_apksigner(self, stdout, code=0):
-        """A stand-in for build-tools apksigner: prints the given report and exits with the given code."""
+        """A stand-in for build-tools apksigner: prints the given report and exits with the given code.
+
+        Like the real tool it is a launcher the verifier runs as a program: apksigner.bat on Windows
+        (here a .cmd wrapper around this Python), an executable script elsewhere.
+        """
         out = self.root / "report.txt"
         out.write_text(stdout)
-        tool = self.root / "apksigner"
-        tool.write_text(f"#!{sys.executable}\nimport sys\nsys.stdout.write(open({str(out)!r}).read())\nsys.exit({code})\n")
-        tool.chmod(tool.stat().st_mode | stat.S_IXUSR)
+        body = self.root / "fake_apksigner.py"
+        body.write_text(f"import sys\nsys.stdout.write(open({str(out)!r}).read())\nsys.exit({code})\n")
+        if os.name == "nt":
+            tool = self.root / "apksigner.cmd"
+            tool.write_text(f'@"{sys.executable}" -I "{body}" %*\r\n@exit /b %ERRORLEVEL%\r\n')
+        else:
+            tool = self.root / "apksigner"
+            tool.write_text(f"#!{sys.executable} -I\n" + body.read_text())
+            tool.chmod(tool.stat().st_mode | stat.S_IXUSR)
         return tool
+
+    def test_fake_tool_is_a_runnable_program_with_its_exit_code(self):
+        # Guards the fixture itself: if it stopped launching, every signer test below would test nothing.
+        for code in (0, 1):
+            run = subprocess.run([str(self.fake_apksigner("Verifies\n", code=code)), "verify"],
+                                 capture_output=True, text=True, timeout=60)
+            self.assertEqual((run.returncode, run.stdout), (code, "Verifies\n"))
 
     def test_pin_matches_the_documented_direct_certificate(self):
         doc = (SCRIPTS.parent / "docs" / "release-signing.md").read_text()
