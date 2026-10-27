@@ -35,15 +35,11 @@ object ProtectionCommitment {
             .putLong("server_anchor", window.serverNow).putLong("elapsed_anchor", SystemClock.elapsedRealtime())
             .putLong("high_water", window.serverNow).putInt("boot", boot(c)).putBoolean("committed", false).commit())
     }
+    // Uptime only: no wall clock or BOOT_COUNT (adb-writable). Uptime keeps running, so an uncertain clock cannot trap a device.
     private fun now(c: Context): Long {
         val p = prefs(c)
-        val sameBoot = p.getInt("boot", -2) == boot(c)
-        // A reset clock across a reboot cannot establish an indefinitely extended lock.
-        // Require a new online verification rather than trapping a device with an uncertain clock.
-        if (!sameBoot && System.currentTimeMillis() + 300_000 < p.getLong("high_water", 0)) return endsAt(c)
-        return CommitmentRules.effectiveNow(System.currentTimeMillis(), SystemClock.elapsedRealtime(),
-            p.getLong("server_anchor", 0), p.getLong("elapsed_anchor", 0), p.getLong("high_water", 0),
-            sameBoot)
+        return CommitmentRules.effectiveNow(SystemClock.elapsedRealtime(), p.getLong("server_anchor", 0),
+            p.getLong("elapsed_anchor", 0), p.getLong("high_water", 0))
     }
     fun isActive(c: Context) = if (LocalTestSession.enabled) LocalTestSession.isActive(c)
         else CommitmentRules.active(prefs(c).getBoolean("committed", false), endsAt(c), now(c))
@@ -57,11 +53,14 @@ object ProtectionCommitment {
         val p = prefs(c)
         check(p.getBoolean("committed", false) && result.checkedId == p.getString("id", null) &&
             result.userId == p.getString("user", null)) { "Sign in with the account used to start this protection period." }
-        if (result.window != null) return false // Renewals never silently extend the consented term.
         check(result.serverNow > 0)
-        p.edit().putLong("ends", minOf(endsAt(c), result.serverNow))
-            .putLong("server_anchor", result.serverNow).putLong("elapsed_anchor", SystemClock.elapsedRealtime())
-            .putLong("high_water", result.serverNow).putInt("boot", boot(c)).commit().also { check(it) }
+        // Server time always re-anchors: the uptime clock does not count powered-off time, and only this restores it.
+        val edit = p.edit().putLong("server_anchor", result.serverNow).putLong("elapsed_anchor", SystemClock.elapsedRealtime())
+            .putLong("high_water", maxOf(p.getLong("high_water", 0), result.serverNow)).putInt("boot", boot(c))
+        // Renewals never silently extend the consented term; only a revoked or ended period shortens it.
+        if (result.window == null) edit.putLong("ends", minOf(endsAt(c), result.serverNow))
+        edit.commit().also { check(it) }
+        if (isActive(c)) return false
         releaseExpired(c)
         return true
     }
@@ -90,10 +89,11 @@ object ProtectionCommitment {
         val p = prefs(c)
         if (!p.getBoolean("committed", false)) return
         val current = now(c)
+        val elapsed = SystemClock.elapsedRealtime()
         val edit = p.edit().putLong("high_water", current)
-        if (p.getInt("boot", -2) != boot(c)) {
-            edit.putLong("server_anchor", current).putLong("elapsed_anchor", SystemClock.elapsedRealtime())
-                .putInt("boot", boot(c))
+        // Re-anchoring is never wrong (current is never over-counted); it must happen after any reboot.
+        if (p.getInt("boot", -2) != boot(c) || elapsed < p.getLong("elapsed_anchor", 0)) {
+            edit.putLong("server_anchor", current).putLong("elapsed_anchor", elapsed).putInt("boot", boot(c))
         }
         edit.apply()
         if (current >= endsAt(c)) expireAsync(c)

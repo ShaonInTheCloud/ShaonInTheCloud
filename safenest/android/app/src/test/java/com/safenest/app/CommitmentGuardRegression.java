@@ -13,9 +13,20 @@ public final class CommitmentGuardRegression {
         check(!CommitmentRules.validWindow(t - 1000, t, t), "expiry boundary");
         check(!CommitmentRules.active(false, t + 1000, t), "uncommitted verification must not enforce");
         check(!CommitmentRules.active(true, t, t), "no enforcement after expiry");
-        check(CommitmentRules.effectiveNow(t - 90_000, 20_000, t, 10_000, t, true) == t + 10_000, "same-boot rollback");
-        check(CommitmentRules.effectiveNow(t + 90_000, 20_000, t, 10_000, t, true) == t + 10_000, "same-boot forward clock cannot unlock");
-        check(CommitmentRules.effectiveNow(t - 90_000, 100, t, 10_000, t + 5000, false) == t + 5000, "reboot retains highwater");
+        // The wall clock is not an input, so no clock change (forward or back, before or after reboot) can move these.
+        check(CommitmentRules.effectiveNow(20_000, t, 10_000, t) == t + 10_000, "same boot: server time plus uptime");
+        check(CommitmentRules.effectiveNow(20_000, t, 10_000, t + 50_000) == t + 50_000, "same boot never goes below high-water");
+        check(CommitmentRules.effectiveNow(100, t, 10_000, t + 5000) == t + 5100, "reboot adds only uptime since boot to high-water");
+        check(CommitmentRules.effectiveNow(15_000, t, 10_000, t) == t + 5000, "missed reboot under-counts, so it can only delay release");
+        // A 7-day term across two reboots, mirroring checkpoint(): high-water each check, re-anchor after a reboot.
+        long day = 24L * 60 * 60 * 1000, ends = t + 7 * day;
+        long high = CommitmentRules.effectiveNow(60_000 + 3 * day, t, 60_000, t);       // boot 1: verified at 1 min, last check 3 days on
+        long anchor = CommitmentRules.effectiveNow(1_000, t, 60_000, high);             // boot 2 at 1 s: reboot detected
+        high = CommitmentRules.effectiveNow(3 * day, anchor, 1_000, high);
+        check(high == t + 6 * day, "six days of uptime across one reboot");
+        anchor = CommitmentRules.effectiveNow(500, anchor, 1_000, high);                // boot 3 at 0.5 s
+        check(CommitmentRules.active(true, ends, CommitmentRules.effectiveNow(day - 1, anchor, 500, high)), "locked 1 ms before 7 days of uptime");
+        check(!CommitmentRules.active(true, ends, CommitmentRules.effectiveNow(day, anchor, 500, high)), "released after exactly 7 days of uptime");
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("SafeNest", "Disconnect this VPN?"), List.of("Cancel", "Disconnect"), false), "SafeNest disconnect dialog");
         check(SystemScreenGuard.blocksSafeNestControl("com.google.android.packageinstaller", List.of("SafeNest"), List.of("Uninstall"), false), "SafeNest uninstall");
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("SafeNest", "Use SafeNest"), List.of(), true), "own accessibility toggle");
