@@ -31,6 +31,8 @@ await build({
 await writeFile('dist/_headers', securityHeaders(url.origin));
 // Deployable to Cloudflare in front of the host that ignores _headers; see docs/security-headers-cloudflare.md.
 await writeFile('dist/cloudflare-security-headers-worker.js', workerSource(securityHeaders(url.origin)));
+await writeFile('dist/cloudflare-static-assets-worker.js', workerSource(securityHeaders(url.origin), { assets: true }));
+await writeFile('dist/.assetsignore', 'cloudflare-security-headers-worker.js\ncloudflare-static-assets-worker.js\n');
 console.log(key ? 'Built account page. Live Auth and database verification still required.' : 'Built setup preview. Account forms are disabled until a publishable key is configured.');
 await import('./release-pages.mjs');
 

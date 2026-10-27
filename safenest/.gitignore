@@ -14,3 +14,5 @@ android/local.properties
 *.keystore
 *.apk
 *.aab
+
+.wrangler/

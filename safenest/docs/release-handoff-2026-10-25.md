@@ -142,3 +142,11 @@ The two tracks are separate. Merging or deploying PR #17 must not overwrite the 
    - #18 is superseded by `ea9f0a7`.
    - #12–#16 are older drafts.
 10. **Wording.** `website/play/index.html` (Nest Run) still uses জুয়া. Change it if the বেটিং wording is meant to cover the whole site.
+
+## Hosting configuration follow-up — 26 October 2026
+
+A locally testable Workers Static Assets configuration and fail-closed manual workflow
+are prepared in `docs/security-headers-cloudflare.md`. This does not clear any live
+release gate: source reconciliation remains blocked, and no DNS, hosting or checkout
+cutover is authorized by configuration validation. Follow the source-preservation,
+account/zone preflight, mail-preservation and rollback requirements in that runbook.
