@@ -1,0 +1,14 @@
+# SafeNest — gambling app package IDs (exact). One per line; '#' starts a comment.
+# Your team adds new IDs here (or through the signed catalog later). Opening a listed app returns Home.
+# Find an ID: Play Store link "id=...", or `adb shell pm list packages` on a test phone.
+# Evidence for the seed entries: data/known-gambling-packages.json.
+com.krikya.krikya            # Krikya
+com.application.yongbao.bj   # Baji
+org.xbet.client1             # 1xBet
+org.bet22.client             # 22Bet
+org.linebet.client           # Linebet
+org.melbet.client            # Melbet
+com.ads.mostbet              # Mostbet
+org.megapari.client          # Megapari
+com.luckygoal.neonpulse      # gambling front app (see evidence file)
+com.playcubely.fall          # gambling front app (see evidence file)

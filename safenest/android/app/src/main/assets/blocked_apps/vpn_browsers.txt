@@ -1,0 +1,26 @@
+# SafeNest — browsers with a built-in VPN or proxy. Their traffic leaves the phone without passing the
+# on-device filter, so (like Gamban) the whole app is blocked during protection: opening it returns Home
+# and its Play Store install page returns Home. Format: package ID | name shown on the Play Store
+com.opera.browser | Opera
+com.opera.browser.beta | Opera beta
+com.opera.mini.native | Opera Mini
+com.opera.mini.native.beta | Opera Mini beta
+com.opera.gx | Opera GX
+com.opera.touch | Opera Touch
+com.opera.cryptobrowser | Opera Crypto Browser
+com.aloha.browser | Aloha Browser
+org.torproject.torbrowser | Tor Browser
+org.torproject.torbrowser_alpha | Tor Browser (Alpha)
+org.torproject.android | Orbot
+com.cloudmosa.puffin | Puffin Browser
+com.cloudmosa.puffinFree | Puffin Browser
+com.cloudmosa.puffinIncognito | Puffin Incognito Browser
+com.avast.android.secure.browser | Avast Secure Browser
+com.tenta.android | Tenta Browser
+com.epicbrowser.android | Epic Privacy Browser
+pan.alexander.tordnscrypt | InviZible Pro
+info.guardianproject.orfox | Orfox
+# Verified 2026-10-19 from each app's own Google Play description ("built-in VPN" / "Fast VPN browser").
+com.UCMobile.intl | UC Browser
+com.avg.android.secure.browser | AVG Secure Browser
+com.norton.neo | Norton Neo

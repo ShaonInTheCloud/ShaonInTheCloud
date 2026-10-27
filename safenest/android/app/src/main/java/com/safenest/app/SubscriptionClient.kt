@@ -21,7 +21,10 @@ object SubscriptionClient {
         return checkAccess(email, password, startTrialPlan = plan).window
             ?: error("Your trial has already ended. A verified subscription is required.")
     }
-    fun checkAccess(email: String, password: String, entitlementId: String? = null, startTrialPlan: String? = null): AccessCheck {
+    /** Short-lived sign-in used for one purchase flow. Never persisted. */
+    data class Session(val jwt: String, val userId: String)
+
+    fun signIn(email: String, password: String): Session {
         val base = BuildConfig.SUPABASE_URL
         val key = BuildConfig.SUPABASE_PUBLISHABLE_KEY
         check(base.startsWith("https://") && key.isNotBlank()) { "Paid access is not configured in this build." }
@@ -29,11 +32,36 @@ object SubscriptionClient {
             JSONObject().put("email", email.trim()).put("password", password))
         val token = auth.optString("access_token")
         check(token.isNotBlank()) { "Sign in to your SafeNest account first." }
+        val userId = auth.optJSONObject("user")?.optString("id").orEmpty()
+        check(userId.isNotBlank()) { "Sign in to your SafeNest account first." }
+        return Session(token, userId)
+    }
+
+    fun checkAccess(email: String, password: String, entitlementId: String? = null, startTrialPlan: String? = null): AccessCheck {
+        val base = BuildConfig.SUPABASE_URL
+        val key = BuildConfig.SUPABASE_PUBLISHABLE_KEY
+        val session = signIn(email, password)
         if (startTrialPlan != null) {
-            post("$base/functions/v1/start-trial", key, token, JSONObject().put("plan_code", startTrialPlan))
+            post("$base/functions/v1/start-trial", key, session.jwt, JSONObject().put("plan_code", startTrialPlan))
         }
         val body = JSONObject().apply { if (entitlementId != null) put("entitlement_id", entitlementId) }
-        val reply = post("$base/functions/v1/protection-access", key, token, body)
+        return parseAccess(post("$base/functions/v1/protection-access", key, session.jwt, body), entitlementId)
+    }
+
+    /**
+     * Hands a Google Play purchase token to the SafeNest server. The server re-fetches
+     * the subscription from Google, binds it to this account and returns the entitlement.
+     * Returns null while Google still reports the payment as pending.
+     */
+    fun verifyPlayPurchase(session: Session, purchaseToken: String): AccessCheck? {
+        val base = BuildConfig.SUPABASE_URL
+        val key = BuildConfig.SUPABASE_PUBLISHABLE_KEY
+        val reply = post("$base/functions/v1/play-billing-verify", key, session.jwt, JSONObject().put("purchase_token", purchaseToken))
+        if (reply.optBoolean("pending", false)) return null
+        return parseAccess(reply, null)
+    }
+
+    private fun parseAccess(reply: JSONObject, entitlementId: String?): AccessCheck {
         val user = reply.getString("user_id")
         val serverNow = Instant.parse(reply.getString("server_now")).toEpochMilli()
         val checkedId = if (reply.isNull("checked_entitlement_id")) null else reply.getString("checked_entitlement_id")

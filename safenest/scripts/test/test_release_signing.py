@@ -17,6 +17,7 @@ MANIFEST = f'''<manifest xmlns:android="{ANDROID}" package="com.safenest.app" an
 <application android:allowBackup="false" android:usesCleartextTraffic="false">
 <service android:name="com.safenest.app.SafeNestVpnService" android:permission="android.permission.BIND_VPN_SERVICE"/>
 <service android:name="com.safenest.app.SafeNestAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+<receiver android:name="com.safenest.app.SafeNestAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN"/>
 </application></manifest>'''
 
 
@@ -107,7 +108,10 @@ class ReleaseIdentityTests(unittest.TestCase):
             MANIFEST.replace("<application ", '<application android:testOnly="true" '),
             MANIFEST.replace('android:allowBackup="false"', 'android:allowBackup="true"'),
             MANIFEST.replace('android:usesCleartextTraffic="false"', 'android:usesCleartextTraffic="true"'),
-            MANIFEST.replace("</application>", '<receiver android:name=".SafeNestAdminReceiver"/></application>'),
+            # The admin receiver must be present exactly once and bound to the system permission.
+            MANIFEST.replace(' android:permission="android.permission.BIND_DEVICE_ADMIN"', ''),
+            MANIFEST.replace('<receiver android:name="com.safenest.app.SafeNestAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN"/>', ''),
+            MANIFEST.replace("</application>", '<receiver android:name=".SafeNestAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN"/></application>'),
         ):
             manifest.write_text(content)
             with self.assertRaises(ValueError):

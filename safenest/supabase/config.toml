@@ -52,3 +52,21 @@ verify_jwt = false
 
 [functions.payment-catalogue]
 verify_jwt = false
+
+# DNS-over-HTTPS filter for the iOS DNS profile: iPhone DNS clients send no Supabase JWT.
+[functions.dns-query]
+verify_jwt = false
+
+[functions.play-billing-verify]
+verify_jwt = true
+
+# Pub/Sub push from Google carries no Supabase JWT; the handler checks PLAY_RTDN_SECRET.
+[functions.play-billing-rtdn]
+verify_jwt = false
+
+# Customer-facing payment endpoints keep the hosted JWT check in addition to their own /auth/v1/user validation.
+[functions.payment-order]
+verify_jwt = true
+
+[functions.payment-status]
+verify_jwt = true

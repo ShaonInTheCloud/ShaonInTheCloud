@@ -1,0 +1,8 @@
+# Optional second home for the SafeNest DNS filter. Not deployed by any workflow.
+name = "safenest-dns"
+main = "worker.mjs"
+compatibility_date = "2026-10-01"
+workers_dev = true
+routes = [
+  { pattern = "dns.mysafenestbd.com", custom_domain = true }
+]

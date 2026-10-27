@@ -40,12 +40,13 @@ class GuardDeviceFlowTest {
             prepareAndStart()
             pass("Permission-first setup and active connected guard")
             verifyFilteredInternet()
+            guardedSameVisitAlwaysOn(launcher)
             stopTest()
             openVpnDetails()
+            assertSettings("Own VPN detail open again once the test is stopped")
             capture("vpn-detail-before-guard")
-            tap("Always-on VPN")
-            await("Always-on persisted") { alwaysOnPackage() == context.packageName }
-            pass("Always-on enabled through Android UI before guarding")
+            assertEquals("Always-on stays SafeNest after Stop test", context.packageName, alwaysOnPackage())
+            pass("Stop test releases the own VPN page; Always-on stays SafeNest")
             appInfo(context.packageName)
             assertSettings("Test App info available before starting")
             assertNotNull("Actual uninstall page before guarding", device.wait(Until.findObject(By.text("Uninstall")), 5000))
@@ -56,6 +57,8 @@ class GuardDeviceFlowTest {
             capture("regular-app-info-before-guard")
             prepareAndStart()
 
+            // Owner's contract (17 Oct 2026): App info stays open; the TAP on Uninstall / Force stop bounces.
+            val removalReasons = setOf("destructive_tap", "test_uninstall_confirm", "test_force_stop_confirm")
             for ((index, pkg) in listOf(context.packageName, "com.safenest.app").withIndex()) {
                 if (index > 0) {
                     ownAccessibilityDetail()
@@ -64,11 +67,39 @@ class GuardDeviceFlowTest {
                     }
                 }
                 appInfo(pkg)
-                await("$pkg App info returns Home") {
-                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("test_app_control", "test_settings_detail")
+                assertSettings("$pkg App info stays open while guarded")
+                assertNotNull("$pkg App info shows Uninstall while guarded", device.wait(Until.findObject(By.text("Uninstall")), 5000))
+                capture(if (pkg == context.packageName) "test-app-info-open-while-guarded" else "regular-app-info-open-while-guarded")
+                tap("Uninstall")
+                await("$pkg Uninstall tap returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
                 }
-                capture(if (pkg == context.packageName) "test-uninstall-guard-home" else "regular-uninstall-guard-home")
-                pass("$pkg uninstall/force-stop page returns Home")
+                capture(if (pkg == context.packageName) "test-uninstall-tap-home" else "regular-uninstall-tap-home")
+                pass("$pkg App info open; Uninstall tap returns Home")
+                appInfo(pkg)
+                assertSettings("$pkg App info open again")
+                // Force stop is inert for an app that is not running (the consumer build in CI);
+                // only the lab app, which is running the test, has a live button.
+                val forceStop = device.wait(Until.findObject(By.text("Force stop")), 5000)
+                if (pkg == context.packageName && forceStop != null) {
+                    tap("Force stop")
+                    await("$pkg Force stop tap returns Home") {
+                        device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in removalReasons
+                    }
+                    pass("$pkg Force stop tap returns Home")
+                } else pass("$pkg Force stop is disabled (app not running); nothing to guard")
+                device.pressHome()
+            }
+            appInfo(context.packageName)
+            assertSettings("Storage sub-page reachable")
+            if (tapVisibleText("Storage & cache") || tapVisibleText("Storage")) {
+                assertSettings("Own Storage page stays open while guarded")
+                capture("test-storage-open-while-guarded")
+                tap("Clear storage")
+                await("Clear storage tap returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in setOf("destructive_tap", "test_clear_storage_confirm")
+                }
+                pass("Own Storage page open; Clear storage tap returns Home")
             }
             start(Intent(Settings.ACTION_SETTINGS))
             assertSettings("Main Settings stays usable after redirect")
@@ -82,18 +113,20 @@ class GuardDeviceFlowTest {
                 device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "test_accessibility"
             }
             pass("Own Accessibility detail returns Home")
-            assertEquals("VPN check needs a different prior action", "test_accessibility", GuardPreferences.lastBlockReason())
+            // Always-on is SafeNest: the own VPN detail page (Always-on switch, Forget VPN) goes
+            // Home before anything on it can be touched. It can be turned on but never off.
+            assertEquals("Always-on is SafeNest before the guarded visit", context.packageName, alwaysOnPackage())
             openVpnDetails()
-            await("VPN gear returns Home") {
-                // An early page event can expose the protected Forget VPN
-                // action before the other rows load: the matcher then reports
-                // test_app_control. It is a fresh action after Accessibility.
-                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in
-                    setOf("test_vpn_detail", "test_settings_detail", "test_app_control")
+            await("Own VPN detail returns Home while Always-on is on") {
+                device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
             }
             assertEquals("Always-on must remain enabled", context.packageName, alwaysOnPackage())
-            capture("vpn-guard-home")
-            pass("VPN gear/detail returns Home and Always-on stays enabled")
+            capture("vpn-detail-guarded-home")
+            pass("Own VPN detail returns Home before Always-on or Forget VPN can be touched")
+            // The turn-on path is covered by guardedSameVisitAlwaysOn at the start of this flow: with
+            // Always-on off the page opened during an active guard, and the same visit ended once it was on.
+            // (Clearing the Secure setting from the shell does not change what the running VPN
+            // service reports, so it cannot stand in for the real switch here.)
             start(Intent(Settings.ACTION_VPN_SETTINGS))
             assertSettings("VPN list stays available")
             assertNotNull(device.wait(Until.findObject(By.text("SafeNest Test")), 5000))
@@ -102,6 +135,32 @@ class GuardDeviceFlowTest {
             appInfo("com.android.settings")
             assertSettings("Unrelated App info stays available")
             pass("Unrelated app settings remain available")
+
+            // 0.5.11+ app blocking, with stand-in apps CI installs (android/teststubs). Skipped if absent.
+            val stubs = listOf(
+                Triple("com.opera.browser", "Opera (browser with built-in VPN)", setOf("vpn_browser")),
+                Triple("com.krikya.krikya", "Krikya (gambling app by package ID)", setOf("app")),
+                Triple("com.example.luckycasino", "Lucky Casino Slots (gambling word in the name)", setOf("app")),
+                Triple("com.example.stubvpn", "Stub VPN (detected VPN app)", setOf("app")))
+            for ((pkg, label, reasons) in stubs) {
+                if (!installed(pkg)) { outcomes.add("SKIP $label: stand-in not installed"); continue }
+                device.pressHome()
+                openStub(pkg)
+                await("$label returns Home") {
+                    device.currentPackageName == launcher && GuardPreferences.lastBlockReason() in reasons
+                }
+                capture("blocked-${pkg.substringAfterLast('.')}")
+                pass("$label opened and returned Home")
+            }
+            if (installed("com.example.notes")) {
+                device.pressHome()
+                openStub("com.example.notes")
+                SystemClock.sleep(2500)
+                assertEquals("Ordinary app must stay open", "com.example.notes", device.currentPackageName)
+                capture("ordinary-app-open")
+                pass("Ordinary app (Notes) stays open with protection on")
+                device.pressHome()
+            }
 
             stopTest()
             appInfo(context.packageName)
@@ -203,6 +262,47 @@ class GuardDeviceFlowTest {
 
     }
 
+    /**
+     * Owner exception (18 Oct): during an active guard, the own VPN page opens while Always-on is off so
+     * it can be switched on, and once it is on the same visit must end before it can be switched off.
+     * Always-on is switched on through Android's UI (or by the guard's own ensureAlwaysOn, if it gets
+     * there first), then, as a person would, the row is tapped again about a second later if the page
+     * is still there. Before PR #25 the page stayed, so that second tap switched Always-on off.
+     */
+    private fun guardedSameVisitAlwaysOn(launcher: String) {
+        assertTrue("Guard active for the same-visit check", GuardPreferences.testControlGuardReady(context))
+        assertNull("Always-on must be off before the guarded same-visit check (clear it on the device first)", alwaysOnPackage())
+        openVpnDetails()
+        assertSettings("Own VPN page opens during an active guard while Always-on is off")
+        assertNotNull("Always-on row on the own VPN page", device.wait(Until.findObject(By.text("Always-on VPN")), 5000))
+        capture("vpn-detail-guarded-always-on-off")
+        pass("Own VPN page opens during an active guard while Always-on is off")
+        // Give the guard's own ensureAlwaysOn a chance first; otherwise switch it on through Android's UI.
+        val autoDeadline = SystemClock.elapsedRealtime() + 3000
+        while (SystemClock.elapsedRealtime() < autoDeadline && alwaysOnPackage() != context.packageName) SystemClock.sleep(150)
+        val path = if (alwaysOnPackage() == context.packageName) "the guard's ensureAlwaysOn" else {
+            tap("Always-on VPN")
+            "Android UI tap"
+        }
+        await("Always-on persisted during the guarded visit") { alwaysOnPackage() == context.packageName }
+        // A person needs about a second to tap again. If the page is still on screen, try to switch it off.
+        SystemClock.sleep(1000)
+        val again = if (device.currentPackageName == "com.android.settings") device.findObject(By.text("Always-on VPN")) else null
+        if (again != null) {
+            try { again.click(); outcomes.add("NOTE same-visit second tap reached the Always-on row") }
+            catch (_: StaleObjectException) { }
+        }
+        await("The same visit leaves the own VPN page") {
+            device.currentPackageName == launcher && GuardPreferences.lastBlockReason() == "always_on_guarded"
+        }
+        // Let a switch-off (if one got through) reach Android before reading the setting.
+        SystemClock.sleep(1500)
+        assertEquals("Always-on must still be SafeNest after the same-visit attempt", context.packageName, alwaysOnPackage())
+        await("Filter running after the same-visit attempt") { SafeNestVpnService.isRunning.get() }
+        capture("vpn-detail-guarded-same-visit-home")
+        pass("Always-on switched on via $path; the same visit left the page and Always-on stayed on")
+    }
+
     private fun stopTest() {
         openApp()
         tap("Stop test", scroll = true)
@@ -226,6 +326,12 @@ class GuardDeviceFlowTest {
         tap("SafeNest Test app guard", scroll = true)
     }
 
+    private fun installed(pkg: String) = try { context.packageManager.getApplicationInfo(pkg, 0); true } catch (_: Exception) { false }
+    private fun openStub(pkg: String) {
+        val output = device.executeShellCommand("am start -W -n $pkg/com.safenest.teststub.StubActivity")
+        check(!output.contains("Error:")) { "Stand-in launch failed: $output" }
+        SystemClock.sleep(300)
+    }
     private fun appInfo(pkg: String) = start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
     private fun openApp() {
         // Permission Settings can sit above MainActivity in the app's task.
@@ -282,13 +388,11 @@ class GuardDeviceFlowTest {
             SystemClock.sleep(200)
         }
         if (scroll) {
-            repeat(16) {
-                if (tapVisibleText(text)) return
-                swipePage(towardStart = true)
-            }
-            repeat(24) {
-                if (tapVisibleText(text)) return
-                swipePage(towardStart = false)
+            // Two full passes: top-to-bottom, then back up, settling after each swipe so a
+            // Compose page that is still laying out does not hide the button between frames.
+            repeat(2) {
+                repeat(12) { swipePage(towardStart = true); SystemClock.sleep(250); if (tapVisibleText(text)) return }
+                repeat(24) { swipePage(towardStart = false); SystemClock.sleep(250); if (tapVisibleText(text)) return }
             }
         }
         error("Missing visible button: $text")

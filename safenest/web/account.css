@@ -76,3 +76,12 @@ summary:focus-visible { outline:3px solid var(--rose); outline-offset:4px; }
 .auth-captcha{margin:12px 0;min-width:0}
 
 textarea {width:100%;border:1px solid #d6bbc8;border-radius:15px;background:#fffcfd;color:var(--ink);padding:14px;font:inherit;font-size:16px;resize:vertical;min-height:110px} textarea:focus-visible{outline:3px solid var(--rose);outline-offset:4px} .support-panel{grid-column:1/-1} .support-panel form{max-width:720px} .support-ticket{display:block;width:100%;text-align:start;border-radius:14px;margin:10px 0;overflow-wrap:anywhere} .support-message{padding:16px;border:1px solid var(--line);border-radius:16px;margin:12px 0} .support-message p{white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0} .support-message p:first-child{font-size:13px;color:var(--muted)} #support-reference{overflow-wrap:anywhere} #support-status{white-space:pre-wrap} #support-thread{scroll-margin-top:24px}
+/* Payment edition / method choices */
+.billing-region, .billing-method { border:0; padding:0; margin:0; display:grid; gap:10px; }
+.billing-region legend, .billing-method legend { font-weight:600; margin-bottom:6px; }
+.billing-region label, .billing-method label { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px;
+  background:rgba(255,255,255,.72); border:1px solid rgba(214,51,132,.18); cursor:pointer; }
+.billing-method label[hidden] { display:none; }
+.billing-region input, .billing-method input { accent-color:#d63384; width:18px; height:18px; margin:0; }
+.billing-details { display:grid; gap:20px; }
+.billing-details[hidden] { display:none; }

@@ -1,0 +1,8 @@
+# SafeNest — IP addresses of gambling sites that are opened by number instead of by name.
+# One IPv4/IPv6 address or CIDR per line ("203.0.113.7" or "203.0.113.0/24"); '#' starts a comment.
+# Rules that keep normal internet working:
+#   - Only addresses used solely by gambling services. NEVER add shared CDN addresses (Cloudflare, Akamai,
+#     Google, Amazon CloudFront...): one shared address can serve thousands of ordinary sites.
+#   - Ranges wider than /20 (IPv4) or /32 (IPv6), and private or reserved addresses, are ignored.
+# Traffic to these addresses is routed into SafeNest's tunnel and dropped. Separately, a public IP address
+# typed into a browser's address bar returns Home during protection, whether or not it is listed here.
