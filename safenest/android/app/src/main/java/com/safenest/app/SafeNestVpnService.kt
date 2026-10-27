@@ -559,8 +559,8 @@ class SafeNestVpnService : VpnService() {
         super.onRevoke()
     }
 
-    /** Protection was committed and another VPN took the connection: ask the user back in to restore it. */
-    private fun notifyTakeover() {
+    /** Protection was committed but stopped (another VPN, or Android ended the service): ask the user back in to restore it. */
+    private fun notifyTakeover(text: String = "Another VPN replaced SafeNest. Tap to restore protection.") {
         if (!ProtectionCommitment.isActive(this)) return
         try {
             val manager = getSystemService(NotificationManager::class.java) ?: return
@@ -572,7 +572,7 @@ class SafeNestVpnService : VpnService() {
             manager.notify(TAKEOVER_NOTIFICATION_ID, Notification.Builder(this, ALERT_CHANNEL)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle("SafeNest protection interrupted")
-                .setContentText("Another VPN replaced SafeNest. Tap to restore protection.")
+                .setContentText(text)
                 .setCategory(Notification.CATEGORY_ALARM).setAutoCancel(true).setContentIntent(open).build())
         } catch (_: Exception) {}
     }
@@ -583,6 +583,7 @@ class SafeNestVpnService : VpnService() {
         if (wasRunning) {
             dnsHealth.set("failed")
             lastError.set("Android stopped the DNS service. Reopen SafeNest to check protection.")
+            notifyTakeover("Android stopped SafeNest's filter. Tap to restore protection.")
         }
         super.onDestroy()
     }
