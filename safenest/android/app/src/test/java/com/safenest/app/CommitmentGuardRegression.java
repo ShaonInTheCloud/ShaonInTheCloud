@@ -34,6 +34,22 @@ public final class CommitmentGuardRegression {
         check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop SafeNest app guard?", "Stopping SafeNest app guard will turn off its features."), List.of("Cancel", "Stop"), false), "Stop service? dialog bounces without the app name as a label");
         check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Stop SafeNest Test app guard?"), List.of(), List.of("Cancel", "Stop")).equals("test_accessibility_confirm"), "lab Stop service? dialog");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Stop TalkBack?"), List.of("Cancel", "Stop"), false), "another service's Stop dialog stays usable");
+        // Only SafeNest's own service labels count; another app's service merely named "App Guard" stays usable.
+        for (String other : List.of("Stop Norton App Guard?", "Stop Kaspersky app guard?", "Stop App Guard?", "Stop SafeNestPlus app guard?",
+                "Stop MySafeNest app guard?", "Stop SafeNest app guardian?", "Turn off Bank app guard?"))
+            check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of(other, "Stopping it will turn off its features."), List.of("Cancel", "Stop"), false),
+                "another service's Stop dialog stays usable: " + other);
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Stop Norton App Guard?"), List.of(), List.of("Cancel", "Stop")).isEmpty(),
+            "lab: another service's App Guard dialog stays usable");
+        // Own labels in any Android language: the service label itself is not translated.
+        for (String own : List.of("Stop SafeNest app guard?", "Turn off SafeNest app guard?", "SafeNest app guard বন্ধ করবেন?",
+                "Pysäytetäänkö SafeNest app guard?", "STOP  SAFENEST APP GUARD?".replace("  ", " ")))
+            check(SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of(own), List.of("Cancel", "Stop"), false), "own Stop dialog bounces: " + own);
+        check(SystemScreenGuard.testControlReason("com.android.settings", List.of("Stop SafeNest Owner Test app guard?"), List.of(), List.of("Cancel", "Stop")).equals("test_accessibility_confirm"),
+            "ownerlab Stop service? dialog");
+        // The label alone (the list row or the switch title) is not a question and does not bounce.
+        check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Accessibility", "SafeNest app guard", "Off"), List.of("SafeNest app guard"), false),
+            "own service row in the Accessibility list stays usable");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Accessibility", "SafeNest app guard"), List.of(), true), "unrelated toggle in accessibility list");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.settings", List.of("Another VPN"), List.of("Disconnect"), false), "other VPN settings unaffected");
         check(!SystemScreenGuard.blocksSafeNestControl("com.android.chrome", List.of("SafeNest"), List.of("Uninstall"), false), "webpage is not Settings");

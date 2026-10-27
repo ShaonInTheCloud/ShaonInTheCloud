@@ -31,6 +31,7 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
       - run: sh run-core-tests.sh
+      - run: python3 -B -m unittest discover -s scripts/test -p 'test_*.py'
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build and sign the direct APK
         env:
@@ -53,11 +54,15 @@ jobs:
           Path(os.environ['SAFENEST_DIRECT_KEYSTORE']).write_bytes(base64.b64decode(raw, validate=True))
           PY
           unset SAFENEST_DIRECT_KEYSTORE_BASE64
+          # Fail before building if the supplied key is not the permanent direct key.
+          python3 -I scripts/verify-direct-signing.py --keystore "$SAFENEST_DIRECT_KEYSTORE"
           grep -q "versionName = \"$SAFENEST_RELEASE_VERSION\"" android/app/build.gradle.kts || { echo "Version $SAFENEST_RELEASE_VERSION is not the source version"; exit 1; }
           chmod +x android/gradlew
           (cd android && ./gradlew :app:testDirectReleaseUnitTest :app:lintDirectRelease :app:assembleDirectRelease --console=plain)
           APK=android/app/build/outputs/apk/direct/release/app-direct-release.apk
-          "$ANDROID_HOME"/build-tools/36.0.0/apksigner verify --print-certs "$APK" | tee android/app/build/direct-release-certs.txt
+          # Pin the signer of the actual APK; a mismatch fails here, before anything is copied or uploaded.
+          python3 -I scripts/verify-direct-signing.py --apk "$APK" --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
+            --certs-out android/app/build/direct-release-certs.txt
           mkdir -p android/app/build/direct-release
           cp "$APK" "android/app/build/direct-release/SafeNest-$SAFENEST_RELEASE_VERSION.apk"
           sha256sum "android/app/build/direct-release/SafeNest-$SAFENEST_RELEASE_VERSION.apk" > "android/app/build/direct-release/SafeNest-$SAFENEST_RELEASE_VERSION.apk.sha256"

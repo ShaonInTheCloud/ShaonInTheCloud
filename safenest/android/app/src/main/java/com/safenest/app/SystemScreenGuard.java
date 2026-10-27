@@ -119,8 +119,9 @@ public final class SystemScreenGuard {
         Set<String> buttons = new HashSet<>();
         actions.stream().map(SystemScreenGuard::normalize).forEach(buttons::add);
         // Android's "Stop <service>?" dialog names the service, not the app, and the switch page behind it is
-        // hidden from the service on Android 14+, so the dialog itself must count as ours.
-        boolean disableService = text.stream().anyMatch(s -> s.startsWith("stop safenest") || s.startsWith("turn off safenest") || s.contains("app guard?"));
+        // hidden from the service on Android 14+, so the dialog itself must count as ours. Only a question that
+        // names one of SafeNest's own service labels as a whole phrase counts; another app's "App Guard" does not.
+        boolean disableService = text.stream().anyMatch(SystemScreenGuard::isOwnServiceQuestion);
         boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity) || recentlyOnOwnPage || disableService;
         if (!own) return "";
         boolean confirm = buttons.stream().anyMatch(CONFIRM_BUTTONS::contains);
@@ -253,6 +254,13 @@ public final class SystemScreenGuard {
         if (!ownTitleConflict(pageTitles)) return false;
         return labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("uninstall") || s.equals("force stop") || s.equals("always-on vpn") || s.equals("clear storage") || s.equals("disable"));
+    }
+    /** SafeNest's own Accessibility service labels (not translated), matched as a whole phrase. */
+    private static final Pattern OWN_SERVICE_LABEL = Pattern.compile(
+        "(?<![\\p{L}\\p{N}])safenest(?: test| owner test)? app guard(?![\\p{L}\\p{N}])");
+    /** A dialog question ("Stop SafeNest app guard?", "SafeNest app guard বন্ধ করবেন?") naming SafeNest's own service. */
+    static boolean isOwnServiceQuestion(String normalized) {
+        return normalized.length() <= 200 && normalized.indexOf('?') >= 0 && OWN_SERVICE_LABEL.matcher(normalized).find();
     }
     private static boolean isSafeNestIdentity(String s) {
         return s.equals("safenest test") || s.equals("com.safenest.app.lab") ||
