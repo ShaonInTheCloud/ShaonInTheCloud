@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useRef, useState} from 'react';
 import {View} from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import {useFocusEffect} from 'expo-router';
@@ -28,14 +28,31 @@ const proposed: Record<'bd' | 'global', Product[]> = {
 function read(key: string) { try { return localStorage.getItem(key); } catch { return null; } }
 function write(key: string, value: string | null) { try { value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch {} }
 
+type CatalogueState = {status: 'loading'} | {status: 'ready'; catalogue: Catalogue}
+  | {status: 'error'; reason: 'network' | 'server'};
+
 export default function Plans() {
   const {t, edition, session, testMode, testPlan, setTestPlan, lang} = useStore();
   const testGuest = testMode && !session;
-  const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
+  const [catalogueState, setCatalogueState] = useState<CatalogueState>({status: 'loading'});
+  const loadId = useRef(0);
   const [busy, setBusy] = useState(''), [note, setNote] = useState(''), [tone, setTone] = useState<'good' | 'bad' | 'neutral'>('neutral');
   const pendingKey = `safenest.payment.${session?.user.id}`;
   const load = useCallback(async () => {
-    try { setCatalogue(await api.catalogue()); } catch { setCatalogue({available: false, products: [], providers: []}); }
+    const id = ++loadId.current;
+    // Clear stale prices/buttons while rechecking availability. A failed fetch is never a closed checkout.
+    setCatalogueState({status: 'loading'});
+    try {
+      const catalogue = await api.catalogue();
+      if (!catalogue || typeof catalogue.available !== 'boolean' || !Array.isArray(catalogue.products) || !Array.isArray(catalogue.providers)) {
+        throw new ApiError('invalid_catalogue', 502);
+      }
+      if (id === loadId.current) setCatalogueState({status: 'ready', catalogue});
+    } catch (error) {
+      if (id === loadId.current) setCatalogueState({status: 'error',
+        reason: error instanceof ApiError && error.code === 'network_unavailable' ? 'network' : 'server'});
+    }
+    // Recover an existing order even when the catalogue cannot be loaded.
     const pending = read(pendingKey);
     if (pending) {
       try {
@@ -49,7 +66,7 @@ export default function Plans() {
       } catch {}
     }
   }, [pendingKey, t]);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => { void load(); return () => { loadId.current++; }; }, [load]));
 
   /** Lab build: the whole purchase flow with a simulated checkout. Nothing is charged or sent to a provider. */
   async function testPay(product: Product, provider: string) {
@@ -78,15 +95,27 @@ export default function Plans() {
     } finally { setBusy(''); }
   }
 
+  const catalogue = catalogueState.status === 'ready' ? catalogueState.catalogue : null;
+  const loading = catalogueState.status === 'loading';
+  const failed = catalogueState.status === 'error';
   const live = catalogue?.available === true && !testGuest;
-  const products = live ? catalogue!.products.filter(p => p.region === edition) : proposed[edition];
+  // Open providers with no prices are an empty catalogue, not an operator-disabled checkout.
+  const closed = catalogue?.available === false && catalogue.providers.length === 0;
+  const products = testGuest || closed ? proposed[edition]
+    : live ? catalogue!.products.filter(p => p.region === edition) : [];
   return (
     <Screen>
       <Display>{t.plansTitle}</Display>
       <Label>{edition === 'bd' ? `${t.editionBd} · ৳ BDT` : `${t.editionGlobal} · $ USD`}</Label>
       {testGuest ? <Notice text={testPlan && Date.parse(testPlan.ends_at) > Date.now()
           ? (lang === 'bn' ? `টেস্ট প্ল্যান চালু: ${t.perPlan[testPlan.plan] ?? testPlan.plan}` : `Test plan active: ${t.perPlan[testPlan.plan] ?? testPlan.plan}`)
-          : (lang === 'bn' ? 'টেস্ট বিল্ড: যেকোনো পেমেন্ট চেষ্টা করুন — টাকা কাটা হবে না।' : 'Test build: try any payment method. Nothing is charged.')} tone="good" /> : !live ? <Notice text={t.plansClosed} /> : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
+          : (lang === 'bn' ? 'টেস্ট বিল্ড: যেকোনো পেমেন্ট চেষ্টা করুন — টাকা কাটা হবে না।' : 'Test build: try any payment method. Nothing is charged.')} tone="good" />
+        : loading ? <Notice text={t.plansLoading} />
+        : catalogueState.status === 'error' ? <Notice text={catalogueState.reason === 'network' ? t.plansNetworkError : t.plansServerError} tone="bad" />
+        : closed ? <Notice text={t.plansClosed} />
+        : products.length === 0 ? null
+        : catalogue?.environment === 'sandbox' ? <Notice text={t.plansSandbox} tone="bad" /> : <Body muted size={14}>{t.paysOnProvider}</Body>}
+      {!testGuest && catalogue && !closed && products.length === 0 ? <Notice text={t.plansEmpty} /> : null}
       <Notice text={note} tone={tone} />
       {products.map(p => (
         <Card key={p.code}>
@@ -104,7 +133,8 @@ export default function Plans() {
           )) : <Pill text={t.plansClosed.split('.')[0]} tone="neutral" />}
         </Card>
       ))}
-      <Button kind="text" label={t.refreshStatus} onPress={load} />
+      <Button kind="text" label={!testGuest && failed ? t.plansRetry : t.refreshStatus}
+        busy={loading} disabled={loading || !!busy} onPress={load} />
     </Screen>
   );
 }
