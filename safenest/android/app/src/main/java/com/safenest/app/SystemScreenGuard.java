@@ -255,6 +255,24 @@ public final class SystemScreenGuard {
         return labels.stream().map(SystemScreenGuard::normalize).anyMatch(s ->
             s.equals("uninstall") || s.equals("force stop") || s.equals("always-on vpn") || s.equals("clear storage") || s.equals("disable"));
     }
+    /** Next step for the own-VPN-page watch. */
+    public enum OwnVpnWatchStep { CONTINUE, LEAVE, STOP }
+    /** How long one arming of the own-VPN-page watch may run; any later event on the page re-arms it. */
+    public static final long OWN_VPN_WATCH_MS = 5L * 60L * 1000L;
+    /**
+     * Owner exception (18 Oct 2026): during an active guard SafeNest's own VPN page stays open while Always-on is
+     * off, so it can be switched on, and the same visit must end as soon as it is on. Android 14+ hides that switch
+     * from the service and the flip produces no usable event, so the service watches the running VPN service's own
+     * isAlwaysOn while that exact page stays in front. Leave the moment it is on; stop watching when the guard
+     * ends, the page is no longer in front, or the bounded window runs out. Never watches any other page.
+     */
+    public static OwnVpnWatchStep ownVpnWatchStep(boolean connected, boolean guardActive, boolean samePageInFront,
+                                                  boolean alwaysOnIsSafeNest, long elapsedMs) {
+        if (!connected || !guardActive || !samePageInFront) return OwnVpnWatchStep.STOP;
+        if (alwaysOnIsSafeNest) return OwnVpnWatchStep.LEAVE;
+        return elapsedMs >= OWN_VPN_WATCH_MS ? OwnVpnWatchStep.STOP : OwnVpnWatchStep.CONTINUE;
+    }
+
     /** SafeNest's own Accessibility service labels (not translated), matched as a whole phrase. */
     private static final Pattern OWN_SERVICE_LABEL = Pattern.compile(
         "(?<![\\p{L}\\p{N}])safenest(?: test| owner test)? app guard(?![\\p{L}\\p{N}])");

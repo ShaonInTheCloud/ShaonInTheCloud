@@ -19,6 +19,8 @@ import android.widget.Toast
  */
 class SafeNestAccessibilityService : AccessibilityService() {
     companion object {
+        /** Own-VPN-page watch interval: fast enough to leave before a person can tap a second time. */
+        private const val OWN_VPN_WATCH_TICK_MS = 150L
         @Volatile var isConnected: Boolean = false
             private set
         @Volatile var lastBlockReason: String? = null
@@ -374,10 +376,14 @@ class SafeNestAccessibilityService : AccessibilityService() {
                 qa("ownVpnDetail alwaysOnIsSafeNest=${alwaysOnIsSafeNest()} labels=${screen.labels}")
                 if (alwaysOnIsSafeNest()) {
                     cancelControlScan()
+                    cancelOwnVpnWatch()
                     returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
                     return true
                 }
                 ensureAlwaysOn(root, now)
+                // The switch is often hidden from this service and its flip sends no usable event: keep
+                // checking while this exact page stays in front, so the same visit ends once it is on.
+                watchOwnVpnPage(name, root.windowId)
             }
             val reason = if (testControls) SystemScreenGuard.testControlReason(name, screen.labels, screen.detailTitles, screen.actions, recentlyOnOwnPage(now)) else ""
             if (reason.isNotEmpty()) {
@@ -523,6 +529,48 @@ class SafeNestAccessibilityService : AccessibilityService() {
         handler.postDelayed(scan, 60)
     }
 
+    private var ownVpnWatch: Runnable? = null
+    private var ownVpnWatchPage: String? = null
+    /** See SystemScreenGuard.ownVpnWatchStep: only this page, only during an active guard, cancelled when it leaves. */
+    private fun watchOwnVpnPage(name: String, windowId: Int) {
+        val page = "$name#$windowId"
+        if (ownVpnWatch != null && ownVpnWatchPage == page) return
+        cancelOwnVpnWatch()
+        ownVpnWatchPage = page
+        val startedAt = SystemClock.elapsedRealtime()
+        val watch = object : Runnable {
+            override fun run() {
+                if (ownVpnWatch !== this) return
+                val service = this@SafeNestAccessibilityService
+                val guardActive = GuardPreferences.isEnabled(service) &&
+                    (BuildConfig.ALLOW_SYSTEM_GUARD || GuardPreferences.testControlsActive(service))
+                val root = if (isConnected && guardActive) controlForegroundRoot() else null
+                val samePage = root != null && try { root.packageName?.toString() == name && root.windowId == windowId }
+                    finally { @Suppress("DEPRECATION") root.recycle() }
+                val now = SystemClock.elapsedRealtime()
+                val alwaysOn = samePage && alwaysOnIsSafeNest()
+                when (SystemScreenGuard.ownVpnWatchStep(isConnected, guardActive, samePage, alwaysOn, now - startedAt)) {
+                    SystemScreenGuard.OwnVpnWatchStep.CONTINUE -> handler.postDelayed(this, OWN_VPN_WATCH_TICK_MS)
+                    SystemScreenGuard.OwnVpnWatchStep.STOP -> cancelOwnVpnWatch()
+                    SystemScreenGuard.OwnVpnWatchStep.LEAVE -> {
+                        qa("ownVpnWatch alwaysOn now SafeNest after ${now - startedAt} ms; leaving page")
+                        cancelOwnVpnWatch()
+                        cancelControlScan()
+                        returnHome(now, "always_on_guarded", "Always-on VPN stays on while SafeNest protection is active.", controlPackage = name)
+                    }
+                }
+            }
+        }
+        ownVpnWatch = watch
+        handler.postDelayed(watch, OWN_VPN_WATCH_TICK_MS)
+    }
+
+    private fun cancelOwnVpnWatch() {
+        ownVpnWatch?.let { handler.removeCallbacks(it) }
+        ownVpnWatch = null
+        ownVpnWatchPage = null
+    }
+
     private fun cancelControlScan() {
         pendingControlScan?.let { handler.removeCallbacks(it) }
         pendingControlScan = null
@@ -587,12 +635,15 @@ class SafeNestAccessibilityService : AccessibilityService() {
 
     private fun returnHome(now: Long, reason: String, message: String, controlPackage: String? = null) {
         if (!GuardPreferences.isEnabled(this)) return
-        if (controlPackage != null) {
+        val exit = controlExit
+        if (controlPackage != null && exit != null) {
             // Pop the detail/dialog before Home so Settings restores its unguarded parent next time.
             // The controller coalesces repeated events. A time cooldown here
             // could leave a newly opened protected page unguarded.
-            controlExit?.exit(controlPackage) { recordHome(reason, message) }
+            exit.exit(controlPackage) { recordHome(reason, message) }
         } else {
+            // Play and direct builds have no exit controller (it is created for the local test only):
+            // a control-page exit must still go Home there, never silently do nothing.
             if (now - lastHomeAction < 1000L) return
             lastHomeAction = now
             finishHome(reason, message)
@@ -640,10 +691,11 @@ class SafeNestAccessibilityService : AccessibilityService() {
         if (connectedService === this) connectedService = null
         handler.removeCallbacks(expiryPoll)
         cancelControlScan()
+        cancelOwnVpnWatch()
         controlExit?.cancel()
         // Retain the intended guard selection. If Android revokes Accessibility,
         // the setup status reports the missing permission; re-granting can resume it.
         return super.onUnbind(intent)
     }
-    override fun onDestroy() { cancelControlScan(); controlExit?.cancel(); windowPackages.clear(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
+    override fun onDestroy() { cancelControlScan(); cancelOwnVpnWatch(); controlExit?.cancel(); windowPackages.clear(); handler.removeCallbacksAndMessages(null); isConnected = false; if (connectedService === this) connectedService = null; super.onDestroy() }
 }
