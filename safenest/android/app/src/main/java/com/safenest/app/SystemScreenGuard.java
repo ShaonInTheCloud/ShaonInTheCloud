@@ -118,7 +118,10 @@ public final class SystemScreenGuard {
         labels.stream().map(SystemScreenGuard::normalize).forEach(text::add);
         Set<String> buttons = new HashSet<>();
         actions.stream().map(SystemScreenGuard::normalize).forEach(buttons::add);
-        boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity) || recentlyOnOwnPage;
+        // Android's "Stop <service>?" dialog names the service, not the app, and the switch page behind it is
+        // hidden from the service on Android 14+, so the dialog itself must count as ours.
+        boolean disableService = text.stream().anyMatch(s -> s.startsWith("stop safenest") || s.startsWith("turn off safenest") || s.contains("app guard?"));
+        boolean own = text.stream().anyMatch(SystemScreenGuard::isSafeNestIdentity) || recentlyOnOwnPage || disableService;
         if (!own) return "";
         boolean confirm = buttons.stream().anyMatch(CONFIRM_BUTTONS::contains);
         if (installer) {
@@ -132,7 +135,6 @@ public final class SystemScreenGuard {
         boolean wipe = text.stream().anyMatch(s -> s.startsWith("delete app data") || s.startsWith("clear app data") ||
             s.contains("will be deleted permanently") || s.contains("app data?") || s.startsWith("অ্যাপের ডেটা মুছবেন") || s.startsWith("poistetaanko sovelluksen tiedot"));
         boolean disconnect = buttons.contains("disconnect") || buttons.contains("katkaise yhteys") || buttons.contains("সংযোগ বিচ্ছিন্ন");
-        boolean disableService = text.stream().anyMatch(s -> s.startsWith("stop safenest") || s.startsWith("turn off safenest") || s.contains("app guard?"));
         if (forceStop && confirm) return "force_stop_confirm";
         if (wipe && confirm) return "clear_storage_confirm";
         if (disconnect) return "disconnect_confirm";

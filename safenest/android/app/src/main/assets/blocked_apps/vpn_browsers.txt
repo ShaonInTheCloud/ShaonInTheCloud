@@ -20,3 +20,7 @@ com.tenta.android | Tenta Browser
 com.epicbrowser.android | Epic Privacy Browser
 pan.alexander.tordnscrypt | InviZible Pro
 info.guardianproject.orfox | Orfox
+# Verified 2026-10-19 from each app's own Google Play description ("built-in VPN" / "Fast VPN browser").
+com.UCMobile.intl | UC Browser
+com.avg.android.secure.browser | AVG Secure Browser
+com.norton.neo | Norton Neo
