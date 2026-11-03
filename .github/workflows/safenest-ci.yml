@@ -6,6 +6,11 @@ on:
   pull_request:
     paths: ['safenest/**', '.github/workflows/safenest-ci.yml', '.github/workflows/safenest-signed-release.yml']
   workflow_dispatch:
+    inputs:
+      record_demo:
+        description: Record the emulator screen during the end-to-end test (portfolio demo video)
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -122,17 +127,33 @@ jobs:
           adb install android/app/build/outputs/apk/play/debug/app-play-debug.apk
           # Stand-in apps for the app-blocking checks (Opera, a gambling app, a VPN app, an ordinary app).
           for apk in android/teststubs/build/outputs/apk/*/debug/*.apk; do adb install -r "$apk"; done
+      - name: Start demo screen recording
+        # Manual runs only, so ordinary pushes keep the validated emulator timing.
+        if: github.event_name == 'workflow_dispatch' && inputs.record_demo
+        run: |
+          # screenrecord stops at 180 s, so chain segments until the step below stops it.
+          nohup sh -c 'for i in 1 2 3 4 5; do adb shell screenrecord --bit-rate 2500000 --time-limit 180 /sdcard/Download/demo-$i.mp4 || break; done' > "$RUNNER_TEMP/demo-record.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/demo-record.pid"
+          sleep 2
       - name: Exercise consented Settings guard on emulator
         timeout-minutes: 12
         run: ./gradlew :app:connectedLabDebugAndroidTest --console=plain
         working-directory: safenest/android
       - name: Capture emulator evidence
         if: always()
-        timeout-minutes: 1
+        timeout-minutes: 3
         run: |
           mkdir -p android/app/build/guard-device-evidence
           if adb devices | awk 'NR>1 && $2=="device" {found=1} END {exit !found}'; then
             timeout 15 adb pull /sdcard/Download/safenest-guard-qa android/app/build/guard-device-evidence || true
+            if [ -f "$RUNNER_TEMP/demo-record.pid" ]; then
+              kill "$(cat "$RUNNER_TEMP/demo-record.pid")" 2>/dev/null || true
+              timeout 10 adb shell 'pkill -2 screenrecord' || true
+              sleep 4
+              mkdir -p android/app/build/guard-device-evidence/demo
+              for i in 1 2 3 4 5; do timeout 30 adb pull "/sdcard/Download/demo-$i.mp4" android/app/build/guard-device-evidence/demo/ 2>/dev/null || true; done
+              cat "$RUNNER_TEMP/demo-record.log" || true
+            fi
             timeout 10 adb logcat -d -b crash > android/app/build/guard-device-evidence/crash-log.txt || true
             timeout 10 adb shell dumpsys accessibility > android/app/build/guard-device-evidence/accessibility-state.txt || true
           fi

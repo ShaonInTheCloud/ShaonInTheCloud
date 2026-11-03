@@ -1,198 +1,196 @@
-# SafeNest account integration
+# SafeNest
 
-Prepared for Supabase project `kflenmeizngmafwnwhgv`. The private profiles
-migration is now applied in the hosted database (version `20260924212500`).
-The personal account portal is published with Log in links in the public
-header and footer at
-`https://mysafenestbd.com/account`. On 5 October 2026 the Auth Site URL,
-exact redirect allowlist and Resend custom SMTP were configured. Signup,
-confirmation-email delivery, email verification and private profile saving
-were verified with an owner-controlled test account. Password reset and
-email/password login still require an end-to-end test. The owner requested
-a visible login entry on 5 October 2026; navigation availability does not
-mean that the complete registration flow or paid protection is verified.
-The GitHub repository currently also holds the owner's profile README, so all
-SafeNest files live under `safenest/`.
+**An Android app that helps people stop gambling by blocking gambling sites and apps on their own phone, privately and on-device.**
 
-Included: email signup and confirmation, login, password reset, logout on the
-current device, and private name/language preferences. The signed-in personal
-portal also provides the Android development APK and bilingual installation
-instructions. Saving a profile leaves the portal open with a clear next step. The interface uses white
-and baby pink, English above smaller Bangla, with a full Bangla option.
+[![SafeNest release checks](https://github.com/ShaonInTheCloud/ShaonInTheCloud/actions/workflows/safenest-ci.yml/badge.svg?branch=main)](https://github.com/ShaonInTheCloud/ShaonInTheCloud/actions/workflows/safenest-ci.yml)
+![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-8.0%2B%20%C2%B7%20API%2036-3DDC84?logo=android&logoColor=white)
+![Supabase](https://img.shields.io/badge/Backend-Supabase%20%2B%20Postgres%20RLS-3FCF8E?logo=supabase&logoColor=white)
 
-Supabase Auth manages credentials and users. PostgreSQL row-level security
-restricts each profile to its owner. Accounts do not activate device blocking.
-The Android blocking prototype remains a separate application.
+[Website](https://mysafenestbd.com) · [How it works](#how-the-dns-filter-works) · [Architecture](#architecture) · [Testing](#testing-and-ci) · [Build it](#build-and-run) · [Write-up: How I built a DNS-filtering VPN on Android](docs/blog-dns-filtering-vpn.md)
 
-## 1. Configure Supabase Auth
+Online gambling is a fast-growing harm in Bangladesh, and the sites move to new domains every week. SafeNest is a self-exclusion tool: the user chooses to lock themselves out of gambling for a period they pay for, and the phone enforces that choice even on a bad day.
 
-Open your [Supabase project](https://supabase.com/dashboard/project/kflenmeizngmafwnwhgv).
+It works without root, without reading browsing history and without sending any of it to a server. Domain matching happens on the phone.
 
-1. In **Authentication → Sign In / Providers**, enable Email and keep email
-   confirmation on. Set minimum password length to 10.
-2. In **Authentication → URL Configuration**, use the currently working site URL:
-   `https://mysafenestbd.com`.
-3. Add these exact Redirect URLs:
-   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html`
-   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account.html?mode=recovery`
-   - `https://mysafenestbd.com/account.html`
-   - `https://mysafenestbd.com/account.html?mode=recovery`
-   - `https://mysafenestbd.com/account`
-   - `https://mysafenestbd.com/account?mode=recovery`
-   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account`
-   - `https://safenest-bangladesh.kabirmdhumaun23.chatgpt.site/account?mode=recovery`
-4. Under **Authentication → Email / SMTP Settings**, custom SMTP is configured:
-   sender `no-reply@auth.mysafenestbd.com`, name `SafeNest`, host
-   `smtp.resend.com`, port `465`, username `resend`, minimum interval 60 seconds.
-   The sending-only key is restricted to the verified `auth.mysafenestbd.com`
-   domain and saved only in Supabase. Keep credentials out of Git. Confirmation
-   delivery to Gmail passed SPF and DKIM; recovery still needs live testing.
-5. In **Connect** or **Settings → API Keys**, copy the **Publishable key**
-   beginning `sb_publishable_`. The account page does not need any secret key.
+[![Watch the 53-second demo: a real screen recording of SafeNest on Android 16](docs/media/demo-poster.jpg)](docs/media/SafeNest-demo.mp4)
 
-The custom domain works over HTTPS and the Site URL is
-`https://mysafenestbd.com`. Keep both origins on the allowlist while both are used.
-Do not use wildcard production redirect URLs. Supabase has a default password
-recovery email template; retain its confirmation URL unless deliberately
-implementing a different email verification flow.
+*Watch the [53-second demo](docs/media/SafeNest-demo.mp4): a real screen recording of the app on an Android 16 emulator, made by the CI pipeline while its end-to-end test drives the setup, blocks gambling and VPN apps, and bounces the Uninstall button.*
 
-## 2. Private profile migration
+![SafeNest screens: home, consent before the app guard, live protection status with a filtered domain, Always-on VPN](docs/media/app-screens.jpg)
 
-The hosted database already contains the migration at
-`supabase/migrations/20260924212500_private_profiles.sql` (version `20260924212500`).
-Do **not** run the SQL or `supabase db push` a second time on this project.
-Check that Supabase's migration list shows this version before turning on
-GitHub production deployment. The migration enables RLS and grants each
-signed-in user only the permissions needed for their own profile.
+<p align="center"><img src="docs/media/website.jpg" alt="mysafenestbd.com, bilingual English and Bangla website" width="820"></p>
 
-The `auth.users` table belongs to Supabase. New accounts appear in
-**Authentication → Users**. A row in `public.profiles` appears when a logged-in
-user first saves their name/language. There is no signup trigger to fail and
-block new accounts. User IDs and creation timestamps cannot be changed by users.
+## What it does
 
-## 3. Build the account page
+| Layer | What the user gets | How |
+| --- | --- | --- |
+| **Website filter** | 541,485 gambling domains and their subdomains stop resolving | A local DNS-only VPN answers listed names with NXDOMAIN |
+| **New-mirror detection** | Brand-new mirror domains (`babu88a.com`, `jeetbuzz-bd.live`) are caught before any list has them | Brand + short-tail pattern rules |
+| **Bypass resistance** | Browser "Secure DNS", other VPN apps and raw-IP links do not get around the filter | Encrypted-DNS resolver names refused; listed IP ranges routed into the tunnel and dropped; VPN apps sent Home |
+| **App guard** | Gambling apps, and uninstalling SafeNest during the paid period, bounce to the home screen | Opt-in Accessibility service watching foreground package identity only |
+| **Signed updates** | New domains arrive without an app update, and a tampered list is rejected | P-256 signed catalogs with a pinned key and monotonic revision |
+| **iPhone** | The same blocklist on iOS | RFC 8484 DNS-over-HTTPS filter (Supabase Edge Function / Cloudflare Worker) + a configuration profile |
 
-Use Node.js 22 or newer. Copy `.env.example` to `.env`, then fill in only your
-publishable key. `.env` is ignored by git. The publishable key is included in
-the browser bundle by design; it is not a secret and grants no access beyond RLS.
+## How the DNS filter works
 
-```sh
-npm ci
-npm test
-npm run build
+SafeNest does **not** tunnel the user's internet traffic. It claims a single private address as the DNS server and routes only that address into the VPN, so ordinary browsing stays on the normal network at full speed.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser / app
+    participant OS as Android network stack
+    participant T as SafeNest TUN (10.91.0.53/32 only)
+    participant F as Packet loop
+    participant R as Real resolver (physical network)
+
+    B->>OS: resolve casino-example.com
+    OS->>T: UDP DNS query to 10.91.0.53
+    T->>F: raw IPv4 packet
+    F->>F: DnsPacketCodec.parseRequest()<br/>strict: one question, valid checksums
+    alt listed name, parent domain or mirror
+        F-->>T: NXDOMAIN (instant)
+    else encrypted-DNS resolver name (DoH / DoT bypass)
+        F-->>T: NXDOMAIN
+    else allowed
+        F->>R: query over the physical network<br/>(UDP, TCP fallback or DoH), 4.5 s budget
+        R-->>F: reply
+        F->>F: matchesResponse() + DnsAliasInspector<br/>(a CNAME/DNAME/HTTPS alias to a blocked name is blocked too)
+        F-->>T: original reply
+    end
+    T-->>OS: reply packet
+    OS-->>B: result
 ```
 
-The result is `dist/account.html`, `dist/account.js`, and `dist/account.css`.
-Without a key, the page clearly says account setup is in progress and all
-account forms remain hidden. A secret/service-role key is rejected by the build.
+The important decisions:
 
-The existing Sites project serves the compiled account portal at `/account`
-(`/account.html` redirects there). Each public page now includes a bilingual
-Log in link in its header and footer. Password-reset and password-login checks
-remain pending; keep that verification status explicit. GitHub commits do not
-automatically publish that website.
+- **DNS only, no default route.** `VpnService.Builder` adds the address `10.91.0.53/32` and nothing else, so the app never sees or slows down web traffic. Listed gambling IP ranges are added as extra routes; the loop only answers DNS, so packets to those ranges are dropped and sites opened by raw IP fail.
+- **Blocked lookups never wait.** A blocked name is answered on the reader thread immediately; allowed names go to a bounded worker pool with a whole-request deadline, so a slow resolver cannot stall blocking.
+- **Aliases are followed.** An allowed name whose answer is a CNAME, DNAME or SVCB/HTTPS alias to a blocked name is blocked as well (RFC 1035, 6672, 9460), with depth and loop limits.
+- **Encrypted DNS is closed off.** Lookups for public DoH/DoT resolver hostnames and the Mozilla/Apple canary names get NXDOMAIN, which makes Firefox, Chrome and iCloud Private Relay fall back to system DNS.
 
-## Android download and installation
+## Architecture
 
-The portal links to `/downloads/SafeNest-0.4.0-debug.apk`. This is the existing
-Library development artifact, not a new release build. Its SHA-256 is
-`09b18a7149c70bbdb707d9328d85f063d197eb916d05c31075b86bba6902d77c`.
-It requires Android 8.0 or newer and is 18,728,260 bytes. APK bytes are distributed
-by the existing Site; no signing keys are stored here.
+```mermaid
+flowchart LR
+    subgraph Phone["Android phone"]
+        UI["Compose UI<br/>setup, status, recovery"]
+        VPN["SafeNestVpnService<br/>DNS-only TUN + packet loop"]
+        Rules["RulesStore<br/>CompactDomainSet · MirrorRules · IpRules"]
+        Guard["SafeNestAccessibilityService<br/>app guard (opt-in)"]
+        Cat["CatalogStore<br/>signed catalog, last-known-good"]
+        Bill["Play Billing / entitlement"]
+        UI --> VPN
+        UI --> Guard
+        VPN --> Rules
+        Guard --> Rules
+        Cat --> Rules
+    end
 
-Open the portal on an Android phone, download and open the APK, complete
-Android's installation prompt, then use the app's Account icon to log in with
-the same confirmed SafeNest credentials. An update must use the same signing
-certificate as the installed app. Windows and iPhone builds are not available.
+    subgraph Backend["Supabase"]
+        Auth["Auth (email)"]
+        DB[("Postgres + RLS<br/>profiles, entitlements,<br/>payment ledger")]
+        Fn["Edge Functions<br/>protection-access, start-trial,<br/>play-billing-verify / rtdn,<br/>payments, dns-query"]
+        Auth --> DB
+        Fn --> DB
+    end
 
-The 0.4.0 source and verification notes describe a paid-period requirement for
-protection. Checkout and payment-to-entitlement issuance are not connected;
-the live `protection_entitlements` table had no rows on 5 October 2026. The
-portal therefore does not claim that login/profile saving activates protection.
-Device validation remains separate from these web account checks.
+    Intel["Domain intelligence<br/>Node pipeline: feeds, health probes,<br/>confidence states, signed export"]
+    Web["mysafenestbd.com<br/>website + account portal"]
+    iOS["iPhone<br/>DoH profile"]
+    CF["Cloudflare Worker<br/>DoH filter at scale"]
 
-The account HTML's Content Security Policy allows only this Supabase project.
-If changing project, update that policy as well. Keep third-party scripts off
-the account page because email verification uses the browser-only implicit flow.
-The Supabase SDK consumes the token fragment; referrers are disabled. Serve
-HTTPS in production. A local test origin must be explicitly added in Supabase
-before testing email callbacks locally; remove it from production when done.
+    Bill --> Fn
+    Intel -->|signed catalog| Cat
+    Intel --> DB
+    Web --> Auth
+    Web --> Fn
+    iOS --> CF
+    iOS --> Fn
+```
 
-## 4. Connect GitHub to Supabase (optional for login)
+The blocking engine on the phone is deliberately separate from the intelligence engine that discovers domains. The phone only ever receives a signed, versioned list; it never uploads what the user browses.
 
-GitHub holds code and migrations; it does not create a working login by itself.
+## Engineering highlights
 
-In **Supabase → Project Settings → Integrations → GitHub Integration**:
+- **Half a million domains in about 4 MB.** `CompactDomainSet` stores each hostname as a 64-bit FNV-1a + SplitMix64 fingerprint in a sorted array. Lookup is one binary search per label (`a.b.casino.com` checks four suffixes), and the file carries a SHA-256 of its payload so a truncated asset fails loudly. A `HashSet<String>` of the same data would be around 100 MB.
+- **A paranoid DNS codec.** `DnsPacketCodec` accepts only complete, single-question IPv4/UDP queries addressed to the tunnel resolver, verifies checksums, rejects TSIG/SIG and fragments, and checks every upstream reply's transaction ID, question and record bounds before forwarding it.
+- **Signed catalogs.** `CatalogVerifier` authenticates before it parses: canonical base64, a pinned ECDSA P-256 key, a strictly increasing revision and an expiry window. `CatalogStore` swaps state atomically and keeps the last verified list if an update fails.
+- **Mirror detection.** Gambling brands register new domains weekly. `MirrorRules` treats `brand + short tail` (and a short lead such as `bd-` or `my-`) on common mirror TLDs as that brand, with an exclusion list for ordinary words.
+- **Honest guard.** The Accessibility guard checks foreground package identity only. It never reads page content, never clicks permission dialogs, and leaves Settings usable; only the destructive action (Uninstall, Force stop, turning Always-on VPN off) sends the user Home during a paid period.
+- **Defence in depth on the backend.** Row-level security on every user table, tested against an embedded Postgres (PGlite) with simulated `auth.uid()`: anonymous denial, cross-user denial, owner-only writes, immutable ownership.
 
-1. Authorize the Supabase GitHub app for the intended repository.
-2. Select `ShaonInTheCloud/ShaonInTheCloud`.
-3. Set **Working directory** to `safenest` (the parent of `supabase/`).
-4. Use `main` as production branch when the reviewed draft has been merged.
-5. Keep automatic branching off unless you deliberately want paid previews.
-6. Enable production deployment only after the migration has been reviewed and
-   its history agrees with the hosted database.
+## Testing and CI
 
-Production deployments can apply migrations, declared Edge Functions and
-storage buckets. Auth/URL/SMTP settings must still be configured in the dashboard;
-the integration ignores those settings by default for production. A dedicated
-SafeNest repository can be used later by moving this folder's contents into its
-root and setting Working directory to `.`.
+Every push runs the full pipeline in GitHub Actions ([workflow](../.github/workflows/safenest-ci.yml)):
 
-## 5. Connect mysafenestbd.com
+| Stage | What runs |
+| --- | --- |
+| Web + security | 138 Node tests: RLS isolation on embedded Postgres, payment webhooks and ledger, Play Billing verification, DoH filter wire format, security headers |
+| Android unit tests | 32 JVM test classes (about 550 assertions) across the Play, Direct and Lab flavors: DNS codec, alias inspector, domain rules, compact set, catalog verifier, mirror rules, bypass names |
+| Lint + build | Android lint for three flavors, debug APKs and an unsigned Play release bundle |
+| **Emulator end-to-end** | Boots an Android 16 emulator, installs the app plus stand-in gambling, VPN and VPN-browser apps, and drives the real setup with UI Automator. **26 device checks**: a listed domain fails and ordinary HTTPS still works; Always-on VPN is switched on through Android's own UI; Uninstall, Force stop and Clear storage bounce Home while the rest of Settings stays usable; gambling and VPN apps bounce Home while an ordinary app stays open; everything is released when the test ends |
 
-The domain is attached to the existing Sites project and serves HTTPS. The
-previously issued DNS records are recorded below for reference; preserve the
-current working DNS rather than reapplying these as a new migration:
+The emulator run uploads its screenshots and UI dumps as an artifact, so every failure can be diagnosed from the exact screen it happened on. Running the workflow by hand with **record_demo** also records the emulator screen; the demo video above came from that.
 
-| Type | Name / Host | Value |
-| --- | --- | --- |
-| A | @ | 162.159.143.30 |
-| A | @ | 172.66.3.26 |
-| TXT | _openai-site-verification | openai-site-verification=BS9nb_7-m3p5H8pR5oDWvJikvIf6K2-stwnepAe9vZ4 |
-| TXT | _cf-custom-hostname | 18a479d9-fbfa-466a-b8b4-e48929a8f1e0 |
+## Tech stack
 
-Use the default TTL (1 hour is fine). Preserve the existing NS and SOA records.
-Use these short Host values if the registrar appends `.mysafenestbd.com`.
-These records were returned by Sites for this exact domain; refresh domain
-status after saving to confirm DNS validation and HTTPS issuance. This does not
-configure `www`, email delivery DNS, or a custom Supabase API domain.
+| Area | Tools |
+| --- | --- |
+| Android | Kotlin, Java, Jetpack Compose, `VpnService`, `AccessibilityService`, Device Policy, Google Play Billing, Gradle 8.13, API 36 |
+| Backend | Supabase (Auth, Postgres with RLS, Edge Functions in TypeScript/Deno), custom SMTP for auth email |
+| DNS at the edge | RFC 8484 DoH filter as a Supabase Edge Function and a Cloudflare Worker |
+| Intelligence pipeline | Node.js: feed ingestion, normalization and dedup, health probes, confidence states, signed export |
+| Web | Vanilla JS website and account portal on Cloudflare, bilingual English/Bangla |
+| Mobile (iOS track) | Expo / React Native client, `.mobileconfig` DNS profile |
+| Quality | JUnit, UI Automator, Node test runner, PGlite, Python unittest, GitHub Actions |
 
-## Verification and remaining launch checks
+## Repository layout
 
-`npm test` runs the actual profile migration on embedded PostgreSQL (PGlite),
-with Supabase roles and `auth.uid()` simulated. It checks anonymous denial,
-cross-user access denial, owner-only writes, immutable ownership/timestamps,
-field validation and deletion cascade. Unit tests also check account/recovery
-state and rejection of stale profile responses after an account switch.
+```
+safenest/
+├── android/          Android app (play, direct and lab flavors) and stand-in test apps
+├── supabase/         Postgres migrations and Edge Functions
+├── intelligence/     Domain intelligence pipeline and admin tools
+├── cloudflare/       DoH Worker and DNS config
+├── website/          mysafenestbd.com (Bangladesh and Global editions)
+├── web/              Account portal source
+├── mobile/           Expo client
+├── data/             Blocklist sources and exclusions
+├── tests/            Backend and web tests
+└── docs/             Design notes, verification reports, launch checklist
+```
 
-These tests do not verify the hosted Auth configuration, email delivery,
-browser rendering, deployed callback URLs or an actual device. Before enabling
-accounts for visitors, test with two owner-controlled email addresses: confirm
-signup, log in, save profile, reset a password, log out, and verify that account A
-cannot fetch account B's row through the API. The owner-controlled signup/confirmation/profile test succeeded on 5 October
-2026; recovery and password-login tests remain pending.
+## Build and run
 
-On 24 September 2026: all 7 local tests passed, including the embedded
-PostgreSQL isolation test; the account bundle built successfully with the
-unconfigured account forms disabled. Hosted verification is still pending.
+Requirements: JDK 17 or 21, Android SDK 36, Node.js 22+.
 
-Official references:
-- https://supabase.com/docs/guides/auth/passwords
-- https://supabase.com/docs/guides/auth/auth-smtp
-- https://supabase.com/docs/guides/database/postgres/row-level-security
-- https://supabase.com/docs/guides/deployment/branching/github-integration
-- https://supabase.com/docs/guides/getting-started/api-keys
+```sh
+cd safenest
 
-Hosted verification on 24 September 2026: `public.profiles` exists with RLS
-and three owner-scoped policies; anonymous SELECT and authenticated owner-ID
-UPDATE grants are absent; Supabase Security Advisor reports no lints. The historical check above predates the owner-controlled live test on
-5 October 2026; it does not imply that recovery/password-login are verified.
-# SafeNest release workspace
+# Website, account portal and backend tests
+npm ci
+npm test
 
-The canonical launch tracker is [docs/market-launch-checklist.md](docs/market-launch-checklist.md). This repository now contains the website source, Android app, catalogues, applied database migrations and backend functions.
+# Core network rules and signature checks
+sh run-core-tests.sh
 
-`npm ci`, `npm test`, `npm run build` validate and build the website/account pages. `sh run-core-tests.sh` exercises the independent network/rule/signature checks. Android Gradle builds live in `android/`; use the `play` or `direct` flavor explicitly. New source is 0.4.2/code 19; an unsigned AAB or CI debug APK is not a market-ready release.
+# Android unit tests and a test build that needs no login
+cd android
+./gradlew :app:testLabDebugUnitTest :app:assembleLabDebug
+# APK: app/build/outputs/apk/lab/debug/app-lab-debug.apk
+```
 
-The Play flavor leaves uninstall/permission controls available, keeps browsers open and serves existing accounts without an in-app checkout. The direct development flavor retains separate system-screen/managed-device experiments. Final payment setup, signing, physical-device QA and Play Console submission remain required.
+Full Android instructions, including Windows and Android Studio, are in [BUILDING.md](BUILDING.md).
 
-The notes below describe the earlier account-only repository and are retained for setup history.
+## Limits, stated plainly
+
+SafeNest raises the cost of relapse a great deal; it is not an unbreakable wall, and the app says so to its users. A browser or app that talks to a resolver by raw IP, an HTTPS proxy, or a factory reset can get around it. The design goal is that every bypass takes deliberate effort, which is usually enough to get someone through the urge.
+
+## Author
+
+Built by **Md Humaun Kabir**, ICT engineering student at JAMK University of Applied Sciences, Jyväskylä, Finland.
+[LinkedIn](https://www.linkedin.com/in/md-humaun-kabir-590976236/) · kabirmdhumaun23@gmail.com
+
+Setup history for the account portal is in [docs/account-integration.md](docs/account-integration.md); the launch tracker is [docs/market-launch-checklist.md](docs/market-launch-checklist.md).
