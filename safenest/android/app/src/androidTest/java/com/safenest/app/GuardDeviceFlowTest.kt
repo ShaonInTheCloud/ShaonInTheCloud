@@ -430,10 +430,13 @@ class GuardDeviceFlowTest {
         val panel = device.findObject(By.scrollable(true)) ?: return
         val bounds = try { panel.visibleBounds } catch (_: StaleObjectException) { return }
         if (bounds.width() < 16 || bounds.height() < 80) return
-        val upper = bounds.top + bounds.height() / 4
-        val lower = bounds.bottom - bounds.height() / 4
+        // Drag a third of the panel slowly (~5 ms per step, ~1 s total) so Compose does not
+        // fling. A fast half-panel swipe flings past a whole card between visibility checks;
+        // after the 0.5.20 font/layout change it skipped "1. App guard" on every pass.
+        val upper = bounds.top + bounds.height() / 3
+        val lower = bounds.bottom - bounds.height() / 3
         device.swipe(bounds.centerX(), if (towardStart) upper else lower,
-            bounds.centerX(), if (towardStart) lower else upper, 35)
+            bounds.centerX(), if (towardStart) lower else upper, 200)
         SystemClock.sleep(450)
     }
 
