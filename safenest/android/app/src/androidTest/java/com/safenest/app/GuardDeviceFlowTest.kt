@@ -212,9 +212,13 @@ class GuardDeviceFlowTest {
         openApp()
         assertTrue("App startup must finish before setup", device.wait(Until.hasObject(By.text("Start test")), 30_000))
         tap("Start test", scroll = true)
-        device.findObject(By.text("OK"))?.let { tapVisibleText("OK") }
+        dismissSetupInstruction()
         tap("Review and enable test guard", scroll = true)
+        assertTrue("Review must open the app guard disclosure", device.wait(
+            Until.hasObject(By.text("Allow SafeNest app guard?")), 15_000))
         tap("I agree — open settings")
+        await("Explicit test guard consent recorded") { GuardPreferences.hasTestControlConsent(context) }
+        assertSettings("Consent opens Android Accessibility settings")
         if (!GuardPreferences.isAccessibilityEnabled(context)) {
             ownAccessibilityDetail()
             tap("Use SafeNest Test app guard")
@@ -233,6 +237,28 @@ class GuardDeviceFlowTest {
             GuardPreferences.testControlGuardReady(context) && SafeNestVpnService.isRunning.get()
         }
         capture("guard-active-${outcomes.size}")
+    }
+
+    private fun dismissSetupInstruction() {
+        // requestActivation changes the page and animates a Snackbar, not a dialog.
+        // A one-shot OK lookup can precede composition; a successful coordinate tap
+        // can also land while the action is moving. Wait for this specific message,
+        // then observe its dismissal before searching/scrolling the setup page.
+        val instruction = By.pkg(context.packageName).text(
+            "Review and enable the test guard first. Grant Accessibility, then return here.")
+        assertTrue("Start test must reach the permission-first setup instruction",
+            device.wait(Until.hasObject(instruction), 15_000))
+        capture("setup-instruction-${outcomes.size}")
+        await("Setup instruction dismissed") {
+            if (!device.hasObject(instruction)) true else {
+                // Scope OK to the app while the known instruction is present. Never
+                // dismiss an Android permission prompt or the disclosure this way.
+                val action = device.findObject(By.pkg(context.packageName).text("OK"))
+                try { action?.click() } catch (_: StaleObjectException) { }
+                false
+            }
+        }
+        capture("setup-instruction-dismissed-${outcomes.size}")
     }
 
     private fun verifyFilteredInternet() {
@@ -404,10 +430,13 @@ class GuardDeviceFlowTest {
         val panel = device.findObject(By.scrollable(true)) ?: return
         val bounds = try { panel.visibleBounds } catch (_: StaleObjectException) { return }
         if (bounds.width() < 16 || bounds.height() < 80) return
-        val upper = bounds.top + bounds.height() / 4
-        val lower = bounds.bottom - bounds.height() / 4
+        // Drag a third of the panel slowly (~5 ms per step, ~1 s total) so Compose does not
+        // fling. A fast half-panel swipe flings past a whole card between visibility checks;
+        // after the 0.5.20 font/layout change it skipped "1. App guard" on every pass.
+        val upper = bounds.top + bounds.height() / 3
+        val lower = bounds.bottom - bounds.height() / 3
         device.swipe(bounds.centerX(), if (towardStart) upper else lower,
-            bounds.centerX(), if (towardStart) lower else upper, 35)
+            bounds.centerX(), if (towardStart) lower else upper, 200)
         SystemClock.sleep(450)
     }
 
