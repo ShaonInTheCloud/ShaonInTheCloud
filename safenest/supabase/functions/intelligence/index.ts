@@ -3,6 +3,10 @@ import {parse} from 'npm:tldts@7.0.25';
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'apikey, authorization, content-type','Access-Control-Allow-Methods':'GET, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store'};
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers});
 const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false,autoRefreshToken:false}});
+// Constant-time string comparison: the time taken does not reveal how many leading characters matched.
+const sameKey=(a:string,b:string)=>{const x=new TextEncoder().encode(a),y=new TextEncoder().encode(b);let d=x.length^y.length;for(let i=0;i<Math.max(x.length,y.length);i++)d|=(x[i]??0)^(y[i]??0);return d===0;};
+// Weak/strong ETag match for If-None-Match (a list, or *).
+const notModified=(req:Request,etag:string)=>{const h=req.headers.get('if-none-match');return !!h&&(h.trim()==='*'||h.split(',').some(t=>t.trim().replace(/^W\//,'')===etag));};
 let cached:any=null;let cachedAt=0;let lookupMap=new Map<string,any>();
 async function latest(){if(cached&&Date.now()-cachedAt<60000)return cached;const {data,error}=await db.from('blocklist_versions').select('version,generated_at,expires_at,checksum,domains,envelope').order('version',{ascending:false}).limit(1).maybeSingle();if(error)throw Error('Unavailable');if(data){cached=data;lookupMap=new Map(data.domains.map((r:any)=>[r.domain,r]));cachedAt=Date.now();}return data;}
 Deno.serve(async req=>{
@@ -13,11 +17,14 @@ Deno.serve(async req=>{
  // This is API key authentication, not an admin authorization mechanism.
  const provided=req.headers.get('apikey')||url.searchParams.get('key');
  const expected=Deno.env.get('SAFENEST_CATALOG_ACCESS_KEY')||Deno.env.get('SUPABASE_ANON_KEY');
- if(!expected||!provided||provided!==expected)return json({error:'Catalogue API key required'},401);
+ if(!expected||!provided||!sameKey(provided,expected))return json({error:'Catalogue API key required'},401);
  try{
   const current=await latest();if(!current)return json({error:'No signed release has been published'},503);
   const action=url.pathname.split('/').filter(Boolean).pop();
-  if(action==='catalog')return new Response(current.envelope,{headers:{...headers,'Content-Type':'application/octet-stream','Cache-Control':'public, max-age=60','ETag':'"'+current.checksum+'"'}});
+  const etag='"'+current.checksum+'"';
+  // Apps poll the catalogue: answer 304 when they already hold this signed release instead of re-sending it.
+  if(action==='catalog'){const h={...headers,'Content-Type':'application/octet-stream','Cache-Control':'public, max-age=60','ETag':etag};
+   return notModified(req,etag)?new Response(null,{status:304,headers:h}):new Response(current.envelope,{headers:h});}
   if(action==='check'){
    const raw=url.searchParams.get('domain')||'';if(raw.length>253||/[\s/:@?#\\]/.test(raw))return json({error:'Hostname required'},400);
    let host;try{host=new URL('https://'+raw).hostname.toLowerCase().replace(/\.$/,'').replace(/^www\./,'');}catch{return json({error:'Invalid hostname'},400);}

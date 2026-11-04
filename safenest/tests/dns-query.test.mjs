@@ -138,3 +138,66 @@ test('brand mirrors: babu88a.com and friends are blocked, ordinary names are not
   for (const h of ['bajirao.com', 'alibaba.com', 'google.com', 'bet365sports.com', 'velkia.fi', '1winner.com', 'wikipedia.org', 'prothomalo.com'])
     assert.equal(mirrorOf(h, brands), null, h);
 });
+
+// ---- Rate limiting (security audit H-1) ----------------------------------------------------------
+import {clientKey, memoryLimiter} from '../supabase/functions/_shared/doh.mjs';
+import {makeWorker} from '../cloudflare/dns/worker.mjs';
+
+test('memoryLimiter: fixed window per key, resets, and refuses new keys once the table is full', () => {
+  let t = 0;
+  const allow = memoryLimiter({limit: 3, windowMs: 1000, maxKeys: 2, now: () => t});
+  assert.deepEqual([1, 2, 3, 4].map(() => allow('a')), [true, true, true, false]);
+  assert.equal(allow('b'), true);
+  assert.equal(allow('c'), false, 'third distinct key in a full table');
+  t = 1000;
+  assert.equal(allow('a'), true, 'new window');
+  assert.equal(allow('c'), true);
+});
+
+test('clientKey prefers Cloudflare, then the first forwarded address', () => {
+  assert.equal(clientKey(new Request('https://x', {headers: {'cf-connecting-ip': '203.0.113.9', 'x-forwarded-for': '198.51.100.1'}})), '203.0.113.9');
+  assert.equal(clientKey(new Request('https://x', {headers: {'x-forwarded-for': '198.51.100.1, 10.0.0.1'}})), '198.51.100.1');
+  assert.equal(clientKey(new Request('https://x')), 'unknown');
+});
+
+test('over the limit: 429 with Retry-After, nothing forwarded; a broken limiter lets DNS through', async () => {
+  const {calls, deps: d} = deps({allow: () => false});
+  const res = await handleDoh(post(query('wikipedia.org')), d);
+  assert.equal(res.status, 429);
+  assert.equal(res.headers.get('retry-after'), '60');
+  assert.equal(calls.length, 0);
+  const preflight = await handleDoh(new Request('https://x/dns-query', {method: 'OPTIONS'}), d);
+  assert.equal(preflight.status, 204, 'CORS preflight is never limited');
+  const broken = deps({allow: () => { throw new Error('binding down'); }});
+  assert.equal((await handleDoh(post(query('wikipedia.org')), broken.deps)).status, 200);
+});
+
+test('Worker: uses the DNS_LIMITER binding per client address, blocks brand mirrors, serves the iOS profile', async () => {
+  const seen = [];
+  let budget = 2;
+  const env = {DNS_LIMITER: {limit: async ({key}) => { seen.push(key); return {success: budget-- > 0}; }}};
+  const forwarded = [];
+  const worker = makeWorker(async (url, init) => {
+    forwarded.push(url);
+    const r = new Uint8Array(new Uint8Array(init.body)); r[2] |= 0x80;
+    return new Response(r, {headers: {'content-type': 'application/dns-message'}});
+  });
+  const req = name => new Request('https://dns.example/dns-query', {method: 'POST',
+    headers: {'content-type': 'application/dns-message', 'cf-connecting-ip': '203.0.113.7'}, body: query(name)});
+  assert.equal((await worker.fetch(req('wikipedia.org'), env)).status, 200);
+  assert.equal((await worker.fetch(req('babu88a.com'), env)).status, 200);
+  assert.equal(forwarded.length, 1, 'the brand mirror was answered locally');
+  assert.equal((await worker.fetch(req('wikipedia.org'), env)).status, 429);
+  assert.deepEqual(seen, ['203.0.113.7', '203.0.113.7', '203.0.113.7']);
+  assert.equal((await worker.fetch(req('wikipedia.org'), {})).status, 200, 'no binding (local dev): unlimited');
+  const profile = await worker.fetch(new Request('https://dns.example/dns-query?profile=ios'), env);
+  assert.equal(profile.headers.get('content-type'), 'application/x-apple-aspen-config');
+});
+
+test('dns-query Edge Function and Worker both pass a limiter to handleDoh', () => {
+  const edge = readFileSync(new URL('../supabase/functions/dns-query/index.ts', import.meta.url), 'utf8');
+  assert.match(edge, /allow: r => limited\(clientKey\(r\)\)/);
+  const toml = readFileSync(new URL('../cloudflare/dns/wrangler.toml', import.meta.url), 'utf8');
+  assert.match(toml, /\[\[ratelimits\]\]\s*\nname = "DNS_LIMITER"/);
+  assert.match(toml, /period = (10|60)\b/);
+});

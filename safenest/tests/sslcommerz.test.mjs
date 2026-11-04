@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
+import {createHash} from 'node:crypto';
 import {sslcommerzAdapter,moneyMinor,providerTime} from '../supabase/functions/_shared/sslcommerz.mjs';
 import {handleCatalogue,handleStatus,handleReturn,handleReconcile} from '../supabase/functions/_shared/payment-endpoints.mjs';
 const env={SSLCOMMERZ_ENABLED:'true',SSLCOMMERZ_ENVIRONMENT:'sandbox',SSLCOMMERZ_TIMESTAMP_ZONE:'Asia/Dhaka',
@@ -13,7 +14,15 @@ const validation={APIConnect:'DONE',status:'VALID',val_id:'fixtureval',tran_id:o
   currency:'BDT',currency_type:'BDT',amount:'379.00',currency_amount:'379',risk_level:'0',
   bank_tran_id:'fixturebank',tran_date:'2026-10-06 12:00:00'};
 const headers=new Headers({'content-type':'application/x-www-form-urlencoded'});
-const notify='tran_id=SNfixture1&val_id=fixtureval&status=VALID&amount=1&verified=true';
+// SSLCOMMERZ-style signed callback, computed here with Node's own MD5 (independent of the adapter's).
+const md5=x=>createHash('md5').update(x).digest('hex');
+function signed(fields,password='local-only',keys=Object.keys(fields)){
+  const pairs={...Object.fromEntries(keys.map(k=>[k,fields[k]??''])),store_passwd:md5(password)};
+  const text=Object.keys(pairs).sort().map(k=>k+'='+pairs[k]).join('&');
+  return new URLSearchParams({...fields,verify_key:keys.join(','),verify_sign:md5(text)}).toString();
+}
+const callbackFields={tran_id:'SNfixture1',val_id:'fixtureval',status:'VALID',amount:'1',verified:'true'};
+const notify=signed(callbackFields);
 const json=x=>new Response(JSON.stringify(x),{headers:{'Content-Type':'application/json'}});
 test('strict monetary parsing and confirmed Dhaka timestamps reject ambiguous values',()=>{
   assert.equal(moneyMinor('379.1'),37910);assert.equal(providerTime(validation.tran_date),'2026-10-06T06:00:00.000Z');
@@ -34,6 +43,21 @@ test('notification ignores forged browser evidence and independently checks the 
   const b=await sslcommerzAdapter(env,async()=>order,async()=>json({...validation,status:'VALIDATED',card_no:'ignored'})).validateNotification(notify,headers);
   assert.equal(a.evidenceSha256,b.evidenceSha256);assert.equal(a.eventId,b.eventId);assert.equal('card_no' in a,false);
   await assert.rejects(adapter.validateNotification(notify+'&val_id=duplicate',headers),/invalid_notification/);
+});
+test('callbacks without a valid verify_sign are refused before any lookup or validator call (audit L-3)',async()=>{
+  let lookups=0,fetches=0;
+  const adapter=sslcommerzAdapter(env,async()=>{lookups++;return order;},async()=>{fetches++;return json(validation);});
+  const unsigned='tran_id=SNfixture1&val_id=fixtureval&status=VALID';
+  const tampered=notify.replace('val_id=fixtureval','val_id=otherval');
+  for(const raw of [unsigned,tampered,signed(callbackFields,'wrong-password'),
+    signed(callbackFields,'local-only',['tran_id','status']),        // signature does not cover val_id
+    signed(callbackFields,'local-only',['tran_id','val_id','store_passwd']),
+    notify.replace(/verify_sign=[0-9a-f]+/,'verify_sign=zz')])
+    await assert.rejects(adapter.validateNotification(raw,headers),/invalid_notification/);
+  assert.equal(lookups,0);assert.equal(fetches,0);
+  // Uppercase hex and fields outside verify_key are fine; the validator API still decides.
+  await adapter.validateNotification(notify.replace(/verify_sign=([0-9a-f]+)/,(m,h)=>'verify_sign='+h.toUpperCase())+'&value_x=extra',headers);
+  assert.equal(lookups,1);assert.equal(fetches,1);
 });
 test('wrong amounts, currency, merchant, references and risk never validate',async()=>{
   for(const change of [{amount:'350.00'},{currency_amount:'350'},{currency:'USD'},{store_id:'another'},

@@ -136,6 +136,12 @@ test('nowpayments: IPN signature over sorted JSON, independent payment re-fetch,
   const noted=[];await assert.rejects(nowpaymentsAdapter(nowEnv,async(n,a)=>{if(n==='payment_session_note'){noted.push(a);throw new Error('conflict');}return cryptoOrder;},
     async()=>json(finished)).validateNotification(raw,headers()),/payment_order_mismatch/);
   assert.equal(noted.length,1);
+  // Paid-at is the payment's creation time, even when the final confirmation lands hours later.
+  const opened='2026-11-01T10:05:00.000Z';
+  const late=await nowpaymentsAdapter(nowEnv,rpc,async()=>json({...finished,created_at:opened,updated_at:'2026-11-01T13:40:00.000Z'})).validateNotification(raw,headers());
+  assert.equal(late.paidAt,opened);
+  const noCreated=await nowpaymentsAdapter(nowEnv,rpc,async()=>json({...finished,updated_at:opened})).validateNotification(raw,headers());
+  assert.equal(noCreated.paidAt,opened);
 });
 
 test('nowpayments: invoice is created with the ledger price and redirects only to the hosted invoice page',async()=>{

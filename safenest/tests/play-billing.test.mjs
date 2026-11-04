@@ -23,7 +23,7 @@ async function fixture() {
     grant execute on function auth.uid() to anon,authenticated,service_role;
     insert into auth.users values ('${buyer}'),('${other}');`);
   for (const file of (await readdir(migrations)).filter(name =>
-      /_protection_entitlements|_payment_foundation(?:_hardening)?|_trial_subscriptions|_google_play_billing/.test(name)).sort())
+      /_protection_entitlements|_payment_foundation(?:_hardening)?|_trial_subscriptions|_google_play_billing|_play_subscriptions_deny_clients/.test(name)).sort())
     await db.exec(await readFile(new URL(file, migrations), 'utf8'));
   await db.exec('set role service_role');
   return db;
@@ -199,4 +199,21 @@ test('RTDN endpoint: secret gate, decodes Pub/Sub envelope, re-fetches and updat
   // A token the ledger has never seen returns 2xx so Pub/Sub stops retrying.
   const unbound = fakeFetch(google(), {rpcResult: {message: 'purchase_not_bound'}, rpcStatus: 400});
   assert.equal((await (await handleRtdn(push(notification), env, {fetcher: unbound.fetcher})).json()).ignored, 'purchase_not_bound');
+});
+
+test('clients cannot read or write Play subscriptions even if a grant is added by mistake', async () => {
+  const db = await fixture();
+  const policy = await db.query(`select permissive, roles::text[] as roles from pg_policies
+    where schemaname='payments' and tablename='play_subscriptions' and policyname='deny_clients'`);
+  assert.equal(policy.rows.length, 1);
+  assert.equal(policy.rows[0].permissive, 'RESTRICTIVE');
+  // Simulate an accidental grant: the restrictive policy must still hide every row.
+  await db.exec(`reset role; grant usage on schema payments to authenticated;
+    grant select, insert on payments.play_subscriptions to authenticated;
+    create policy oops on payments.play_subscriptions for all to authenticated using (true) with check (true);
+    insert into payments.play_subscriptions(purchase_token,user_id,product_id,base_plan_id,plan_code,state,starts_at,expires_at,evidence_sha256)
+      select 'tok-deny-clients-fixture-000000', id, 'safenest_protection','monthly','monthly','ACTIVE', now(), now()+interval '1 day', repeat('a',64) from auth.users limit 1;
+    set role authenticated`);
+  assert.equal((await db.query('select count(*)::int as n from payments.play_subscriptions')).rows[0].n, 0);
+  await db.exec('reset role');
 });

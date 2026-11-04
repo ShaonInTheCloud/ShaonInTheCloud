@@ -86,8 +86,11 @@ export function nowpaymentsAdapter(env,rpc,fetcher=fetch) {
     if (status!=='paid') return {orderId:order.id,provider:'nowpayments',environment,status,
       amountMinor:Number(order.amount_minor),currency:order.currency,eventId:`${status}:${paymentId}`,
       validationReference:paymentId,evidenceSha256:await digest({orderId:order.id,status,paymentId})};
+    // Paid-at is when the customer opened the payment, not when the last blockchain confirmation landed:
+    // confirmations can finish after the order window closes, and the ledger rejects paid_at > expires_at,
+    // which would leave a customer who paid in time without access.
     const proof={orderId:order.id,provider:'nowpayments',environment,status:'paid',amountMinor:Number(order.amount_minor),
-      currency:order.currency,transactionId:paymentId,paidAt:providerTime(payment.updated_at),validationReference:paymentId};
+      currency:order.currency,transactionId:paymentId,paidAt:providerTime(payment.created_at??payment.updated_at),validationReference:paymentId};
     return {...proof,eventId:'paid:'+paymentId,evidenceSha256:await digest(proof)};
   }
   return {

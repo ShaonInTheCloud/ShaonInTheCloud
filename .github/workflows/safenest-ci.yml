@@ -32,6 +32,9 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node --test supabase/functions/protection-access/test/*.test.mjs
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm ci && npm test && npm audit --audit-level=high
+        working-directory: safenest/intelligence
       - run: npm run build
         env:
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_jt2VeNCAATz3iEiebx2Kog_ZiZVL7Vl

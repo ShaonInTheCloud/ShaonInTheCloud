@@ -1,4 +1,5 @@
-# Optional second home for the SafeNest DNS filter. Not deployed by any workflow.
+# SafeNest DNS filter on Cloudflare Workers (security audit H-1). Not deployed by any workflow yet:
+# deploy by hand once, check it (docs/dns-worker-handover-2026-11-05.md), then reissue the iOS profile.
 name = "safenest-dns"
 main = "worker.mjs"
 compatibility_date = "2026-10-01"
@@ -6,3 +7,14 @@ workers_dev = true
 routes = [
   { pattern = "dns.mysafenestbd.com", custom_domain = true }
 ]
+
+# Per-client-address limit. Cloudflare counts per location and approximately, which is enough to stop one
+# address flooding the filter. Generous because carrier NAT puts many phones behind one address.
+# period may only be 10 or 60 seconds.
+[[ratelimits]]
+name = "DNS_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 1200
+  period = 60
