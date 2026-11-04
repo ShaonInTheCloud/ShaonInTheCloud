@@ -3,13 +3,16 @@
 // Blocks the bundled SafeNest gambling list (541k names, same sources as the Android app), the latest published (signed) blocklist when there is one,
 // and common encrypted-DNS bypass endpoints. verify_jwt = false (config.toml): DNS clients send no JWT.
 import {createClient} from 'npm:@supabase/supabase-js@2.117.1';
-import {BYPASS_DOMAINS, handleDoh, loadCompressedList} from '../_shared/doh.mjs';
+import {BYPASS_DOMAINS, clientKey, handleDoh, loadCompressedList, memoryLimiter} from '../_shared/doh.mjs';
 import {BUNDLED_BRANDS, BUNDLED_GZIP_BASE64} from './domains.generated.mjs';
 import {IOS_PROFILE} from './profile.generated.mjs';
 
 // Decoded once per instance (~0.2 s, ~25 MB); every request awaits the same promise.
 const bundled = loadCompressedList(BUNDLED_GZIP_BASE64);
 const bypass = new Set(BYPASS_DOMAINS);
+// Per-instance cap (security audit H-1). Generous because many phones share one carrier-NAT address;
+// the real limit lives in the Cloudflare Worker (cloudflare/dns), which this function is meant to hand over to.
+const limited = memoryLimiter({limit: Number(Deno.env.get('SAFENEST_DNS_LIMIT_PER_MIN')) || 1200});
 let published = new Set<string>();
 let publishedAt = 0;
 
@@ -32,6 +35,7 @@ Deno.serve(req => new URL(req.url).searchParams.get('profile') === 'ios' && req.
       'Content-Disposition': 'attachment; filename="safenest-dns.mobileconfig"', 'Cache-Control': 'no-cache'}})
   : handleDoh(req, {
   fetch,
+  allow: r => limited(clientKey(r)),
   brands: BUNDLED_BRANDS, // babu88a.com, jeetbuzz-bd.live: brand + short tail is blocked as a mirror
   blocklists: async () => { refreshPublished(); return [await bundled, published, bypass]; }, // refresh runs in the background
 }));

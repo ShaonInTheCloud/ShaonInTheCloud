@@ -169,13 +169,43 @@ const reply = (body, status = 200, extra = {}) => new Response(body, {status, he
 const dnsReply = bytes => reply(bytes, 200, {'Content-Type': DNS_MESSAGE});
 
 /**
+ * Per-client limiter for one runtime instance: a fixed window per key, with a bounded key table so a flood of
+ * distinct addresses cannot grow memory without limit. Instances do not share counts, so this caps abuse per
+ * instance only; the Cloudflare Worker uses Cloudflare's rate-limiting binding instead.
+ */
+export function memoryLimiter({limit = 1200, windowMs = 60_000, maxKeys = 50_000, now = () => Date.now()} = {}) {
+  let windowStart = now(), counts = new Map();
+  return key => {
+    const t = now();
+    if (t - windowStart >= windowMs) { windowStart = t; counts = new Map(); }
+    if (!counts.has(key) && counts.size >= maxKeys) return false;
+    const n = (counts.get(key) ?? 0) + 1;
+    counts.set(key, n);
+    return n <= limit;
+  };
+}
+
+/** The caller's address as the platform reports it; one shared key when none is present. */
+export function clientKey(req) {
+  const h = req.headers;
+  return h.get('cf-connecting-ip') || (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
+}
+
+/**
  * Handles one DoH request.
  * deps.blocklists(): Promise<Set<string>[]> — sets of blocked registrable names
  * deps.brands?: string[] — gambling brand names; a brand plus a short tail is blocked as a mirror
  * deps.fetch: fetch implementation for the upstream resolvers
+ * deps.allow?: (req) => boolean | Promise<boolean> — rate limit; false answers 429. A limiter that throws lets the
+ *   query through: a broken limiter must not take everyone's DNS down.
  */
 export async function handleDoh(req, deps) {
   if (req.method === 'OPTIONS') return reply(null, 204);
+  if (deps.allow) {
+    let allowed = true;
+    try { allowed = await deps.allow(req); } catch { allowed = true; }
+    if (allowed === false) return reply('Too many DNS queries; slow down.', 429, {'Retry-After': '60', 'Content-Type': 'text/plain; charset=utf-8'});
+  }
   let bytes, q;
   try {
     if (req.method === 'GET') {

@@ -1,4 +1,26 @@
 import {PaymentError, readLimitedBody} from './payments.mjs';
+import {md5Hex} from './md5.mjs';
+import {constantTimeEqual} from './stripe.mjs';
+
+/**
+ * SSLCOMMERZ callback signature (security audit L-3): md5 over the key-sorted `key=value&…` pairs of the fields
+ * named in verify_key, plus store_passwd=md5(store password). Checked before anything else so an unsigned or
+ * forged callback never reaches the order lookup or the validator API. The validator stays the real proof.
+ */
+export function sslcommerzSignatureValid(fields,storePassword) {
+  const sign=fields.get('verify_sign'),keys=(fields.get('verify_key')??'').split(',').map(k=>k.trim()).filter(Boolean);
+  if (typeof sign!=='string' || !/^[0-9a-f]{32}$/i.test(sign) || !keys.length || keys.length>64) return false;
+  // The signature must cover the fields we act on.
+  if (!keys.includes('tran_id') || !keys.includes('val_id')) return false;
+  const pairs=new Map();
+  for (const key of keys) {
+    if (!/^[a-z0-9_]{1,64}$/i.test(key) || key==='store_passwd' || pairs.has(key)) return false;
+    pairs.set(key,fields.get(key)??'');
+  }
+  pairs.set('store_passwd',md5Hex(storePassword));
+  const text=[...pairs.keys()].sort().map(k=>k+'='+pairs.get(k)).join('&');
+  return constantTimeEqual(md5Hex(text),sign.toLowerCase());
+}
 
 export function moneyMinor(value) {
   if (typeof value!=='string' || !/^(0|[1-9][0-9]{0,7})(\.[0-9]{1,2})?$/.test(value))
@@ -103,7 +125,7 @@ export function sslcommerzAdapter(env,rpc,fetcher=fetch) {
         throw new PaymentError('invalid_notification',400);
       const fields=new URLSearchParams(raw);
       if (new Set(fields.keys()).size!==Array.from(fields.keys()).length ||
-        !token(fields.get('tran_id'),30) || !token(fields.get('val_id')))
+        !token(fields.get('tran_id'),30) || !token(fields.get('val_id')) || !sslcommerzSignatureValid(fields,password))
         throw new PaymentError('invalid_notification',400);
       const order=await rpc('payment_order_lookup',{p_reference:fields.get('tran_id'),p_provider:'sslcommerz',p_environment:environment});
       if (!order) throw new PaymentError('order_not_found',404);
