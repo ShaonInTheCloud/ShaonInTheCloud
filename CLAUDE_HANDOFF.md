@@ -16,38 +16,28 @@ Land an English-speaking QA / Test Automation Engineer role in Finland within ~3
 ## Target stack
 Python, pytest, Playwright (Python), Robot Framework, API testing (requests/Postman), SQL, GitHub Actions, Docker, ISTQB Foundation. Plus LLM eval basics (promptfoo/DeepEval) as a differentiator.
 
-## Applications this week (priority order)
-1. VALA — Test Automation Developer, Helsinki hybrid. Process: culture talk → coding test → client interview. Robot Framework + Playwright.
-2. Tieto Tech Consulting — Test Automation Specialist (open in Jyväskylä too).
-3. Gofore — Test Automation Developer, Helsinki.
-4. ALTEN Finland — Software Test Engineer (manual + automated; Selenium/Robot Framework).
-5. Sine Engineering — QA Engineer, Tampere on-site, drone/defence tech. Embedded flavour. Nice-to-have: AI-assisted testing.
-6. NICO (Fujitsu) — Junior automation tester, Helsinki. Posting in Finnish; may want Finnish.
+## Applications: live tracker
+Verified job list with status dropdowns (checked 6 Nov 2026 by opening every posting):
+https://claude.ai/artifact/1awpDTNfB34dwY83LyagfS
 
-### Full triage of the 18 LinkedIn postings (6 Nov 2026)
-| # | Posting | Verdict |
-|---|---|---|
-| 1 | Gofore – QA Lead / Test Manager | Senior, skip; apply to Gofore Test Automation Developer |
-| 2 | Eaton – Project Quality Engineer, Vantaa | Manufacturing QC, skip |
-| 3 | ALTEN – Testiautomaatio- & QA-asiantuntija | Finnish; apply to ALTEN Software Test Engineer instead |
-| 4 | Outokumpu – Quality Development Engineer, Tornio | Steel plant, skip |
-| 5 | Fingrid – Testauspäällikkö | Test manager, Finnish, skip |
-| 6 | Winthrop – QAQC Engineer, Vaasa | Construction, skip |
-| 7 | Hiab – Quality Engineer, Raisio | Manufacturing, skip |
-| 8 | Arcadis – Quality Coordinator, Mechanical | Construction, skip |
-| 9 | NICO – Junior automaatiotestaaja | APPLY (junior, posted 5 Nov; Finnish may be expected) |
-| 10 | Stora Enso – Quality Controller, Varkaus | Paper mill, skip |
-| 11 | Danfoss – Test Engineer Grid Code, Vaasa | Power-electronics lab, deadline 31 Jan 2027, low priority |
-| 12 | Tieto – Test Automation Specialist | APPLY (open in Jyväskylä) |
-| 13 | "Quality Assurance Engineer" (company cut off) | Unknown, re-check on LinkedIn |
-| 14 | VALA – Test Automation Developer | APPLY (top target) |
-| 15 | Wärtsilä – Quality Engineer, Vaasa | Manufacturing, skip |
-| 16 | Valmet – Parts Quality Assurance, Jyväskylä | Physical parts, skip |
-| 17 | Valmet – Parts Quality Assurance, Vantaa | Same, skip |
-| 18 | Nordic Semiconductor – Firmware Test Engineer | Norway, firmware security, skip |
-+ Sine Engineering QA Engineer (Tampere) from Ashby link: APPLY.
+Priority order for the first week (all English postings, junior-friendly):
+1. Vaisala via Academic Work — Junior Software Test Engineer, Vantaa. Robot Framework, Jenkins, Python. Rolling, may close early.
+2. Kassavirtanen — Junior Software Tester, Helsinki. Deadline 13 Nov.
+3. Bluefors — Trainee, Test Systems & Data, Helsinki. Deadline 12 Nov. For students.
+4. Nordic Semiconductor — Firmware Test Engineer, Secure Domain, Oulu. Early-career stated. Python + CI; C is the gap.
+5. Visual Components — Junior Software QA Engineer, Espoo/Tampere.
+6. Lokki (banking client) — QA Engineer mobile+web, Helsinki. Deadline 9 Nov, asks 3 yrs; stretch.
+7. Open applications: Siili (VALA merged into Siili in 2024), Gofore, Nitor, Vincit.
 
-No deadline falls on 6 Nov 2026. Deadlines on skipped postings were not verified.
+If Finnish is workable: NICO junior tester (deadline 10 Nov), OP Test Engineer Oulu/Helsinki (15 Nov), Academic Work software validation engineer in Jyväskylä (rolling), Tieto Tech Consulting Test Automation Specialist (rolling).
+
+### Corrections to the 6 Nov LinkedIn triage
+- VALA Group no longer exists as a separate company; it merged into Siili Solutions in 2024. vala.fi is an unrelated organisation. Apply via the Siili open application.
+- Gofore's Test Automation Developer posting is gone; only embedded test roles (several years' experience) remain.
+- Sine Engineering QA Engineer (Tampere) closed on 1 Nov 2026.
+- Tieto Tech Consulting's January Jyväskylä posting expired; the live one is the 29 Oct Espoo re-post, Finnish required.
+- ALTEN's Software Test Engineer posting is stale; only the Finnish-language open application for 3+ yrs is live.
+- NICO junior tester is confirmed open to 10 Nov and mandates good written Finnish.
 
 ## Portfolio projects to build (all in github.com/ShaonInTheCloud)
 1. `qa-playwright-demo` — Playwright+Python suite vs saucedemo.com, Page Object Model, 25+ tests, HTML report, GitHub Actions.
