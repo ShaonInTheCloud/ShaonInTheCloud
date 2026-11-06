@@ -52,6 +52,9 @@ def check_manifest(path, version):
         raise ValueError("Debug/test-only build cannot be released")
     if app.get(android + "allowBackup") != "false" or app.get(android + "usesCleartextTraffic") != "false":
         raise ValueError("Release backup/cleartext settings must be disabled")
+    # Android 12+ still allows device-to-device transfer when allowBackup is false.
+    if app.get(android + "dataExtractionRules") != "@xml/data_extraction_rules":
+        raise ValueError("Release must declare data extraction rules that block device transfer")
     if root.find("instrumentation") is not None:
         raise ValueError("Test instrumentation cannot be released")
     # Owner decision 2026-10-17: the Play release ships the Device Administrator receiver

@@ -1,0 +1,21 @@
+version: 2
+# Workflows pin every action to a full commit SHA. Dependabot keeps those pins current
+# so a pinned action never silently falls behind its own security fixes.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /safenest
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /safenest/intelligence
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

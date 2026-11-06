@@ -14,7 +14,7 @@ signing = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(signing)
 ANDROID = "http://schemas.android.com/apk/res/android"
 MANIFEST = f'''<manifest xmlns:android="{ANDROID}" package="com.safenest.app" android:versionCode="24" android:versionName="0.4.7">
-<application android:allowBackup="false" android:usesCleartextTraffic="false">
+<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false">
 <service android:name="com.safenest.app.SafeNestVpnService" android:permission="android.permission.BIND_VPN_SERVICE"/>
 <service android:name="com.safenest.app.SafeNestAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
 <receiver android:name="com.safenest.app.SafeNestAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN"/>
@@ -108,6 +108,7 @@ class ReleaseIdentityTests(unittest.TestCase):
             MANIFEST.replace("<application ", '<application android:testOnly="true" '),
             MANIFEST.replace('android:allowBackup="false"', 'android:allowBackup="true"'),
             MANIFEST.replace('android:usesCleartextTraffic="false"', 'android:usesCleartextTraffic="true"'),
+            MANIFEST.replace(' android:dataExtractionRules="@xml/data_extraction_rules"', ''),
             # The admin receiver must be present exactly once and bound to the system permission.
             MANIFEST.replace(' android:permission="android.permission.BIND_DEVICE_ADMIN"', ''),
             MANIFEST.replace('<receiver android:name="com.safenest.app.SafeNestAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN"/>', ''),
